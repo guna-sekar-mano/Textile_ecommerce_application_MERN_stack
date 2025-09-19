@@ -441,16 +441,16 @@ export const getallheaderProducts = async (req, res) => {
     }
 };
 
-export const getPopularProductsforCustomer = async (req, res) => {
-    try {
-        const products = await Products.find({ is_popular_products: true }).sort({ createdAt: -1 });
+// export const getPopularProductsforCustomer = async (req, res) => {
+//     try {
+//         const products = await Products.find({ is_popular_products: true }).sort({ createdAt: -1 });
 
-        res.send({ resdata: products, totallength: products.length });
-    } catch (err) {
-        console.error("Get Popular Products Error:", err);
-        res.status(500).send({ error: "An error occurred while fetching popular products" });
-    }
-};
+//         res.send({ resdata: products, totallength: products.length });
+//     } catch (err) {
+//         console.error("Get Popular Products Error:", err);
+//         res.status(500).send({ error: "An error occurred while fetching popular products" });
+//     }
+// };
 
 export const getBannerProducts = async (req, res) => {
     try {

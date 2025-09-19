@@ -61,3 +61,24 @@ export const saveShippingAddress = async (req, res) => {
       console.error(err)
     }
   }
+
+export const getaccountdetails = async (req, res) => {
+    try {
+        const resdata = await Customer.find({ Email:req.user.Email });
+        res.send({ resdata });
+    } catch (err) {
+        console.error("Error fetching shipping details:", err);
+        res.send({ message: "Error fetching Account details" });
+    }
+};
+
+export const updateaccountdetails = async (req, res) => {
+  try {
+    const { _id } = req.query
+    console.log(req.query);
+    const resdata = await Customer.findOneAndUpdate({ _id }, req.body, { new: true })
+    res.send({message:'Account updated successfully' ,resdata})
+  } catch (err) {
+    console.log(err)
+  }
+}

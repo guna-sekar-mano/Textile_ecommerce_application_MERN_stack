@@ -18,26 +18,31 @@ const Orderschema = mongoose.Schema({
     Order_Status: { type: String, default: "Payment Pending" },
     Total_Amount: Number,
     shipment_id: Number,
-    Payment_Date: {type: Date},
+    Payment_Date: { type: Date },
+    failed_reason: String,
 }, { timestamps: true });
 
 const Ordersmasterschema = mongoose.Schema({
     Order_id: { type: String, index: true },
-    First_Name: { type: String },
-    Book_Name: String,
-    Book_image: [String],
-    Regular_Price: String,
-    Discount: String,
-    Sale_Price: String,
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'products' },
+    variantId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    Product_Name: String,
+    variant_name: String,
+    Images: [String],
+    variant_images: [String],
+    price: String,
+    sale_price: String,
+    selectedSize: String,
     Quantity: Number,
-    
+    Category: String,
+    Subcategory: String,
+    Product_type: String,
+    tags: String,
 }, { timestamps: true });
-
 
 const Order = db.model('orders', Orderschema);
 const Ordermaster = db.model('ordermasters', Ordersmasterschema);
 
-// Ensure indexes are correct
 Ordermaster.collection.dropIndexes().catch(err => console.log('No indexes to drop'));
 
 export { Order, Ordermaster };

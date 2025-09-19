@@ -1,6 +1,6 @@
 import express from 'express';
 import authMiddleware from '../middlewares/authmiddlewares.js';
-import { deleteShippingAddress, getallCustomers, getshippingdetails, saveShippingAddress, updateshippingAddress } from '../controllers/Customercontroller.js';
+import { deleteShippingAddress, getaccountdetails, getallCustomers, getshippingdetails, saveShippingAddress, updateaccountdetails, updateshippingAddress } from '../controllers/Customercontroller.js';
 
 const CustomerRouter = express.Router();
 
@@ -10,5 +10,8 @@ CustomerRouter.get('/apigetshippingdetails',authMiddleware(['Customer']),getship
 CustomerRouter.post('/apisaveshippingAddress',authMiddleware(['Customer']),saveShippingAddress);
 CustomerRouter.put('/updateShippingaddress',authMiddleware(['Customer']),updateshippingAddress);
 CustomerRouter.delete('/apideleteShipping',authMiddleware(['Customer']),deleteShippingAddress);
+
+CustomerRouter.get('/apigetaccountdetails',authMiddleware(['Admin','Customer']),getaccountdetails);
+CustomerRouter.put('/apiupdateaccoutdetails',authMiddleware(['Admin','Customer']),updateaccountdetails);
 
 export default CustomerRouter;
