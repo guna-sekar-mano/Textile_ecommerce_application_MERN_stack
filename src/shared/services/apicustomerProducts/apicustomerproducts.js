@@ -32,7 +32,7 @@ export const getCustomerProductById = async (id, productType, productName) => {
 export const apigetPopularProducts = async (params) => {
     try {
         const token = gettoken();
-        const res = await axios.get(`${apiurl()}/products/apigetPopularProducts`, { params: params,headers: { "Authorization": `Bearer ${token}` }});
+        const res = await axios.get(`${apiurl()}/popular-products/apigetCustomerpopularproducts`, { params: params,headers: { "Authorization": `Bearer ${token}` }});
         return res.data;
     } catch (err) {
         console.error('API Get Products Error:', err.response ? err.response.data : err);

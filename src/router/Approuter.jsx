@@ -17,6 +17,11 @@ import SupportMain from "../shared/components/Support/core/SupportMain";
 import Contactus from "../shared/components/Support/pages/Contactus";
 import Trackorder from "../shared/components/Support/pages/Trackorder";
 import Faq from "../shared/components/Support/pages/Faq";
+import ScrollToTop from "./Scrolltotop";
+import MyAccountMain from "../shared/components/MyAccount/core/MyAccountMain";
+import Myorders from "../shared/components/MyAccount/pages/MyOrders";
+import AccountDetails from "../shared/components/MyAccount/pages/AccountDetails";
+import Rough from "../shared/components/rough";
 
 
 export default function Approuter () {
@@ -24,6 +29,7 @@ export default function Approuter () {
     return (
         <>
         <BrowserRouter>
+            <ScrollToTop/>
             <Routes>
                 <Route element={<Main/>}>
                     <Route path="/" element={<Homepage/>}/>
@@ -37,11 +43,17 @@ export default function Approuter () {
                     <Route path="/verify-otp" element={<VerifyOtp/>}/>
                     <Route path="/cart" element={<Cartpage/>}/>
                     <Route path="/checkout" element={<Checkoutpage/>}/>
+                    <Route path="/rough" element={<Rough/>}/>
+
                     <Route path="/wishlist" element={<Wishlistpage/>}/>
                         <Route element={<SupportMain />}>
                             <Route path="/contact-us" element={<Contactus/>}/>
                             <Route path="/track-order" element={<Trackorder/>}/>
                             <Route path="/frequently-asked-questions" element={<Faq/>}/>
+                        </Route>
+                        <Route element={<MyAccountMain />}>
+                            <Route path="/my-orders" element={<Myorders/>}/>
+                            <Route path="/account-details" element={<AccountDetails/>}/>
                         </Route>
                 </Route>
                 <Route path="/dashboard/*" element={<ProtectedRoute allowedRoles={['Admin']}><Dashboardrouter /></ProtectedRoute>}/>

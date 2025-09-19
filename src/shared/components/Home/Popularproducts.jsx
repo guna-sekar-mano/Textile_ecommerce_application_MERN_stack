@@ -7,23 +7,84 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { apigetPopularProducts } from '../../services/apicustomerProducts/apicustomerproducts';
 import apiurl from '../../services/apiendpoint/apiendpoint';
 import { Link } from 'react-router-dom';
+import { deleteOnewishitems, getAllwishitems, savewishitems } from '../../services/apiwishlist/apiwishlist';
+import useAuth from '../../services/store/useAuth';
+import toast from 'react-hot-toast';
+import Swal from 'sweetalert2'
+
+const toUrlFriendly = (str) => {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
 
 export default function Popularproducts () {
 
     const isMountedRef = useRef(true);
-    const [data, setData] = useState({ products: [], totallength: 0 });
+    const [data, setData] = useState({ products: [], highlightedProduct: null, totallength: 0 });
+    const { userdetails } = useAuth();
+    const [wishlistItems, setWishlistItems] = useState([]);
 
+    const checkIfInWishlist = (productToCheck, variantToCheck = null) => {
+        if (!wishlistItems.length) return false;
+        
+        return wishlistItems.some(item => {
+            const isSameProduct = item.productId === productToCheck._id;
+            
+            const isSameVariant = variantToCheck ? item.variantId === variantToCheck._id : !item.variantId;
+            
+            return isSameProduct && isSameVariant;
+        });
+    };
+
+    useEffect(() => {
+        const fetchWishlistItems = async () => {
+            try {
+                if (userdetails?.Email) {
+                    const response = await getAllwishitems();
+                    if (response?.response) {
+                        setWishlistItems(response.response);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching wishlist items:", error);
+            }
+        };
+
+        fetchWishlistItems();
+    }, [userdetails]);
 
     const getAllPopularProductsData = useCallback(async () => {
         try {
             const res = await apigetPopularProducts();
             
             const apiData = res?.resdata || [];
-            setData({ products: apiData, totallength: res?.totallength || apiData.length });
+            let allProducts = [];
+            let highlightedProduct = null;
+
+            apiData.forEach(popularProductGroup => {
+                if (popularProductGroup.ProductId && Array.isArray(popularProductGroup.ProductId)) {
+                    allProducts.push(...popularProductGroup.ProductId);
+                }
+                
+                if (popularProductGroup.HighlightedProductId && !highlightedProduct) {
+                    highlightedProduct = popularProductGroup.HighlightedProductId;
+                }
+            });
+
+            const uniqueProducts = allProducts.filter((product, index, self) => 
+                index === self.findIndex((p) => p._id === product._id)
+            );
+
+            setData({ 
+                products: uniqueProducts, 
+                highlightedProduct: highlightedProduct,
+                totallength: uniqueProducts.length 
+            });
         } catch (error) {
             console.error('Error fetching data:', error);
-            setData({ products: [], totallength: 0 });
-            // toast.error("Failed to fetch products data");
+            setData({ products: [], highlightedProduct: null, totallength: 0 });
         }
     }, []);
     
@@ -44,6 +105,64 @@ export default function Popularproducts () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+       const addWish = async (productData) => {
+        try {
+            const userDetails = userdetails;
+            if (!userDetails || !userDetails.Email) {
+                toast.error("Please log in to manage your wishlist!");  
+                return;
+            }
+
+            const productToProcess = productData;
+            const currentWishlistState = checkIfInWishlist(productToProcess, null);
+            
+            if (currentWishlistState) {
+                const wishlistItem = wishlistItems.find(item => {
+                    const isSameProduct = item.productId === productToProcess._id;
+                    const isSameVariant = !item.variantId;
+                    return isSameProduct && isSameVariant;
+                });
+
+                if (wishlistItem) {
+                    await deleteOnewishitems(wishlistItem._id);
+                    setWishlistItems(prev => prev.filter(item => item._id !== wishlistItem._id));
+                    Swal.fire({title: "Removed from wishlist !", icon: "success", draggable: true });
+                }
+            } else {
+                const {_id, variants, ...productDataWithoutId} = productToProcess;
+
+                const wishlistData = {
+                    Email: userDetails.Email,
+                    productId: productToProcess._id,
+                    variantId: null,
+                    variantName: null,
+                    Product_Name: productToProcess.Product_Name,
+                    Category: productToProcess.Category,
+                    Subcategory: productToProcess.Subcategory,
+                    Images: productToProcess.Images,
+                    description: productToProcess.description,
+                    material_care: productToProcess.material_care,
+                    tags: productToProcess.tags,
+                    sizes: productToProcess.sizes,
+                    gender: productToProcess.gender,
+                    Product_type: productToProcess.Product_type,
+                    price: productToProcess.price,
+                    sale_price: productToProcess.sale_price,
+                    cost_price: productToProcess.cost_price,
+                    stock: productToProcess.stock
+                };
+
+                const response = await savewishitems(wishlistData);
+                if (response) {
+                    setWishlistItems(prev => [...prev, response]);
+                }
+                Swal.fire({title: "Add to Wishlist Success !", icon: "success", draggable: true });
+            }
+        } catch (error) {
+            console.error("Error managing wishlist:", error);
+            toast.error("Failed to update wishlist. Please try again.");
+        }
+    };
 
     return (
         <>
@@ -54,68 +173,155 @@ export default function Popularproducts () {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mt-8">
                     <div className="col-span-4 ">
                         <div className='relative sticky top-20'>
-                            <img src="/images/popular-products/3.jpg" alt="" className="lg:h-[80dvh] w-full object-cover object-center" />
-                            <div className='absolute bottom-0 left-0 w-full p-4 azeret-mono'>
-                                <p className="text-sm font-semibold  bg-white/55 w-fit px-1 py-1">ESSENTIAL COLLECTION NEW DROP</p>
-                                <div className='flex gap-3 mt-3 font-semibold text-gray-600 text-sm'>
-                                    <p className='bg-white p-1'>TRACKS</p>
-                                    <p className='bg-white p-1'>T-SHIRTS</p>
-                                    <p className='bg-white p-1'>SHORTS</p>
-                                </div>
-                            </div>
+                            {data.highlightedProduct ? (
+                                <Link to={`/products-view/${data.highlightedProduct._id}`} state={{ product: data.highlightedProduct }} onClick={scrollToTop}>
+                                    <img 
+                                        src={getImageUrl(data.highlightedProduct.Images[0])} 
+                                        alt={data.highlightedProduct.Product_Name} 
+                                        className="lg:h-[80dvh] w-full object-cover object-center" 
+                                    />
+                                    <div className='absolute bottom-0 left-0 w-full p-4 azeret-mono'>
+                                        <div className='bg-white/90 p-3 rounded'>
+                                            <h3 className='font-semibold text-gray-800 mb-2'>
+                                                {data.highlightedProduct.Product_Name}
+                                            </h3>
+                                            <div className='flex gap-3 mt-3 font-semibold text-gray-600 text-sm'>
+                                                <p className='bg-white p-1'>{data.highlightedProduct.Category?.toUpperCase() || 'FEATURED'}</p>
+                                                <p className='bg-white p-1'>{data.highlightedProduct.Product_type?.toUpperCase() || 'PRODUCT'}</p>
+                                                {data.highlightedProduct.tags && (
+                                                    <p className='bg-white p-1'>{data.highlightedProduct.tags.toUpperCase()}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ) : (
+                                <>
+                                    <img src="/images/popular-products/3.jpg" alt="" className="lg:h-[80dvh] w-full object-cover object-center" />
+                                    <div className='absolute bottom-0 left-0 w-full p-4 azeret-mono'>
+                                        <div className='flex gap-3 mt-3 font-semibold text-gray-600 text-sm'>
+                                            <p className='bg-white p-1'>TRACKS</p>
+                                            <p className='bg-white p-1'>T-SHIRTS</p>
+                                            <p className='bg-white p-1'>SHORTS</p>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
                     <div className="col-span-8">
                         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                            { data?.products.map((item) => (
-                                <div className="group" key={item.id}>
-                                    <div className="relative">
-                                        <Link to={`/products-view/${item._id}`} state={{ product: item }} onClick={scrollToTop}>
-                                            <Swiper 
-                                                navigation={{
-                                                    nextEl: `.swiper-button-next-${item._id}`,
-                                                    prevEl: `.swiper-button-prev-${item._id}`,
-                                                }} modules={[Navigation]} className="mySwiper relative" loop={true} >
+                            {data?.products.map((item) => {
+                                return (
+                                    <div className="group" key={item._id}>
+                                        <div className="relative">
+                                            <Link to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
+                                                <Swiper 
+                                                    navigation={{
+                                                        nextEl: `.swiper-button-next-${item._id}`,
+                                                        prevEl: `.swiper-button-prev-${item._id}`,
+                                                    }} 
+                                                    modules={[Navigation]} 
+                                                    className="mySwiper relative" 
+                                                    loop={true} 
+                                                >
                                                     {item.Images?.map((img, index) => (
-                                                        <SwiperSlide key={index}><img src={getImageUrl(img)} alt="" className="w-full h-auto" /></SwiperSlide>
+                                                        <SwiperSlide key={index}>
+                                                            <img src={getImageUrl(img)} alt={item.Product_Name} className="w-full h-auto" />
+                                                        </SwiperSlide>
                                                     ))}
-                                            </Swiper>
-                                        </Link>
-                                        
-                                        <div className="absolute top-2 left-2 bg-white/60 p-1 z-10">
-                                            <p className="text-sm flex justify-center items-center">{item.tags}</p>
-                                        </div>
-                                        <div className="absolute top-2 right-2 bg-white p-1 z-10">
-                                            <i className="fi fi-rr-heart flex justify-center items-center"></i>
-                                        </div>
-                                        <div className="opacity-0 group-hover:opacity-100">
-                                            <div className={`swiper-button-prev-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
-                                                <ChevronLeft/>
+                                                </Swiper>
+                                            </Link>
+                                            
+                                            <div className="absolute top-2 left-2 bg-white/60 p-1 z-10">
+                                                <p className="text-sm flex justify-center items-center">{item.tags || 'NEW'}</p>
                                             </div>
-                                            <div className={`swiper-button-next-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
-                                                <ChevronRight/>
+                                            <div className="absolute top-2 right-2 bg-white p-1 z-10">
+                                               <i className={`fi ${checkIfInWishlist(item, null) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(item); }}></i>
+                                            </div>
+                                            <div className="opacity-0 group-hover:opacity-100">
+                                                <div className={`swiper-button-prev-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
+                                                    <ChevronLeft/>
+                                                </div>
+                                                <div className={`swiper-button-next-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
+                                                    <ChevronRight/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 px-1">
+                                            <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                                                {item.Product_Name}
+                                            </h3>
+                                            
+                                            <div className="mt-1 flex items-center gap-2">
+                                                {(() => {
+                                                    if (item.price || item.sale_price) {
+                                                        const hasGlobalSalePrice = item.sale_price && parseFloat(item.sale_price) > 0;
+                                                        
+                                                        if (hasGlobalSalePrice) {
+                                                            return (
+                                                                <>
+                                                                    <span className="text-lg font-semibold text-gray-900">
+                                                                        ₹{item.sale_price}
+                                                                    </span>
+                                                                    <span className="text-sm text-gray-500 line-through">
+                                                                        ₹{item.price}
+                                                                    </span>
+                                                                </>
+                                                            );
+                                                        } else {
+                                                            return (
+                                                                <span className="text-lg font-semibold text-gray-900">
+                                                                    ₹{item.price}
+                                                                </span>
+                                                            );
+                                                        }
+                                                    } 
+                                                    else if (item.sizes && item.sizes.length > 0) {
+                                                        const firstSize = item.sizes[0];
+                                                        const hasSizeWiseSalePrice = firstSize.sale_price && parseFloat(firstSize.sale_price) > 0;
+                                                        
+                                                        if (hasSizeWiseSalePrice) {
+                                                            return (
+                                                                <>
+                                                                    <span className="text-lg font-semibold text-gray-900">
+                                                                        ₹{firstSize.sale_price}
+                                                                    </span>
+                                                                    <span className="text-sm text-gray-500 line-through">
+                                                                        ₹{firstSize.price}
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-400">
+                                                                        ({firstSize.size})
+                                                                    </span>
+                                                                </>
+                                                            );
+                                                        } else {
+                                                            return (
+                                                                <>
+                                                                    <span className="text-lg font-semibold text-gray-900">
+                                                                        ₹{firstSize.price}
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-400">
+                                                                        ({firstSize.size})
+                                                                    </span>
+                                                                </>
+                                                            );
+                                                        }
+                                                    }
+                                                    else {
+                                                        return (
+                                                            <span className="text-lg font-semibold text-gray-900">
+                                                                Price not available
+                                                            </span>
+                                                        );
+                                                    }
+                                                })()}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-3 px-1">
-                                <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                                    {item.Product_Name}
-                                </h3>
-                                <div className="mt-1 flex items-center gap-2">
-                                    <span className="text-lg font-semibold text-gray-900">
-                                        ₹{item.discounted_sale_price || item.sale_price}
-                                    </span>
-                                    {item.discounted_sale_price && item.discount && parseInt(item.discount) > 0 && (
-                                        <>
-                                            <span className="text-sm text-gray-500 line-through">₹{item.sale_price}</span>
-                                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5">{item.discount}% OFF</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                                </div>
-                            )) }
+                                )
+                            })}
                         </div>
                     </div>
                 </div>

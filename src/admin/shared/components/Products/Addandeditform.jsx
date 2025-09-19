@@ -270,44 +270,44 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
 
                     <div className="bg-gray-50 p-4 rounded-lg">
                         <h3 className="text-lg font-semibold mb-4">Product Details</h3>
-                       
-                        <div className="mb-4">
-                            <label className="block text-sm font-semibold text-gray-800 mb-2">Description *</label>
-                              <SunEditor setContents={formdata?.description || ''} onChange={(content) => handlechange({ target: { name: 'description', value: content } })}
-                                    setOptions={{
-                                        defaultStyle: "font-family: Arial, sans-serif;",
-                                        font: ['Arial'],
-                                        buttonList: [
-                                            ['undo', 'redo', 'fontSize', 'formatBlock'],
-                                            ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
-                                            ['fontColor', 'hiliteColor', 'textStyle'],
-                                            ['align', 'list', 'lineHeight'],
-                                            ['outdent', 'indent'],
-                                        ]
-                                    }}
-                                    height="150px"
-                                />
-                        </div>
+                        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                            <div className="mb-4">
+                                <label className="block text-sm font-semibold text-gray-800 mb-2">Description *</label>
+                                <SunEditor setContents={formdata?.description || ''} onChange={(content) => handlechange({ target: { name: 'description', value: content } })}
+                                        setOptions={{
+                                            defaultStyle: "font-family: Arial, sans-serif;",
+                                            font: ['Arial'],
+                                            buttonList: [
+                                                ['undo', 'redo', 'fontSize', 'formatBlock'],
+                                                ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
+                                                ['fontColor', 'hiliteColor', 'textStyle'],
+                                                ['align', 'list', 'lineHeight'],
+                                                ['outdent', 'indent'],
+                                            ]
+                                        }}
+                                        height="150px"
+                                    />
+                            </div>
 
-                        <div className="mb-4">
-                            <label className="block text-sm font-semibold text-gray-800 mb-2">Material Care *</label>
-                             <SunEditor setContents={formdata?.material_care || ''} onChange={(content) => handlechange({ target: { name: 'material_care', value: content } })}
-                                    setOptions={{
-                                        defaultStyle: "font-family: Arial, sans-serif;",
-                                        font: ['Arial'],
-                                        buttonList: [
-                                            ['undo', 'redo', 'fontSize', 'formatBlock'],
-                                            ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
-                                            ['fontColor', 'hiliteColor', 'textStyle'],
-                                            ['align', 'list', 'lineHeight'],
-                                            ['outdent', 'indent'],
-                                        ]
-                                    }}
-                                    height="150px"
-                                />
+                            <div className="mb-4">
+                                <label className="block text-sm font-semibold text-gray-800 mb-2">Material Care *</label>
+                                <SunEditor setContents={formdata?.material_care || ''} onChange={(content) => handlechange({ target: { name: 'material_care', value: content } })}
+                                        setOptions={{
+                                            defaultStyle: "font-family: Arial, sans-serif;",
+                                            font: ['Arial'],
+                                            buttonList: [
+                                                ['undo', 'redo', 'fontSize', 'formatBlock'],
+                                                ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
+                                                ['fontColor', 'hiliteColor', 'textStyle'],
+                                                ['align', 'list', 'lineHeight'],
+                                                ['outdent', 'indent'],
+                                            ]
+                                        }}
+                                        height="150px"
+                                    />
+                            </div>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                             <div className="mb-4">
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Gender *</label>
                                  <Dropdown 
@@ -448,14 +448,14 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                     <option value="Inactive">Out of Stock</option>
                                 </select>
                             </div>
-                           <div>
+                           {/* <div>
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Show in Popular Products (Home)</label>
                                 <input type="checkbox" 
                                     name="is_popular_products"
                                     checked={formdata?.is_popular_products || false} 
                                     onChange={handlechange}
                                     className="w-5 h-5 border border-gray-300 rounded" />
-                            </div>
+                            </div> */}
                         </div>
 
                         <div>
@@ -504,7 +504,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
                                             placeholder="e.g., Red, Blue, Green" required/>
                                     </div>
-
+                                <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
                                     <div className='mb-2'>
                                         <label className="block text-sm font-medium mb-1">Material Care</label>
                                          <SunEditor setContents={variant.material_care || ''} onChange={(content) => updateVariantField(index, 'material_care', content)}
@@ -539,6 +539,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                             }}
                                             height="150px"
                                         />
+                                </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">

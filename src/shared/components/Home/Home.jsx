@@ -41,10 +41,8 @@ export default function Home() {
     };
 
     const handleBannerClick = (redirectLink, productIds, bannerName) => {
-        console.log('Banner clicked:', { redirectLink, productIds, bannerName }); // Debug log
         
         if (redirectLink && redirectLink.trim() !== '') {
-            // If there's a specific redirect link, use it
             navigate(redirectLink, { 
                 state: { 
                     productIds: productIds,
@@ -53,7 +51,6 @@ export default function Home() {
                 } 
             });
         } else if (productIds && productIds.length > 0) {
-            // If no redirect link but there are product IDs, go to banner products page
             navigate('/banner-products', { 
                 state: { 
                     productIds: productIds,

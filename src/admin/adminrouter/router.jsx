@@ -7,6 +7,8 @@ import Customerpage from "../components/Customerpage";
 import Hookuppage from "../components/Hookuppage";
 import Homecategoriespage from "../components/Homecategoriespage";
 import Homebannerpage from "../components/Homebannerpage";
+import Popularproductspage from "../components/PopularProductspage";
+import Orderspage from "../components/Orderspage";
 
 export default function Dashboardrouter() {
 
@@ -24,6 +26,8 @@ export default function Dashboardrouter() {
                 <Route path="/hookups" element={<Hookuppage/>}/>
                 <Route path="/categories" element={<Homecategoriespage/>}/>
                 <Route path="/home-banner" element={<Homebannerpage/>}/>
+                <Route path="/popular-products" element={<Popularproductspage/>}/>
+                <Route path="/orders" element={<Orderspage/>}/>
 
                 <Route path="/" element={<Navigate to={getRedirectPath()} replace />} />
             </Route>

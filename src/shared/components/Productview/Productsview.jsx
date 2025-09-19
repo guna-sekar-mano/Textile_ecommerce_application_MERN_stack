@@ -33,17 +33,14 @@ export default function Productsview({selected, container2Ref, container3Ref, co
         });
     };
 
-    // Function to get pricing information based on current selection
     const getPricingInfo = () => {
         const productData = selectedVariant || product;
         
-        // Check if product has size-specific pricing
         const hasSizeSpecificPricing = productData?.sizes && productData.sizes.length > 0 && 
             productData.sizes.some(sizeObj => sizeObj.price || sizeObj.sale_price);
         
         if (hasSizeSpecificPricing) {
             if (selectedSize) {
-                // Show price for selected size
                 const sizeData = productData.sizes.find(s => s.size === selectedSize);
                 if (sizeData) {
                     return {
@@ -54,7 +51,6 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                     };
                 }
             } else {
-                // Show price range when no size is selected
                 const prices = productData.sizes
                     .map(s => parseFloat(s.sale_price && s.sale_price !== "0" ? s.sale_price : s.price))
                     .filter(price => !isNaN(price))
@@ -75,7 +71,6 @@ export default function Productsview({selected, container2Ref, container3Ref, co
             }
         }
         
-        // Fallback to regular pricing logic
         if (productData?.sale_price && productData.sale_price !== "0" && productData?.price) {
             return {
                 currentPrice: productData.sale_price,
@@ -123,10 +118,10 @@ export default function Productsview({selected, container2Ref, container3Ref, co
 
     const handleAddToCart = async (product) => {
         const userDetails = userdetails;
-        if (!userDetails) {
-            toast.error("Please log in to add items to your cart!");
-            return;
-        }
+        // if (!userDetails) {
+        //     toast.error("Please log in to add items to your cart!");
+        //     return;
+        // }
 
         if (!selectedSize) {
             toast.error("Please select a size!");
@@ -167,10 +162,40 @@ export default function Productsview({selected, container2Ref, container3Ref, co
         }
     };
 
+    const createWishlistData = (mainProduct, variant, userEmail) => {
+        const isVariant = variant !== null;
+        
+        const getValue = (variantValue, mainValue) => variantValue || mainValue;
+        
+        return {
+            Email: userEmail,
+            productId: mainProduct._id,
+            variantId: variant?._id || null,
+            variantName: variant?.variant_name || null,
+            Product_Name: isVariant ? `${mainProduct.Product_Name} - ${variant.variant_name}` : mainProduct.Product_Name,
+            Category: mainProduct.Category,
+            Subcategory: mainProduct.Subcategory,
+            Images: (isVariant && variant.variant_images?.length > 0) ? variant.variant_images : mainProduct.Images,
+            variant_images: variant?.variant_images || null,
+            description: getValue(variant?.description, mainProduct.description),
+            material_care: getValue(variant?.material_care, mainProduct.material_care),
+            tags: getValue(variant?.tags, mainProduct.tags),
+            sizes: (isVariant && variant.sizes?.length > 0) ? variant.sizes : mainProduct.sizes,
+            gender: getValue(variant?.gender, mainProduct.gender),
+            Product_type: getValue(variant?.Product_type, mainProduct.Product_type),
+            price: getValue(variant?.price, mainProduct.price),
+            sale_price: getValue(variant?.sale_price, mainProduct.sale_price),
+            cost_price: getValue(variant?.cost_price, mainProduct.cost_price),
+            stock: getValue(variant?.stock, mainProduct.stock),
+            status: mainProduct.status,
+            is_popular_products: mainProduct.is_popular_products
+        };
+    };
+
     const addWish = async (productData) => {
         try {
             const userDetails = userdetails;
-            if (!userDetails || !userDetails.Email) {
+            if (!userDetails?.Email) {
                 toast.error("Please log in to manage your wishlist!");  
                 return;
             }
@@ -195,38 +220,13 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                     });
                 }
             } else {
-                const {_id,variants,...productDataWithoutId} = productToProcess;
-
-                const wishlistData = {
-                    Email: userDetails.Email,
-                    productId: productToProcess._id,
-                    variantId: selectedVariant?._id || null,
-                    variantName: selectedVariant?.variant_name || null,
-                    Product_Name: productToProcess.Product_Name,
-                    Category: productToProcess.Category,
-                    Subcategory: productToProcess.Subcategory,
-                    Images: productToProcess.Images,
-                    description: productToProcess.description,
-                    material_care: productToProcess.material_care,
-                    tags: productToProcess.tags,
-                    sizes: productToProcess.sizes,
-                    gender: productToProcess.gender,
-                    Product_type: productToProcess.Product_type,
-                    sale_price: productToProcess.sale_price,
-                    discount: productToProcess.discount,
-                    discounted_sale_price: productToProcess.discounted_sale_price,
-                    stock: productToProcess.stock
-                };
-
+                const wishlistData = createWishlistData(productToProcess, selectedVariant, userDetails.Email);
+                
                 const response = await savewishitems(wishlistData);
                 if (response) {
                     setWishlistItems(prev => [...prev, response]);
                 }
-                Swal.fire({
-                    title: "Add to Wishlist Success !",
-                    icon: "success",
-                    draggable: true
-                });
+                Swal.fire({title: "Add to Wishlist Success !", icon: "success", draggable: true });
             }
         } catch (error) {
             console.error("Error managing wishlist:", error);

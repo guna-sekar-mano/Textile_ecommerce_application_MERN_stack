@@ -10,6 +10,13 @@ import useAuth from "../../services/store/useAuth";
 import { Link } from "react-router-dom";
 import apiurl from "../../services/apiendpoint/apiendpoint";
 
+// const toUrlFriendly = (str) => {
+//   return str
+//     .toLowerCase()
+//     .replace(/[^a-z0-9]+/g, '-')
+//     .replace(/^-+|-+$/g, '');
+// };
+
 export default function Cart() {
     const { userdetails } = useAuth();
     let isMounted = true;
@@ -29,37 +36,59 @@ export default function Cart() {
     }, [cart]);
 
     const getProductDetails = (item) => {
-        if (item.productId) {
-            return {
-                name: item.productId.Product_Name,
-                image: item.productId.Images?.[0],
-                price: Number(item.productId.sale_price) || 0,
-                discountedPrice: item.productId.discounted_sale_price ? Number(item.productId.discounted_sale_price) : null
-            };
-        } else if (item.variantId && safeCart.length > 0) {
-            const mainProduct = safeCart.find(cartItem => 
-                cartItem.productId?.variants?.some(variant => variant._id === item.variantId)
-            );
-            
-            if (mainProduct) {
-                const variant = mainProduct.productId.variants.find(v => v._id === item.variantId);
+        let productData = null;
+        let name = "Unknown Product";
+        let image = null;
+
+        if (item.variantId) {
+            if (item.variant_name || item.variant_images) {
+                productData = item;
+                name = item.variant_name;
+                image = item.variant_images?.[0];
+            } else if (item.variantData) {
+                productData = item.variantData;
+                name = item.variantData.variant_name;
+                image = item.variantData.variant_images?.[0];
+            } else if (item.productId?.variants) {
+                const variant = item.productId.variants.find(v => v._id === item.variantId);
                 if (variant) {
-                    return {
-                        name: variant.variant_name,
-                        image: variant.variant_images?.[0],
-                        price: Number(variant.sale_price) || 0,
-                        discountedPrice: variant.discounted_sale_price ? Number(variant.discounted_sale_price) : null
-                    };
+                    productData = variant;
+                    name = variant.variant_name;
+                    image = variant.variant_images?.[0];
                 }
             }
+        } else if (item.productId) {
+            productData = item.productId;
+            name = item.productId.Product_Name;
+            image = item.productId.Images?.[0];
+        } else if (item.Product_Name || item.variant_name) {
+            productData = item;
+            name = item.Product_Name || item.variant_name;
+            image = item.Images?.[0] || item.variant_images?.[0];
+        }
+
+        if (!productData) {
+            return { name, image, price: 0, discountedPrice: null };
+        }
+
+        const selectedSizeData = productData.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
+        
+        let price = 0;
+        let discountedPrice = null;
+        
+        if (selectedSizeData) {
+            price = Number(selectedSizeData.price) || 0;
+            discountedPrice = selectedSizeData.sale_price && 
+                            selectedSizeData.sale_price !== "0" && 
+                            selectedSizeData.sale_price !== "" ? 
+                            Number(selectedSizeData.sale_price) : null;
+        } else {
+            price = Number(productData.sale_price) || Number(productData.price) || 0;
+            discountedPrice = productData.discounted_sale_price ? 
+                            Number(productData.discounted_sale_price) : null;
         }
         
-        return {
-            name: "Unknown Product",
-            image: null,
-            price: 0,
-            discountedPrice: null
-        };
+        return { name, image, price, discountedPrice };
     };
 
     const calculateTotals = () => {
@@ -79,6 +108,10 @@ export default function Cart() {
     };
 
     const { totalQuantity, subTotal } = calculateTotals();
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     return (
         <>
@@ -116,6 +149,15 @@ export default function Cart() {
                                                                     <p className="text-gray-500 text-sm">Size: {item.selectedSize}</p>
                                                                     {item.variantId && <p className="text-gray-500 text-xs">Variant</p>}
                                                                 </div>
+                                                                 {/* {item.productId ? (
+                                                                    <Link to={`/products-view/${toUrlFriendly(item.productId.Product_type)}/${toUrlFriendly(item.productId.Product_Name)}`} state={{ product: item.productId, productId: item.productId._id }} onClick={scrollToTop}>
+                                                                        <img src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'} alt={productDetails.name} 
+                                                                            className="h-20 w-20 object-cover object-center" />
+                                                                    </Link>
+                                                                ) : (
+                                                                    <img src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'} alt={productDetails.name} 
+                                                                        className="h-20 w-20 object-cover object-center" />
+                                                                )} */}
                                                             </div>
                                                         </div>
                                                         <div className="col-span-2 font-semibold">
@@ -242,7 +284,7 @@ export default function Cart() {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-4 lg:mt-0 mt-6">
+                        <div className="lg:col-span-4 lg:mt-0 mt-6 sticky top-20 self-start">
                             <div className="bg-gray-200 p-4">
                                 <p className="mb-1 font-semibold">CART SUMMARY</p>
                                 <hr />

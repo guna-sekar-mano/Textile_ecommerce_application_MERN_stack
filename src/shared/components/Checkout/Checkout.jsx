@@ -1,21 +1,23 @@
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../../services/store/useAuth";
-import { usePaymentHandlers } from "./Paymentfunctions";
 import useCartStore from "../../services/store/usecart";
 import { useCallback, useEffect, useState } from "react";
 import { apigetshippingDetails } from "../../services/apishipping/apishipping";
 import { getcartItems } from "../../services/apicart/apicart";
 import apiurl from "../../services/apiendpoint/apiendpoint";
+import toast from "react-hot-toast";
+import { useOrderHandlers } from "./Paymentfunctions";
 
 export default function Checkout () {
 
     const [shippingDetails, setShippingDetails] = useState([]);
     const [selectedAddressIndex, setSelectedAddressIndex] = useState(0);
     const [checked, setChecked] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const { userdetails } = useAuth();
-    const { cart, setCartItems,clearCart } = useCartStore();
+    const { cart, setCartItems, clearCart } = useCartStore();
     const navigate = useNavigate();
-    const { initializePayment } = usePaymentHandlers(cart, userdetails, clearCart, setCartItems, navigate);
+    const { createOrder } = useOrderHandlers(cart, userdetails, clearCart, setCartItems, navigate);
     const safeCart = Array.isArray(cart) ? cart : [];
 
     let isMounted = true;
@@ -32,49 +34,80 @@ export default function Checkout () {
     const fetchCartItems = useCallback(async () => {
         try {
             const response = await getcartItems(userdetails?.Email);
-            if (JSON.stringify(cart) !== JSON.stringify(response.response)) {
+            if (response?.response && JSON.stringify(cart) !== JSON.stringify(response.response)) {
                 setCartItems(response.response);
             }
         } catch (error) {
             console.log('Error fetching cart items:', error);
         }
-    }, [userdetails?.Email, cart, setCartItems]);
+    }, [userdetails?.Email]);
 
     useEffect(() => {
-        if(isMounted) {
-        fetchShippingDetails();
-        fetchCartItems();
+        if(isMounted && userdetails?.Email) {
+            fetchShippingDetails();
+            fetchCartItems();
         }
         return (() => isMounted = false);
-    }, [fetchShippingDetails, fetchCartItems]);
+    }, [userdetails?.Email]);
 
     const getProductDetails = (item) => {
-        if (item.productId) {
-            return {
-                name: item.productId.Product_Name,
-                image: item.productId.Images?.[0],
-                price: Number(item.productId.sale_price) || 0,
-                discountedPrice: item.productId.discounted_sale_price ? Number(item.productId.discounted_sale_price) : null
-            };
-        } else if (item.variantId && safeCart.length > 0) {
-            const mainProduct = safeCart.find(cartItem => 
-                cartItem.productId?.variants?.some(variant => variant._id === item.variantId)
-            );
-            
-            if (mainProduct) {
-                const variant = mainProduct.productId.variants.find(v => v._id === item.variantId);
+        let productData = null;
+        let name = "Unknown Product";
+        let image = null;
+
+        if (item.variantId) {
+            if (item.variant_name || item.variant_images) {
+                productData = item;
+                name = item.variant_name;
+                image = item.variant_images?.[0];
+            } 
+            else if (item.variantData) {
+                productData = item.variantData;
+                name = item.variantData.variant_name;
+                image = item.variantData.variant_images?.[0];
+            } 
+            else if (item.productId?.variants) {
+                const variant = item.productId.variants.find(v => v._id === item.variantId);
                 if (variant) {
-                    return {
-                        name: variant.variant_name,
-                        image: variant.variant_images?.[0],
-                        price: Number(variant.sale_price) || 0,
-                        discountedPrice: variant.discounted_sale_price ? Number(variant.discounted_sale_price) : null
-                    };
+                    productData = variant;
+                    name = variant.variant_name;
+                    image = variant.variant_images?.[0];
                 }
             }
+        } 
+        else if (item.productId) {
+            productData = item.productId;
+            name = item.productId.Product_Name;
+            image = item.productId.Images?.[0];
+        } 
+        else if (item.Product_Name || item.variant_name) {
+            productData = item;
+            name = item.Product_Name || item.variant_name;
+            image = item.Images?.[0] || item.variant_images?.[0];
+        }
+
+        if (!productData) {
+            return { name, image, price: 0, discountedPrice: null };
+        }
+
+        const selectedSizeData = productData.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
+        
+        let price = 0;
+        let discountedPrice = null;
+        
+        if (selectedSizeData) {
+            price = Number(selectedSizeData.price) || 0;
+            discountedPrice = selectedSizeData.sale_price && 
+                            selectedSizeData.sale_price !== "0" && 
+                            selectedSizeData.sale_price !== "" ? 
+                            Number(selectedSizeData.sale_price) : null;
+        } else {
+            price = Number(productData.sale_price) || Number(productData.price) || 0;
+            discountedPrice = productData.discounted_sale_price ? 
+                            Number(productData.discounted_sale_price) : null;
         }
         
-        return { name: "Unknown Product", image: null, price: 0, discountedPrice: null };
+        return { name, image, price, discountedPrice };
     };
 
     const calculateTotals = () => {
@@ -101,6 +134,27 @@ export default function Checkout () {
 
     const { totalQuantity, subTotal } = calculateTotals();
 
+    const handlePlaceOrder = async () => {
+        if (selectedAddressIndex === '' || !shippingDetails[selectedAddressIndex]) {
+            toast.error('Please choose an address before placing the order.');
+            return;
+        }
+
+        if (safeCart.length === 0) {
+            toast.error('Your cart is empty.');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await createOrder(shippingDetails[selectedAddressIndex], subTotal);
+        } catch (error) {
+            console.error('Order creation error:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <>
          <section className="py-10">
@@ -115,22 +169,19 @@ export default function Checkout () {
                         {shippingDetails.length > 0 ? (
                         <div className="grid grid-cols-1 mt-2 space-y-2">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.First_Name} className="w-full border border-gray-400 p-2" placeholder="First Name" />
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Last_Name} className="w-full border border-gray-400 p-2" placeholder="Last Name" />
+                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.First_Name || ''} className="w-full border border-gray-400 p-2" placeholder="First Name" readOnly />
+                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Last_Name || ''} className="w-full border border-gray-400 p-2" placeholder="Last Name" readOnly />
                             </div>
                             <div>
-                                <textarea type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Address} className="w-full border border-gray-400 p-2" placeholder="Address" />
+                                <textarea type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Address || ''} className="w-full border border-gray-400 p-2" placeholder="Address" readOnly />
                             </div>
-                            {/* <div>
-                                <input type="text" name="" id="" className="w-full border border-gray-400 p-2" placeholder="Apartment, house etc (Optional)" />
-                            </div> */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.City} className="w-full border border-gray-400 p-2" placeholder="City" />
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.State} className="w-full border border-gray-400 p-2" placeholder="State" />
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Zipcode} className="w-full border border-gray-400 p-2" placeholder="Zipcode" />
+                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.City || ''} className="w-full border border-gray-400 p-2" placeholder="City" readOnly />
+                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.State || ''} className="w-full border border-gray-400 p-2" placeholder="State" readOnly />
+                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Zipcode || ''} className="w-full border border-gray-400 p-2" placeholder="Zipcode" readOnly />
                             </div>
                             <div>
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Mobilenumber} className="w-full border border-gray-400 p-2" placeholder="Phone" />
+                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Mobilenumber || ''} className="w-full border border-gray-400 p-2" placeholder="Phone" readOnly />
                             </div>
                         </div>
                         ) : (
@@ -181,7 +232,7 @@ export default function Checkout () {
                             const itemTotal = (Number(item?.Quantity) || 0) * itemPrice;
                         return (
                             
-                            <div className="mt-3  bg-white rounded-lg" key={item._id}>
+                            <div className="mt-3  bg-white rounded-lg" key={item._id || index}>
                                 <div className=" p-4 flex justify-between">
                                     <div className="flex justify-center items-center gap-6">
                                         <div className="relative"> 
@@ -193,6 +244,7 @@ export default function Checkout () {
                                         <div>
                                             <p>{productDetails.name}</p>
                                             <span className="text-xs">SIZE:  {item.selectedSize}</span>
+                                            {item.variantId && <p className="text-gray-500 text-xs">Variant</p>}
                                         </div>
                                     </div>
                                     <div className="flex justify-center items-center">
@@ -230,7 +282,15 @@ export default function Checkout () {
 
                      
                         <div className="">
-                           <button className="bg-black w-full mt-5 text-white p-2 cursor-pointer">Pay Now</button>
+                           <button 
+                                className={`w-full mt-5 text-white p-2 cursor-pointer ${
+                                    isLoading ? 'bg-gray-500' : 'bg-black hover:bg-gray-800'
+                                }`}
+                                onClick={handlePlaceOrder}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Placing Order...' : 'Place Order'}
+                            </button>
                         </div>
                         <hr className="mt-8" />
                         <div className="flex justify-between mt-5 manrope">

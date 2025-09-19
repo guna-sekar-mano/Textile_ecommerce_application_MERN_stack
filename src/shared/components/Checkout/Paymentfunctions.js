@@ -1,9 +1,14 @@
-import { deleteAllcartItems, deletecartItem } from '../../services/apicart/apicart';
+import { deleteAllcartItems } from '../../services/apicart/apicart';
 import toast from 'react-hot-toast';
-import { apiCreateOrder, apiPaymentDone } from '../../services/apiorder/apiorder';
+import { apiPaymentDone } from '../../services/apiorder/apiorder';
 
-export const usePaymentHandlers = (cart, userdetails, clearCart, setCartItems, onClose,navigate) => {
-    const initializePayment = async (selectedAddress,total) => {
+export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, navigate) => {
+    
+    const generateOrderId = () => {
+        return `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    };
+
+    const createOrder = async (selectedAddress, total) => {
         try {
             if (!selectedAddress) {
                 toast.error('Please select or add shipping address');
@@ -15,116 +20,195 @@ export const usePaymentHandlers = (cart, userdetails, clearCart, setCartItems, o
                 return;
             }
 
+            if (!cart || cart.length === 0) {
+                toast.error('Your cart is empty');
+                return;
+            }
+
+            const orderId = generateOrderId();
+
             const orderData = {
+                Order_id: orderId,
                 Total_Amount: total,
                 Billing_Name: `${selectedAddress.First_Name} ${selectedAddress.Last_Name}`.trim(),
                 Email: userdetails?.Email,
                 Mobilenumber: selectedAddress.Mobilenumber,
-                Delivery_Address: `${selectedAddress.Address}, ${selectedAddress.City} - ${selectedAddress.Zipcode}, ${selectedAddress.State}, ${selectedAddress.Country}`.trim(),
+                Delivery_Address: `${selectedAddress.Address}, ${selectedAddress.City} - ${selectedAddress.Zipcode}, ${selectedAddress.State}`.trim(),
                 City: selectedAddress.City,
                 State: selectedAddress.State,
-                Country: selectedAddress.Country,
+                Country: selectedAddress.Country || 'India',
                 Zipcode: selectedAddress.Zipcode,
                 Delivery_Address_id: selectedAddress._id,
-                Payment_Status: "Pending",
-                Order_Status: "Payment Pending",
-                currency: "INR"
+                Payment_Status: "Not Paid",
+                Order_Status: "Order Placed"
             };
 
-            const orderResponse = await apiCreateOrder(orderData);
-            
-            if (!orderResponse?.data?.id) {
-                toast.error('Failed to create order. Please try again.');
-                return;
-            }
-
-            let paymentAttempted = false;
-
-            razorpay.on('payment.failed', async function(response) {
-                paymentAttempted = true;
-                await handlePaymentFailure(orderData, orderResponse, response.error.description);
+            const orderItems = cart.map(item => {
+                const productData = getProductData(item);
+                
+                return {
+                    Order_id: orderId,
+                    productId: item.productId?._id || item.productId,
+                    variantId: item.variantId || null,
+                    Product_Name: productData.name,
+                    variant_name: item.variantId ? productData.variant_name : null,
+                    Images: productData.images,
+                    variant_images: item.variantId ? productData.variant_images : null,
+                    price: productData.price.toString(),
+                    sale_price: productData.sale_price ? productData.sale_price.toString() : null,
+                    selectedSize: item.selectedSize,
+                    Quantity: Number(item.Quantity),
+                    Category: item.productId?.Category || item.Category,
+                    Subcategory: item.productId?.Subcategory || item.Subcategory,
+                    Product_type: item.productId?.Product_type || item.Product_type,
+                    tags: item.productId?.tags || item.tags
+                };
             });
 
-            razorpay.open();
-
-        } catch (error) {
-            console.error('Payment initialization error:', error);
-            toast.error(error.response?.data?.error || 'Failed to initialize payment');
-        }
-    };
-
-    const handlePaymentSuccess = async (response, orderData, orderResponse) => {
-        try {
-            const orderItems = cart.map(item => ({
-                First_Name: orderData.First_Name,
-                Book_Name: item.productId.Book_Name,
-                Book_image: item.productId.Book_image,
-                Regular_Price: item.productId.Regular_Price,
-                Discount: item.productId.Discount,
-                Sale_Price: item.productId.Sale_Price,
-                Quantity: item.Quantity
-            }));
-
-            const paymentData = {
-                orderdata: {
-                    ...orderData,
-                    Order_id: orderResponse.data.receipt,
-                    Payment_Status: "Paid",
-                    Order_Status: "Confirmed"
-                },
-                ordermasterdata: orderItems
+            const completeOrderData = {
+                orderData: orderData,
+                orderItems: orderItems
             };
 
-            const saveResponse = await apiPaymentDone(paymentData);
+            const saveResponse = await apiPaymentDone(completeOrderData);
 
-            if (saveResponse.message === "Order saved successfully" || 
-                saveResponse.message === "Order updated successfully") {
-                toast.success('Payment successful and order placed!');
-                await deletecartItem();
-                await deleteAllcartItems();
-                clearCart();
-                setCartItems([]);
-                onClose();
-                navigate('/myorder');
+            if (saveResponse.success || saveResponse.message === "Order saved successfully") {
+                toast.success('Order placed successfully!');
+                
+                try {
+                    await deleteAllcartItems(userdetails?.Email);
+                    clearCart();
+                    setCartItems([]);
+                } catch (cartError) {
+                    console.error('Error clearing cart:', cartError);
+                    // Don't show error to user as order was successful
+                }
+                
+                navigate('/my-orders');
+            } else {
+                throw new Error(saveResponse.message || 'Failed to place order');
             }
+
         } catch (error) {
-            console.error('Error saving successful order:', error);
-            toast.error('Payment successful but order saving failed');
+            console.error('Order creation error:', error);
+            toast.error(error.response?.data?.message || error.message || 'Failed to place order. Please try again.');
         }
     };
 
-    const handlePaymentFailure = async (orderData, orderResponse, errorMessage) => {
-        try {
-            const orderItems = cart.map(item => ({
-                First_Name: orderData.First_Name,
-                Book_Name: item.productId.Book_Name,
-                Book_image: item.productId.Book_image,
-                Regular_Price: item.productId.Regular_Price,
-                Discount: item.productId.Discount,
-                Sale_Price: item.productId.Sale_Price,
-                Quantity: item.Quantity
-            }));
+    const getProductData = (item) => {
+        let productData = {
+            name: "Unknown Product",
+            images: [],
+            variant_images: null,
+            variant_name: null,
+            price: 0,
+            sale_price: null
+        };
 
-            const paymentData = {
-                orderdata: {
-                    ...orderData,
-                    Order_id: orderResponse.data.receipt,
-                    Payment_Status: "Failed",
-                    Order_Status: "Payment Failed",
-                    failed_reason: errorMessage
-                },
-                ordermasterdata: orderItems
-            };
-
-            await apiPaymentDone(paymentData);
-            toast.error(`Payment failed: ${errorMessage}`);
-        } catch (error) {
-            console.error('Error saving failed order:', error);
-            toast.error('Failed to save order details');
+        // Handle variant products
+        if (item.variantId) {
+            if (item.variant_name || item.variant_images) {
+                // Variant data is directly in item
+                productData.name = item.variant_name || item.Product_Name;
+                productData.variant_name = item.variant_name;
+                productData.images = item.productId?.Images || [];
+                productData.variant_images = item.variant_images || [];
+                
+                const selectedSizeData = item.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
+                if (selectedSizeData) {
+                    productData.price = Number(selectedSizeData.price) || 0;
+                    productData.sale_price = selectedSizeData.sale_price && 
+                                           selectedSizeData.sale_price !== "0" && 
+                                           selectedSizeData.sale_price !== "" ? 
+                                           Number(selectedSizeData.sale_price) : null;
+                } else {
+                    productData.price = Number(item.price) || Number(item.sale_price) || 0;
+                    productData.sale_price = item.sale_price ? Number(item.sale_price) : null;
+                }
+            } 
+            else if (item.variantData) {
+                // Variant data is in variantData property
+                productData.name = item.variantData.variant_name;
+                productData.variant_name = item.variantData.variant_name;
+                productData.images = item.productId?.Images || [];
+                productData.variant_images = item.variantData.variant_images || [];
+                
+                const selectedSizeData = item.variantData.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
+                if (selectedSizeData) {
+                    productData.price = Number(selectedSizeData.price) || 0;
+                    productData.sale_price = selectedSizeData.sale_price && 
+                                           selectedSizeData.sale_price !== "0" && 
+                                           selectedSizeData.sale_price !== "" ? 
+                                           Number(selectedSizeData.sale_price) : null;
+                } else {
+                    productData.price = Number(item.variantData.price) || Number(item.variantData.sale_price) || 0;
+                    productData.sale_price = item.variantData.sale_price ? Number(item.variantData.sale_price) : null;
+                }
+            } 
+            else if (item.productId?.variants) {
+                // Find variant in product variants array
+                const variant = item.productId.variants.find(v => v._id === item.variantId);
+                if (variant) {
+                    productData.name = variant.variant_name;
+                    productData.variant_name = variant.variant_name;
+                    productData.images = item.productId.Images || [];
+                    productData.variant_images = variant.variant_images || [];
+                    
+                    const selectedSizeData = variant.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
+                    if (selectedSizeData) {
+                        productData.price = Number(selectedSizeData.price) || 0;
+                        productData.sale_price = selectedSizeData.sale_price && 
+                                               selectedSizeData.sale_price !== "0" && 
+                                               selectedSizeData.sale_price !== "" ? 
+                                               Number(selectedSizeData.sale_price) : null;
+                    } else {
+                        productData.price = Number(variant.price) || Number(variant.sale_price) || 0;
+                        productData.sale_price = variant.sale_price ? Number(variant.sale_price) : null;
+                    }
+                }
+            }
+        } 
+        // Handle regular products
+        else if (item.productId) {
+            productData.name = item.productId.Product_Name;
+            productData.images = item.productId.Images || [];
+            
+            const selectedSizeData = item.productId.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
+            if (selectedSizeData) {
+                productData.price = Number(selectedSizeData.price) || 0;
+                productData.sale_price = selectedSizeData.sale_price && 
+                                       selectedSizeData.sale_price !== "0" && 
+                                       selectedSizeData.sale_price !== "" ? 
+                                       Number(selectedSizeData.sale_price) : null;
+            } else {
+                productData.price = Number(item.productId.price) || Number(item.productId.sale_price) || 0;
+                productData.sale_price = item.productId.sale_price ? Number(item.productId.sale_price) : null;
+            }
+        } 
+        // Handle direct product data
+        else if (item.Product_Name || item.variant_name) {
+            productData.name = item.Product_Name || item.variant_name;
+            productData.images = item.Images || [];
+            productData.variant_images = item.variant_images || null;
+            productData.variant_name = item.variant_name || null;
+            
+            const selectedSizeData = item.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
+            if (selectedSizeData) {
+                productData.price = Number(selectedSizeData.price) || 0;
+                productData.sale_price = selectedSizeData.sale_price && 
+                                       selectedSizeData.sale_price !== "0" && 
+                                       selectedSizeData.sale_price !== "" ? 
+                                       Number(selectedSizeData.sale_price) : null;
+            } else {
+                productData.price = Number(item.price) || Number(item.sale_price) || 0;
+                productData.sale_price = item.sale_price ? Number(item.sale_price) : null;
+            }
         }
+
+        return productData;
     };
 
     return {
-        initializePayment
+        createOrder
     };
 };

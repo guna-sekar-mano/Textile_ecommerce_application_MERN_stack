@@ -4,13 +4,6 @@ import { useParams, useLocation } from 'react-router-dom';
 import apiurl from '../shared/services/apiendpoint/apiendpoint';
 import { getCustomerProductById } from '../shared/services/apicustomerProducts/apicustomerproducts';
 
-const toUrlFriendly = (str) => {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-};
-
 export default function ProductsViewPage() {
   const [selected, setSelected] = useState(1);
   const container3Ref = useRef(null);

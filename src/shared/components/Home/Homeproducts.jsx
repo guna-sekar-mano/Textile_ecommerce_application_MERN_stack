@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { deleteOnewishitems, getAllwishitems, savewishitems } from '../../services/apiwishlist/apiwishlist';
 import useAuth from '../../services/store/useAuth';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2'
 
 const toUrlFriendly = (str) => {
   return str
@@ -129,7 +130,7 @@ export default function Homeproducts() {
                 if (wishlistItem) {
                     await deleteOnewishitems(wishlistItem._id);
                     setWishlistItems(prev => prev.filter(item => item._id !== wishlistItem._id));
-                    toast.success("Removed from wishlist!");
+                    Swal.fire({title: "Removed from wishlist !", icon: "success", draggable: true });
                 }
             } else {
                 const {_id, variants, ...productDataWithoutId} = productToProcess;
@@ -149,9 +150,9 @@ export default function Homeproducts() {
                     sizes: productToProcess.sizes,
                     gender: productToProcess.gender,
                     Product_type: productToProcess.Product_type,
+                    price: productToProcess.price,
                     sale_price: productToProcess.sale_price,
-                    discount: productToProcess.discount,
-                    discounted_sale_price: productToProcess.discounted_sale_price,
+                    cost_price: productToProcess.cost_price,
                     stock: productToProcess.stock
                 };
 
@@ -159,7 +160,7 @@ export default function Homeproducts() {
                 if (response) {
                     setWishlistItems(prev => [...prev, response]);
                 }
-                toast.success("Added to wishlist!");
+                Swal.fire({title: "Add to Wishlist Success !", icon: "success", draggable: true });
             }
         } catch (error) {
             console.error("Error managing wishlist:", error);
@@ -234,16 +235,70 @@ export default function Homeproducts() {
                                 <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
                                     {item.Product_Name}
                                 </h3>
+
                                 <div className="mt-1 flex items-center gap-2">
-                                    <span className="text-lg font-semibold text-gray-900">
-                                        ₹{item.discounted_sale_price || item.sale_price}
-                                    </span>
-                                    {item.discounted_sale_price && item.discount && parseInt(item.discount) > 0 && (
-                                        <>
-                                            <span className="text-sm text-gray-500 line-through">₹{item.sale_price}</span>
-                                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5">{item.discount}% OFF</span>
-                                        </>
-                                    )}
+                                    {(() => {
+                                        if (item.price || item.sale_price) {
+                                            const hasGlobalSalePrice = item.sale_price && parseFloat(item.sale_price) > 0;
+                                            
+                                            if (hasGlobalSalePrice) {
+                                                return (
+                                                    <>
+                                                        <span className="text-lg font-semibold text-gray-900">
+                                                            ₹{item.sale_price}
+                                                        </span>
+                                                        <span className="text-sm text-gray-500 line-through">
+                                                            ₹{item.price}
+                                                        </span>
+                                                    </>
+                                                );
+                                            } else {
+                                                return (
+                                                    <span className="text-lg font-semibold text-gray-900">
+                                                        ₹{item.price}
+                                                    </span>
+                                                );
+                                            }
+                                        } 
+                                        else if (item.sizes && item.sizes.length > 0) {
+                                            const firstSize = item.sizes[0];
+                                            const hasSizeWiseSalePrice = firstSize.sale_price && parseFloat(firstSize.sale_price) > 0;
+                                            
+                                            if (hasSizeWiseSalePrice) {
+                                                return (
+                                                    <>
+                                                        <span className="text-lg font-semibold text-gray-900">
+                                                            ₹{firstSize.sale_price}
+                                                        </span>
+                                                        <span className="text-sm text-gray-500 line-through">
+                                                            ₹{firstSize.price}
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">
+                                                            ({firstSize.size})
+                                                        </span>
+                                                    </>
+                                                );
+                                            } else {
+                                                return (
+                                                    <>
+                                                        <span className="text-lg font-semibold text-gray-900">
+                                                            ₹{firstSize.price}
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">
+                                                            ({firstSize.size})
+                                                        </span>
+                                                    </>
+                                                );
+                                            }
+                                        }
+                                        else {
+                                            return (
+                                                <span className="text-lg font-semibold text-gray-900">
+                                                    Price not available
+                                                </span>
+                                            );
+                                        }
+                                    })()}
                                 </div>
                             </div>
                         </div>

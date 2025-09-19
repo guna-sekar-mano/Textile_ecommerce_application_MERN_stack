@@ -217,9 +217,9 @@ export default function Header() {
                                         isUserDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
                                     }`}>
                                         <div className="py-2">
-                                            <Link to="/my-orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
+                                            <Link to="/account-details" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
                                                 onClick={() => setIsUserDropdownOpen(false)} >
-                                                My Orders
+                                                My Account
                                             </Link>
                                             {userdetails.Role === 'Admin' && (
                                                 <Link to="/dashboard/adminhome" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
