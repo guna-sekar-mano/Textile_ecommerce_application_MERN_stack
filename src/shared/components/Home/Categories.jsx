@@ -47,11 +47,11 @@ export default function Categories () {
 
     return (
         <>
-        <section className="px-2 py-10 azeret-mono">
+        <section className="px-2 pt-5 lg:pt-7 azeret-mono">
             <div className="max-w-[95rem] mx-auto">
-                <h1 className="text-2xl azeret-mono">Categories</h1>
+                <h1 className="text-2xl lg:text-3xl azeret-mono">Categories</h1>
 
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 pt-5 lg:pt-7">
                    {data.map((item) => (
                         <div key={item._id} className="cursor-pointer" onClick={() => {handleCategoryClick(item.redirect_link, item._id); scrollToTop()}}>
                             {item.Images?.map((img, index) => (
@@ -59,11 +59,11 @@ export default function Categories () {
                                     <img src={getImageUrl(img)} alt={item.Category_Name} className="w-full h-auto"/>
                                 </div>
                              ))}
-                            <h2 className="mt-3 text-center font-semibold text-xl">{item.Category_Name}</h2>
+                            <h2 className="mt-1 lg:mt-3 text-center font-semibold lg:text-xl">{item.Category_Name}</h2>
                         </div>
                     ))}
                 </div>
-                <hr className="mt-7" />
+                <hr className="mt-5 lg:mt-7" />
             </div>
         </section>
         </>

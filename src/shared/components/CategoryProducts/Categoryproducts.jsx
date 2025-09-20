@@ -187,7 +187,7 @@ export default function Categoryproducts() {
                                             >
                                                 {item.Images?.map((img, index) => (
                                                     <SwiperSlide key={index}>
-                                                        <img src={getImageUrl(img)} alt={`${item.Product_Name} - Image ${index + 1}`} className="w-full h-[55dvh] object-cover"/>
+                                                        <img src={getImageUrl(img)} alt={`${item.Product_Name} - Image ${index + 1}`} className="w-full h-[230px] md:h-[400px] lg:h-[500px] object-cover"/>
                                                     </SwiperSlide>
                                                 ))}
                                             </Swiper>

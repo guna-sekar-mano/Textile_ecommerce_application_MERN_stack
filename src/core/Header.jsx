@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../shared/services/store/useAuth";
 import useCartStore from "../shared/services/store/usecart";
 import { apigetallHeaderproducts } from "../admin/shared/services/apiproducts/apiproducts";
+import { getallcustomercategory } from "../shared/services/apiCustomercategory/apicustomercategory";
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,83 +14,48 @@ export default function Header() {
     const navigate = useNavigate();
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [headerData, setHeaderData] = useState([]);
+    const [Data, setData] = useState([]);
+    const { cart } = useCartStore();
+
+    const toggleMenu = () => { setIsMenuOpen(!isMenuOpen); };
+    const toggleSearch = () => { setIsSearchOpen(!isSearchOpen); };
+    const closeSearch = () => { setIsSearchOpen(false); };
 
     const handleLogout = () => {
         logout();
-        clearCart(); 
+        clearCart();
         navigate('/');
     };
 
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
 
-    const toggleSearch = () => {
-        setIsSearchOpen(!isSearchOpen);
-    };
-
-    const closeSearch = () => {
-        setIsSearchOpen(false);
-    };
-
-    const { cart } = useCartStore();
-
-    let isMounted = true;
-    
-    const getAllHeaderProducts = useCallback(async () => {
+    const getallcustomercategories = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await apigetallHeaderproducts();
-            setHeaderData(res?.resdata?.products || res?.resdata || []); 
+            const res = await getallcustomercategory();
+            setData(res.resdata);
+            console.log(res?.resdata)
         } catch (error) {
-            console.error('Error fetching data:', error);
-            setHeaderData([]);
+            console.error("Error fetching categories:", error);
         } finally {
             setLoading(false);
         }
-    }, [])
-    
-    useEffect(() => {
-        if(isMounted){
-            getAllHeaderProducts();
-        }
-        return(() => isMounted = false);
     }, []);
 
-    const generateRoute = (collectionName) => {
-        return `/collection/${collectionName.toLowerCase().replace(/\s+/g, '')}`;
+    let isMounted = true;
+    useEffect(() => {
+        if (isMounted) {
+            getallcustomercategories();
+        }
+        return (() => isMounted = false);
+    }, []);
+
+    const handleCategoryClick = (redirectLink, categoryId) => {
+        sessionStorage.setItem('currentCategoryId', categoryId);
+        navigate(redirectLink);
     };
 
-    const groupProductsByCategory = () => {
-        const grouped = {};
-        
-        headerData.forEach(product => {
-            const category = product.Category || 'Others';
-            if (!grouped[category]) {
-                grouped[category] = [];
-            }
-            grouped[category].push(product);
-        });
-        
-        return grouped;
-    };
-
-    const getUniqueCollections = () => {
-        const collections = new Set();
-        headerData.forEach(product => {
-            if (product.header_menu?.collection_name) {
-                collections.add(product.header_menu.collection_name);
-            }
-        });
-        return Array.from(collections);
-    };
-
-    const groupedProducts = groupProductsByCategory();
-    const uniqueCollections = getUniqueCollections();
-
-    const scrollToTop = () =>{
-        window.scrollTo({ top: 0, behavior: 'smooth'});
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     return (
@@ -102,38 +68,37 @@ export default function Header() {
                                 <Link to={"/"}>
                                     <li className="text-lg hover:text-gray-300 transition-colors">Home</li>
                                 </Link>
-                                <li 
-                                    className="text-lg cursor-pointer hover:text-gray-300 transition-colors relative" 
-                                    onMouseEnter={() => setIsCollectionHovered(true)} 
+                                <li
+                                    className="text-lg cursor-pointer hover:text-gray-300 transition-colors relative"
+                                    onMouseEnter={() => setIsCollectionHovered(true)}
                                     onMouseLeave={() => setIsCollectionHovered(false)}
                                 >
                                     Collection
-                                    
-                                    <div className={`absolute top-full left-0 mt-2 w-[800px] bg-white text-black shadow-2xl overflow-hidden transition-all duration-300 z-50 ${
-                                        isCollectionHovered ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
-                                    }`}>
-                                        <div className="grid grid-cols-4 gap-0">
-                                            {/* Dynamic Collections Column */}
+
+                                    <div className={`absolute top-full left-0 mt-2 w-fit bg-white text-black shadow-2xl overflow-hidden transition-all duration-300 z-50 ${isCollectionHovered ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
+                                        }`}>
+                                        <div className="grid gap-0">
+
                                             <div className="p-6 bg-gray-50 border-r border-gray-200">
                                                 <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
                                                     Collections
                                                 </h3>
-                                                <ul className="space-y-3">
-                                                    {uniqueCollections.map((collection, index) => (
-                                                        <li key={index}>
-                                                            <Link 
-                                                                to={generateRoute(collection)} 
-                                                                className="text-gray-700 hover:text-black transition-colors text-sm"
-                                                            >
-                                                                {collection}
-                                                            </Link>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                                <ul className="grid grid-rows-4 grid-flow-col">
+                                                    {Data.map((col, index) => {
+                                                        return (
+                                                            <li key={`${col._id || index}`} className={index > 3 ? 'border-l' : 'border-0'} >
+                                                                <div onClick={() => handleCategoryClick(col.redirect_link, col._id)}
+                                                                    className="text-gray-700 hover:text-black transition-colors text-sm whitespace-nowrap p-3">
+                                                                    {col?.Category_Name}
+                                                                </div>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul> 
                                             </div>
 
-                                            {/* Dynamic Categories Columns */}
-                                            {Object.entries(groupedProducts).slice(0, 2).map(([category, products], categoryIndex) => (
+
+                                            {/* {Object.entries(groupedProducts).slice(0, 2).map(([category, products], categoryIndex) => (
                                                 <div key={categoryIndex} className="p-6 border-r border-gray-200">
                                                     <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
                                                         {category}
@@ -141,7 +106,7 @@ export default function Header() {
                                                     <ul className="space-y-3">
                                                         {products.slice(0, 6).map((product, productIndex) => (
                                                             <li key={productIndex}>
-                                                                <Link 
+                                                                <Link
                                                                     to={`/product/${product._id}`}
                                                                     className="text-gray-700 hover:text-black transition-colors text-sm"
                                                                 >
@@ -153,7 +118,7 @@ export default function Header() {
                                                 </div>
                                             ))}
 
-                                            {/* Featured/Action Column */}
+                                       
                                             <div className="p-6">
                                                 <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
                                                     Featured
@@ -161,29 +126,29 @@ export default function Header() {
                                                 <ul className="space-y-3 mb-6">
                                                     {headerData.filter(product => product.tags === "FRESH IN").slice(0, 4).map((product, index) => (
                                                         <li key={index}>
-                                                            <Link 
-                                                                to={`/product/${product._id}`} 
+                                                            <Link
+                                                                to={`/product/${product._id}`}
                                                                 className="text-gray-700 hover:text-black transition-colors text-sm"
                                                             >
-                                                                {product.Product_Name.length > 25 
-                                                                    ? product.Product_Name.substring(0, 25) + "..." 
+                                                                {product.Product_Name.length > 25
+                                                                    ? product.Product_Name.substring(0, 25) + "..."
                                                                     : product.Product_Name
                                                                 }
                                                             </Link>
                                                         </li>
                                                     ))}
                                                 </ul>
-                                                
+
                                                 <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
                                                     Shop All
                                                 </h3>
-                                                <Link 
-                                                    to="/collections" 
+                                                <Link
+                                                    to="/collections"
                                                     className="inline-block bg-black text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
                                                 >
                                                     View All Collections
                                                 </Link>
-                                            </div>
+                                            </div> */}
                                         </div>
                                     </div>
                                 </li>
@@ -196,13 +161,13 @@ export default function Header() {
                             <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
                             <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
                         </button>
-                        
+
                         <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2 lg:translate-none lg:relative lg:left-auto lg:transform-none">
                             <img src="/images/logo/logo1.png" alt="" className="h-8 w-auto" />
                             <p className="font-semibold text-xl hidden sm:block font-handelgothic">EXTREME CULTURE</p>
                             <p className="font-semibold text-lg sm:hidden">EC</p>
                         </div>
-                       
+
                         <div className="hidden lg:flex space-x-8 items-center">
                             <Link to={"/contact-us"} onClick={scrollToTop}>
                                 <p className="cursor-pointer hover:text-gray-300 transition-colors">Support</p>
@@ -212,10 +177,9 @@ export default function Header() {
                                     <div className="cursor-pointer hover:text-gray-300 transition-colors flex items-center">
                                         <i className="fi fi-rr-user text-lg mt-1"></i>
                                     </div>
-                                    
-                                    <div className={`absolute top-full right-0 mt-2 w-48 bg-white text-black shadow-2xl overflow-hidden transition-all duration-300 z-50 ${
-                                        isUserDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
-                                    }`}>
+
+                                    <div className={`absolute top-full right-0 mt-2 w-48 bg-white text-black shadow-2xl overflow-hidden transition-all duration-300 z-50 ${isUserDropdownOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
+                                        }`}>
                                         <div className="py-2">
                                             <Link to="/account-details" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors"
                                                 onClick={() => setIsUserDropdownOpen(false)} >
@@ -227,7 +191,7 @@ export default function Header() {
                                                     Admin Dashboard
                                                 </Link>
                                             )}
-                                            <button onClick={() => {setIsUserDropdownOpen(false); handleLogout();}} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors">
+                                            <button onClick={() => { setIsUserDropdownOpen(false); handleLogout(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black transition-colors">
                                                 Logout
                                             </button>
                                         </div>
@@ -236,7 +200,7 @@ export default function Header() {
                             ) : (
                                 <Link to={"/login"}><p className="cursor-pointer hover:text-gray-300 transition-colors" onClick={scrollToTop}>Login / Sign up</p></Link>
                             )}
-                            
+
                             <div className="flex justify-center items-center gap-6 mt-1.5 -ml-2">
                                 <button onClick={toggleSearch} className="hover:text-gray-300 transition-colors cursor-pointer">
                                     <i className="fi fi-rr-search text-lg "></i>
@@ -282,24 +246,23 @@ export default function Header() {
                                         Home
                                     </Link>
                                 </li>
-                                
+
                                 <li>
                                     <p className="text-white text-xl font-medium py-2">Collections</p>
-                                    <ul className="ml-4 space-y-2 mt-2">
-                                        {uniqueCollections.map((collection, index) => (
+                                    <ul className="space-y-3">
+                                        {Data.map((col, index) => (
                                             <li key={index}>
-                                                <Link 
-                                                    to={generateRoute(collection)} 
-                                                    className="block text-gray-300 text-lg hover:text-white transition-colors py-1" 
-                                                    onClick={toggleMenu}
+                                                <div
+                                                    onClick={() => { handleCategoryClick(col.redirect_link, col._id) }}
+                                                    className="text-gray-700 hover:text-black transition-colors text-sm"
                                                 >
-                                                    {collection}
-                                                </Link>
+                                                    {col?.Category_Name}
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>
                                 </li>
-                                
+
                                 <li>
                                     <Link to="/sale" className="block text-white text-xl font-medium hover:text-gray-300 transition-colors py-2" onClick={toggleMenu}>
                                         Sale
@@ -312,7 +275,7 @@ export default function Header() {
                                 </li>
                                 {!userdetails && (
                                     <li>
-                                        <Link to="/login" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={{toggleMenu, scrollToTop}}>
+                                        <Link to="/login" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={{ toggleMenu, scrollToTop }}>
                                             Login / Sign up
                                         </Link>
                                     </li>
@@ -337,8 +300,8 @@ export default function Header() {
                 </div>
             </header>
 
-            <div className={`fixed inset-0 bg-black bg-opacity-95 z-[100] flex items-center justify-center transition-all duration-500 ease-in-out ${ isSearchOpen ? 'opacity-100 visible backdrop-blur-sm' : 'opacity-0 invisible'}`}>
-                <div className={`w-full max-w-4xl px-6 transform transition-all duration-500 ease-out ${ isSearchOpen ? 'translate-y-0 scale-100' : 'translate-y-8 scale-95'}`}>
+            <div className={`fixed inset-0 bg-black bg-opacity-95 z-[100] flex items-center justify-center transition-all duration-500 ease-in-out ${isSearchOpen ? 'opacity-100 visible backdrop-blur-sm' : 'opacity-0 invisible'}`}>
+                <div className={`w-full max-w-4xl px-6 transform transition-all duration-500 ease-out ${isSearchOpen ? 'translate-y-0 scale-100' : 'translate-y-8 scale-95'}`}>
                     <button onClick={closeSearch} className="absolute top-8 right-8 text-white hover:text-gray-300 transition-colors z-10">
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

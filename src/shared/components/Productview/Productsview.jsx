@@ -238,18 +238,18 @@ export default function Productsview({selected, container2Ref, container3Ref, co
 
     return (
         <>
-            <section className="py-10">
+            <section className="py-5 lg:py-10">
                 <div className="max-w-[85rem] mx-auto px-3">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        <div className="flex justify-center items-center gap-5">
-                            <div className="h-[60dvh] relative">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-10">
+                        <div className="flex justify-center items-center gap-2 lg:gap-5">
+                            <div className="h-[350px] mx-auto md:h-[400px] lg:h-[650px] min-w-16 relative overflow-hidden">
                                 <Swiper direction={'vertical'}
                                     navigation={{
                                         nextEl: '.swiper-button-next-custom',
                                         prevEl: '.swiper-button-prev-custom',
                                     }}
                                     modules={[Navigation]}
-                                    className="h-full w-20 mySwiper"
+                                    className="h-full w-16 lg:w-21 lg:mt-10 mySwiper"
                                     slidesPerView={4}
                                     spaceBetween={10}
                                 >
@@ -258,7 +258,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                             <img 
                                                 src={getImageUrl(img)} 
                                                 alt={`${currentProduct.Product_Name} - Thumbnail ${index + 1}`}
-                                                className={`h-20 w-20 object-cover cursor-pointer border-2 ${
+                                                className={`h-20 w-16 lg:h-20 lg:w-20 object-cover cursor-pointer border-2 ${
                                                     currentMainImage === index ? 'border-black' : 'border-transparent hover:border-gray-300'
                                                 }`}
                                                 onClick={() => handleThumbnailClick(index)}
@@ -269,7 +269,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                         </SwiperSlide>
                                     ))}
                                 </Swiper>
-                                <div className="swiper-button-prev-custom absolute -top-12 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
+                                <div className="swiper-button-prev-custom absolute -top-0 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
                                     <ChevronUp/>
                                 </div>
                                 
@@ -279,11 +279,11 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                             </div>
                             <div>
                                 <img src={currentProduct?.Images && currentProduct.Images.length > 0 ? getImageUrl(currentProduct.Images[currentMainImage]) : 'https://via.placeholder.com/400x600?text=No+Image'} 
-                                    alt={currentProduct?.Product_Name} className="h-[75dvh] w-[35rem] object-cover" />
+                                    alt={currentProduct?.Product_Name} className="h-[350px] md:h-[400px] lg:h-[650px] w-auto object-cover" />
                             </div>
                         </div>
 
-                        <div className="py-10">
+                        <div className="">
                             <div className="flex justify-between">
                                 <div className="space-y-2">
                                     <p className="text-xl barlow font-semibold tracking-wider">
@@ -356,7 +356,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                 <div className="lg:flex justify-between">
                                     <div className="space-y-3">
                                         <p className="font-semibold manrope">SIZE</p>
-                                         <div className="flex gap-2 text-lg">
+                                         <div className="flex gap-2 text-lg overflow-auto">
                                             {currentProduct?.sizes?.map((sizeObj, index) => {
                                                 const sizeValue = typeof sizeObj === 'string' ? sizeObj : sizeObj.size;
                                                 return (

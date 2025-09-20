@@ -169,12 +169,12 @@ export default function Homeproducts() {
     };
 
     return (
-        <section className="px-4 py-10 azeret-mono">
+        <section className="px-4 py-7  azeret-mono">
             <div className="max-w-[95rem] mx-auto">
                 <div className="flex flex-wrap gap-4 mb-6">
                     {getUniqueProductTypes().map((productType) => (
                         <button key={productType} onClick={() => handleProductTypeClick(productType)}
-                            className={`px-4 py-1  transition-colors duration-200 ${selectedProductType === productType ? 'bg-black text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+                            className={`px-4 py-1  transition-colors duration-200 ${selectedProductType === productType ? 'bg-black text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} text-sm lg:text-base `}>
                             {productType}
                         </button>
                     ))}
@@ -186,7 +186,7 @@ export default function Homeproducts() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-6">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-6">
                     {filteredData?.products?.map((item) => (
                         <div className="group" key={item._id}>
                             <div className="relative">
@@ -203,7 +203,7 @@ export default function Homeproducts() {
                                     >
                                         {item.Images?.map((img, index) => (
                                             <SwiperSlide key={index}>
-                                                <img src={getImageUrl(img)} alt={`${item.Product_Name} - Image ${index + 1}`} className="w-full h-[55dvh] object-cover"/>
+                                                <img src={getImageUrl(img)} alt={`${item.Product_Name} - Image ${index + 1}`} className="w-full h-[230px] md:h-[400px] lg:h-[500px] object-cover"/>
                                             </SwiperSlide>
                                         ))}
                                     </Swiper>
@@ -215,7 +215,7 @@ export default function Homeproducts() {
                                     </div>
                                 )}
                                 
-                                <div className="absolute top-2 right-2 bg-white p-2 z-10 hover:bg-white cursor-pointer">
+                                <div className="absolute top-2 right-2 bg-white p-1 z-10 hover:bg-white cursor-pointer rounded">
                                     <i className={`fi ${checkIfInWishlist(item, null) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(item); }}></i>
                                 </div>
                                 

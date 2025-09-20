@@ -166,13 +166,13 @@ export default function Popularproducts () {
 
     return (
         <>
-        <section className="px-4 py-10">
+        <section className="px-4 py-5 lg:py-10">
             <div className="max-w-[95rem] mx-auto">
                 <h1 className="text-2xl azeret-mono">Popular Products</h1>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mt-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mt-5 lg:mt-8">
                     <div className="col-span-4 ">
-                        <div className='relative sticky top-20'>
+                        <div className=' sticky top-20'>
                             {data.highlightedProduct ? (
                                 <Link to={`/products-view/${data.highlightedProduct._id}`} state={{ product: data.highlightedProduct }} onClick={scrollToTop}>
                                     <img 
@@ -198,8 +198,8 @@ export default function Popularproducts () {
                             ) : (
                                 <>
                                     <img src="/images/popular-products/3.jpg" alt="" className="lg:h-[80dvh] w-full object-cover object-center" />
-                                    <div className='absolute bottom-0 left-0 w-full p-4 azeret-mono'>
-                                        <div className='flex gap-3 mt-3 font-semibold text-gray-600 text-sm'>
+                                    <div className='absolute bottom-0 left-0 w-full p-2 azeret-mono'>
+                                        <div className='flex gap-2 mt-3 font-semibold text-gray-600 text-sm'>
                                             <p className='bg-white p-1'>TRACKS</p>
                                             <p className='bg-white p-1'>T-SHIRTS</p>
                                             <p className='bg-white p-1'>SHORTS</p>

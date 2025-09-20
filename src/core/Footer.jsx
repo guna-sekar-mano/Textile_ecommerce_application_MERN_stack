@@ -8,7 +8,7 @@ export default function Footer () {
                 <div className="max-w-[95rem] mx-auto py-5 px-5 lg:px-2">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-white">
                         <div>
-                            <p className="text-7xl leading-20 barlow-condensed">Become Part of <br /> The Extreme Culture</p>
+                            <p className="text-5xl md:text-7xl leading-20 barlow-condensed">Become Part of <br /> The Extreme Culture</p>
                             <div className="mt-10">
                                 <form action="#">
                                     <div className="lg:flex gap-5 lg:space-y-0 space-y-2">
@@ -27,14 +27,14 @@ export default function Footer () {
                         <div className="border-t lg:border-t-0 lg:border-l-5  border-white flex lg:justify-end justify-center lg:items-end items-center">
                             <div className="lg:mt-0 mt-5">
                                 <div className="text-center">
-                                    <h1 className="text-4xl azeret-mono">Our Social Post</h1>
+                                    <h1 className="lg:text-4xl text-2xl azeret-mono">Our Social Post</h1>
                                 </div>
                                 <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 mt-8">
                                     <div>
-                                        <img src="/images/popular-products/1.png" alt="" className="h-[40dvh] w-full object-cover" />
+                                        <img src="/images/popular-products/1.png" alt="" className="lg:h-[350px] w-full object-cover" />
                                     </div>
                                     <div>
-                                        <img src="/images/popular-products/2.png" alt="" className="h-[40dvh] w-full object-cover" />
+                                        <img src="/images/popular-products/2.png" alt="" className="lg:h-[350px] w-full object-cover" />
                                     </div>
                                 </div>
                             </div>
@@ -43,7 +43,7 @@ export default function Footer () {
                 </div>
 
                 <div className="border border-white mt-10 text-white border-r-0 border-l-0">
-                    <div className="lg:flex justify-center items-center gap-10 text-xl p-3 tracking-wider azeret-mono text-center lg:space-y-0 space-y-3">
+                    <div className="lg:flex justify-center items-center gap-10 lg:text-xl p-3 tracking-wider azeret-mono text-center lg:space-y-0 space-y-3">
                         <p>5+ Years of Experience</p>
                         <p>600+ Happy Customers</p>
                         <p>300+ Premium Collections</p>
@@ -55,37 +55,37 @@ export default function Footer () {
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 lg:space-y-0 space-y-5">
                             <div className="text-start">
                                 <p className="font-semibold text-lg barlow-condensed">SHOP NOW</p>
-                                <ul className="mt-5 space-y-5 text-gray-400 ">
+                                <ul className="mt-3 lg:mt-5 flex flex-col gap-2 lg:gap-3 text-gray-400">
                                     <Link to={""}><li className="hover:text-white">Men</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3">Tracks</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3">T-Shirt</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3">Shorts</li></Link>
+                                    <Link to={""}><li className="hover:text-white">Tracks</li></Link>
+                                    <Link to={""}><li className="hover:text-white">T-Shirt</li></Link>
+                                    <Link to={""}><li className="hover:text-white">Shorts</li></Link>
                                 </ul>
                             </div>
                              <div className="text-start">
                                 <p className="font-semibold text-lg barlow-condensed">SUPPORT</p>
-                                <ul className="mt-5 space-y-5 text-gray-400">
+                                <ul className="mt-3 lg:mt-5 flex flex-col gap-2 lg:gap-3 text-gray-400">
                                     <Link to={""}><li className="hover:text-white">Track My order</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3">FAQs</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3">Contact Us</li></Link>
+                                    <Link to={""}><li className="hover:text-white">FAQs</li></Link>
+                                    <Link to={""}><li className="hover:text-white">Contact Us</li></Link>
                                 </ul>
                             </div>
                              <div className="text-start">
                                 <p className="font-semibold text-lg barlow-condensed">SOCIAL</p>
-                                <ul className="mt-5 space-y-5 text-gray-400">
+                                <ul className="mt-3 lg:mt-5 flex flex-col gap-2 lg:gap-3 text-gray-400">
                                     <Link to={""}><li className="hover:text-white">Instagram</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3">Youtube</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3"> X</li></Link>
-                                    <Link to={""}><li className="hover:text-white mt-3">Facebook</li></Link>
+                                    <Link to={""}><li className="hover:text-white">Youtube</li></Link>
+                                    <Link to={""}><li className="hover:text-white"> X</li></Link>
+                                    <Link to={""}><li className="hover:text-white">Facebook</li></Link>
                                 </ul>
                             </div>
                         </div>
 
                         <div className="flex justify-center items-center lg:mt-0 mt-5">
-                            <div className="lg:flex gap-6 azeret-mono">
+                            <div className="flex flex-col lg:flex-row gap-2 lg:gap-5 azeret-mono">
                                 <Link to={""}><p className="">Terms & Condition</p></Link>
-                                <Link to={""}><p className="lg:mt-0 mt-5">Privacy Policy</p></Link>
-                                <Link to={""}><p className="lg:mt-0 mt-5">Cookies Policy</p></Link>
+                                <Link to={""}><p className="">Privacy Policy</p></Link>
+                                <Link to={""}><p className="">Cookies Policy</p></Link>
                             </div>
 
                         </div>
@@ -99,7 +99,7 @@ export default function Footer () {
                 </div>
 
                 <div className="py-6">
-                    <h1 className="text-[#A1A1A1] tracking-wider text-center text-4xl md:text-4xl lg:text-9xl font-handelgothic">EXTREME CULTURE</h1>
+                    <h1 className="text-[#A1A1A1] tracking-wider text-center text-2xl md:text-4xl lg:text-9xl font-handelgothic">EXTREME CULTURE</h1>
                 </div>
             </footer>
         </>
