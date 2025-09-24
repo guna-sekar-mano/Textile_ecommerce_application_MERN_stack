@@ -180,9 +180,7 @@ export default function Collection() {
                                                         src={getImageUrl(img)}
                                                         alt={item.Product_Name}
                                                         className="w-full h-auto" 
-                                                        onError={(e) => {
-                                                            e.target.src = '/images/placeholder.png'; // Fallback image
-                                                        }}
+                                                        loading="lazy"
                                                     />
                                                 </SwiperSlide>
                                             ))}

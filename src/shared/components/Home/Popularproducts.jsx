@@ -31,7 +31,6 @@ export default function Popularproducts () {
         
         return wishlistItems.some(item => {
             const isSameProduct = item.productId === productToCheck._id;
-            
             const isSameVariant = variantToCheck ? item.variantId === variantToCheck._id : !item.variantId;
             
             return isSameProduct && isSameVariant;
@@ -105,7 +104,39 @@ export default function Popularproducts () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-       const addWish = async (productData) => {
+    const getAllProductImages = (product) => {
+        let allImages = [];
+        if (product.variants && product.variants.length > 0) {
+            product.variants.forEach(variant => {
+                if (variant.variant_images && variant.variant_images.length > 0) {
+                    allImages = [...allImages, ...variant.variant_images];
+                }
+            });
+        }
+        return allImages.length > 0 ? allImages : [];
+    };
+
+    const getProductImage = (product) => {
+        if (product.variants && product.variants.length > 0) {
+            const firstVariant = product.variants.find(v => v.status === 'Active') || product.variants[0];
+            if (firstVariant && firstVariant.variant_images && firstVariant.variant_images.length > 0) {
+                return firstVariant.variant_images[0];
+            }
+        }
+        return null;
+    };
+
+    const getProductImages = (product) => {
+        if (product.variants && product.variants.length > 0) {
+            const firstVariant = product.variants.find(v => v.status === 'Active') || product.variants[0];
+            if (firstVariant && firstVariant.variant_images && firstVariant.variant_images.length > 0) {
+                return firstVariant.variant_images;
+            }
+        }
+        return [];
+    };
+
+    const addWish = async (productData) => {
         try {
             const userDetails = userdetails;
             if (!userDetails || !userDetails.Email) {
@@ -129,7 +160,7 @@ export default function Popularproducts () {
                     Swal.fire({title: "Removed from wishlist !", icon: "success", draggable: true });
                 }
             } else {
-                const {_id, variants, ...productDataWithoutId} = productToProcess;
+                const {variants, ...productDataWithoutVariants} = productToProcess;
 
                 const wishlistData = {
                     Email: userDetails.Email,
@@ -139,17 +170,18 @@ export default function Popularproducts () {
                     Product_Name: productToProcess.Product_Name,
                     Category: productToProcess.Category,
                     Subcategory: productToProcess.Subcategory,
-                    Images: productToProcess.Images,
+                    Images: getAllProductImages(productToProcess),
                     description: productToProcess.description,
                     material_care: productToProcess.material_care,
                     tags: productToProcess.tags,
-                    sizes: productToProcess.sizes,
+                    sizes: [],
                     gender: productToProcess.gender,
                     Product_type: productToProcess.Product_type,
-                    price: productToProcess.price,
-                    sale_price: productToProcess.sale_price,
-                    cost_price: productToProcess.cost_price,
-                    stock: productToProcess.stock
+                    price: '',
+                    sale_price: '',
+                    cost_price: '',
+                    stock: productToProcess.stock,
+                    variants: productToProcess.variants 
                 };
 
                 const response = await savewishitems(wishlistData);
@@ -172,11 +204,11 @@ export default function Popularproducts () {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mt-5 lg:mt-8">
                     <div className="col-span-4 ">
-                        <div className=' sticky top-20'>
+                        <div className='sticky top-20 relative'>
                             {data.highlightedProduct ? (
-                                <Link to={`/products-view/${data.highlightedProduct._id}`} state={{ product: data.highlightedProduct }} onClick={scrollToTop}>
+                                <Link to={`/products/${toUrlFriendly(data.highlightedProduct.Product_type)}/${toUrlFriendly(data.highlightedProduct.Product_Name)}`} state={{ product: data.highlightedProduct, productId: data.highlightedProduct._id }} onClick={scrollToTop}>
                                     <img 
-                                        src={getImageUrl(data.highlightedProduct.Images[0])} 
+                                        src={getImageUrl(getProductImage(data.highlightedProduct))} 
                                         alt={data.highlightedProduct.Product_Name} 
                                         className="lg:h-[80dvh] w-full object-cover object-center" 
                                     />
@@ -213,10 +245,13 @@ export default function Popularproducts () {
                     <div className="col-span-8">
                         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                             {data?.products.map((item) => {
+                                const productImages = getProductImages(item);
+                                const firstVariant = item.variants?.find(v => v.status === 'Active') || item.variants?.[0];
+                                
                                 return (
                                     <div className="group" key={item._id}>
                                         <div className="relative">
-                                            <Link to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
+                                            <Link to={`/products/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
                                                 <Swiper 
                                                     navigation={{
                                                         nextEl: `.swiper-button-next-${item._id}`,
@@ -224,11 +259,11 @@ export default function Popularproducts () {
                                                     }} 
                                                     modules={[Navigation]} 
                                                     className="mySwiper relative" 
-                                                    loop={true} 
+                                                    loop={productImages.length > 1} 
                                                 >
-                                                    {item.Images?.map((img, index) => (
+                                                    {productImages.map((img, index) => (
                                                         <SwiperSlide key={index}>
-                                                            <img src={getImageUrl(img)} alt={item.Product_Name} className="w-full h-auto" />
+                                                            <img src={getImageUrl(img)} alt={`${item.Product_Name} - Image ${index + 1}`} className="w-full h-[230px] md:h-[400px] lg:h-[500px] object-cover" />
                                                         </SwiperSlide>
                                                     ))}
                                                 </Swiper>
@@ -240,14 +275,17 @@ export default function Popularproducts () {
                                             <div className="absolute top-2 right-2 bg-white p-1 z-10">
                                                <i className={`fi ${checkIfInWishlist(item, null) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(item); }}></i>
                                             </div>
-                                            <div className="opacity-0 group-hover:opacity-100">
-                                                <div className={`swiper-button-prev-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
-                                                    <ChevronLeft/>
+                                            
+                                            {productImages.length > 1 && (
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                    <div className={`swiper-button-prev-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
+                                                        <ChevronLeft/>
+                                                    </div>
+                                                    <div className={`swiper-button-next-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
+                                                        <ChevronRight/>
+                                                    </div>
                                                 </div>
-                                                <div className={`swiper-button-next-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
-                                                    <ChevronRight/>
-                                                </div>
-                                            </div>
+                                            )}
                                         </div>
                                         <div className="mt-3 px-1">
                                             <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
@@ -256,6 +294,7 @@ export default function Popularproducts () {
                                             
                                             <div className="mt-1 flex items-center gap-2">
                                                 {(() => {
+                                                    // Check if product has global price/sale_price
                                                     if (item.price || item.sale_price) {
                                                         const hasGlobalSalePrice = item.sale_price && parseFloat(item.sale_price) > 0;
                                                         
@@ -278,6 +317,46 @@ export default function Popularproducts () {
                                                             );
                                                         }
                                                     } 
+                                                    // Check variant-based pricing
+                                                    else if (firstVariant?.sizes && firstVariant.sizes.length > 0) {
+                                                        const firstSize = firstVariant.sizes[0];
+                                                        const displayPrice = firstSize?.sale_price && firstSize.sale_price !== "0" 
+                                                            ? firstSize.sale_price 
+                                                            : firstSize?.price;
+                                                        const originalPrice = firstSize?.price;
+                                                        
+                                                        const hasDiscount = firstSize?.sale_price && 
+                                                            firstSize.sale_price !== "0" && 
+                                                            firstSize.sale_price !== firstSize.price;
+                                                        
+                                                        if (hasDiscount) {
+                                                            return (
+                                                                <>
+                                                                    <span className="text-lg font-semibold text-gray-900">
+                                                                        ₹{displayPrice}
+                                                                    </span>
+                                                                    <span className="text-sm text-gray-500 line-through">
+                                                                        ₹{originalPrice}
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-400">
+                                                                        ({firstSize.size})
+                                                                    </span>
+                                                                </>
+                                                            );
+                                                        } else if (displayPrice) {
+                                                            return (
+                                                                <>
+                                                                    <span className="text-lg font-semibold text-gray-900">
+                                                                        ₹{displayPrice}
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-400">
+                                                                        ({firstSize.size})
+                                                                    </span>
+                                                                </>
+                                                            );
+                                                        }
+                                                    }
+                                                    // Check if item has old sizes structure
                                                     else if (item.sizes && item.sizes.length > 0) {
                                                         const firstSize = item.sizes[0];
                                                         const hasSizeWiseSalePrice = firstSize.sale_price && parseFloat(firstSize.sale_price) > 0;

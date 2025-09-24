@@ -11,13 +11,13 @@ import { useState, useEffect } from "react";
 import { deleteOnewishitems, savewishitems, getAllwishitems } from "../../services/apiwishlist/apiwishlist";
 import Swal from 'sweetalert2'
 
-export default function Productsview({selected, container2Ref, container3Ref, container7Ref,currentProduct, getImageUrl, currentMainImage, selectedVariant, handlePrimaryProductClick,
-    product, handleVariantClick, toggleAccordion, handleThumbnailClick, 
-}) {
+export default function Productsview(props) {
+
+    const { selected, container2Ref, container3Ref, container7Ref, currentProduct, getImageUrl, currentMainImage, setSelectedVariant, selectedVariant, handlePrimaryProductClick, product,
+        handleVariantClick, handleThumbnailClick, toggleAccordion,selectedSize, setSelectedSize } = props;
    
     const {addToCart, cart: cartItems, cart} = useCartStore();
     const { userdetails } = useAuth();
-    const [selectedSize, setSelectedSize] = useState('');
     const [wishlist, setwishlist] = useState(false);
     const [wishlistItems, setWishlistItems] = useState([]);
 
@@ -25,19 +25,26 @@ export default function Productsview({selected, container2Ref, container3Ref, co
         if (!wishlistItems.length) return false;
         
         return wishlistItems.some(item => {
-            const isSameProduct = item.productId === productToCheck._id;
+            const productMatch = item.productId === productToCheck._id;
+            const variantMatch = item.variantId === (variantToCheck?._id || selectedVariant?._id);
             
-            const isSameVariant = variantToCheck ? item.variantId === variantToCheck._id : !item.variantId;
-            
-            return isSameProduct && isSameVariant;
+            return productMatch && variantMatch;
         });
     };
 
-    const getPricingInfo = () => {
-        const productData = selectedVariant || product;
+    const getProductDetails = () => {
+        const productData = selectedVariant || product.variants?.[0] || product;
         
-        const hasSizeSpecificPricing = productData?.sizes && productData.sizes.length > 0 && 
-            productData.sizes.some(sizeObj => sizeObj.price || sizeObj.sale_price);
+        return {
+            description: productData?.description || product?.description || 'No description available for this product.',
+            material_care: productData?.material_care || product?.material_care || 'No material care information available.'
+        };
+    };
+
+    const getPricingInfo = () => {
+        const productData = selectedVariant || product.variants?.[0] || product;
+        
+        const hasSizeSpecificPricing = productData?.sizes && productData.sizes.length > 0 && productData.sizes.some(sizeObj => sizeObj.price || sizeObj.sale_price);
         
         if (hasSizeSpecificPricing) {
             if (selectedSize) {
@@ -89,6 +96,14 @@ export default function Productsview({selected, container2Ref, container3Ref, co
     };
 
     useEffect(() => {
+        if (product && product.variants && product.variants.length > 0 && !selectedVariant) {
+            setSelectedVariant(product.variants[0]);
+        }
+    }, [product, selectedVariant]);
+
+    const { description, material_care } = getProductDetails();
+
+    useEffect(() => {
         const fetchWishlistItems = async () => {
             try {
                 if (userdetails?.Email) {
@@ -106,8 +121,8 @@ export default function Productsview({selected, container2Ref, container3Ref, co
     }, [userdetails]);
 
     useEffect(() => {
-        if (currentProduct) {
-            const isInWishlist = checkIfInWishlist(currentProduct, selectedVariant);
+        if (currentProduct && selectedVariant) {
+            const isInWishlist = checkIfInWishlist(product, selectedVariant);
             setwishlist(isInWishlist);
         }
     }, [currentProduct, selectedVariant, wishlistItems]);
@@ -162,36 +177,6 @@ export default function Productsview({selected, container2Ref, container3Ref, co
         }
     };
 
-    const createWishlistData = (mainProduct, variant, userEmail) => {
-        const isVariant = variant !== null;
-        
-        const getValue = (variantValue, mainValue) => variantValue || mainValue;
-        
-        return {
-            Email: userEmail,
-            productId: mainProduct._id,
-            variantId: variant?._id || null,
-            variantName: variant?.variant_name || null,
-            Product_Name: isVariant ? `${mainProduct.Product_Name} - ${variant.variant_name}` : mainProduct.Product_Name,
-            Category: mainProduct.Category,
-            Subcategory: mainProduct.Subcategory,
-            Images: (isVariant && variant.variant_images?.length > 0) ? variant.variant_images : mainProduct.Images,
-            variant_images: variant?.variant_images || null,
-            description: getValue(variant?.description, mainProduct.description),
-            material_care: getValue(variant?.material_care, mainProduct.material_care),
-            tags: getValue(variant?.tags, mainProduct.tags),
-            sizes: (isVariant && variant.sizes?.length > 0) ? variant.sizes : mainProduct.sizes,
-            gender: getValue(variant?.gender, mainProduct.gender),
-            Product_type: getValue(variant?.Product_type, mainProduct.Product_type),
-            price: getValue(variant?.price, mainProduct.price),
-            sale_price: getValue(variant?.sale_price, mainProduct.sale_price),
-            cost_price: getValue(variant?.cost_price, mainProduct.cost_price),
-            stock: getValue(variant?.stock, mainProduct.stock),
-            status: mainProduct.status,
-            is_popular_products: mainProduct.is_popular_products
-        };
-    };
-
     const addWish = async (productData) => {
         try {
             const userDetails = userdetails;
@@ -200,14 +185,20 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                 return;
             }
 
-            const productToProcess = productData || currentProduct;
-            const currentWishlistState = checkIfInWishlist(productToProcess, selectedVariant);
+            const productToProcess = product;
+            const variantToProcess = selectedVariant;
+            
+            if (!variantToProcess) {
+                toast.error("Please select a variant to add to wishlist!");
+                return;
+            }
+            
+            const currentWishlistState = checkIfInWishlist(productToProcess, variantToProcess);
             
             if (currentWishlistState) {
                 const wishlistItem = wishlistItems.find(item => {
-                    const isSameProduct = item.productId === productToProcess._id;
-                    const isSameVariant = selectedVariant ? item.variantId === selectedVariant._id : !item.variantId;
-                    return isSameProduct && isSameVariant;
+                    return item.productId === productToProcess._id && 
+                        item.variantId === variantToProcess._id;
                 });
 
                 if (wishlistItem) {
@@ -220,7 +211,24 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                     });
                 }
             } else {
-                const wishlistData = createWishlistData(productToProcess, selectedVariant, userDetails.Email);
+                const wishlistData = {
+                    Email: userDetails.Email,
+                    productId: productToProcess._id,
+                    variantId: variantToProcess._id,
+                    variantName: variantToProcess.variant_name,
+                    Product_Name: variantToProcess.variant_name,
+                    Category: productToProcess.Category || '',
+                    Subcategory: productToProcess.Subcategory || '',
+                    description: variantToProcess.description || productToProcess.description || '',
+                    material_care: variantToProcess.material_care || productToProcess.material_care || '',
+                    tags: variantToProcess.tags || productToProcess.tags || '',
+                    gender: variantToProcess.gender || productToProcess.gender || '',
+                    Product_type: variantToProcess.Product_type || productToProcess.Product_type || '',
+                    is_popular_products: productToProcess.is_popular_products || false,
+                    stock: variantToProcess.stock || 'Inactive',
+                    status: variantToProcess.status || 'Active',
+                    variants: [variantToProcess]
+                };
                 
                 const response = await savewishitems(wishlistData);
                 if (response) {
@@ -238,38 +246,21 @@ export default function Productsview({selected, container2Ref, container3Ref, co
 
     return (
         <>
-            <section className="py-5 lg:py-10">
+            <section className="py-10">
                 <div className="max-w-[85rem] mx-auto px-3">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-10">
-                        <div className="flex justify-center items-center gap-2 lg:gap-5">
-                            <div className="h-[350px] mx-auto md:h-[400px] lg:h-[650px] min-w-16 relative overflow-hidden">
-                                <Swiper direction={'vertical'}
-                                    navigation={{
-                                        nextEl: '.swiper-button-next-custom',
-                                        prevEl: '.swiper-button-prev-custom',
-                                    }}
-                                    modules={[Navigation]}
-                                    className="h-full w-16 lg:w-21 lg:mt-10 mySwiper"
-                                    slidesPerView={4}
-                                    spaceBetween={10}
-                                >
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div className="flex justify-center items-center gap-5">
+                            <div className="h-[60dvh] relative">
+                                <Swiper direction={'vertical'} navigation={{ nextEl: '.swiper-button-next-custom', prevEl: '.swiper-button-prev-custom', }} modules={[Navigation]} className="h-full w-20 mySwiper" slidesPerView={4} spaceBetween={10} >
                                     {currentProduct?.Images?.map((img, index) => (
                                         <SwiperSlide key={index}>
-                                            <img 
-                                                src={getImageUrl(img)} 
-                                                alt={`${currentProduct.Product_Name} - Thumbnail ${index + 1}`}
-                                                className={`h-20 w-16 lg:h-20 lg:w-20 object-cover cursor-pointer border-2 ${
-                                                    currentMainImage === index ? 'border-black' : 'border-transparent hover:border-gray-300'
-                                                }`}
-                                                onClick={() => handleThumbnailClick(index)}
-                                                onError={(e) => {
-                                                    e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
-                                                }}
-                                            />
+                                            <img src={getImageUrl(img)} alt={`${currentProduct.Product_Name} - Thumbnail ${index + 1}`}
+                                                className={`h-20 w-20 object-cover cursor-pointer border-2 ${ currentMainImage === index ? 'border-black' : 'border-transparent hover:border-gray-300' }`}
+                                                onClick={() => handleThumbnailClick(index)} onError={(e) => { e.target.src = 'https://via.placeholder.com/80x80?text=No+Image'; }} />
                                         </SwiperSlide>
                                     ))}
                                 </Swiper>
-                                <div className="swiper-button-prev-custom absolute -top-0 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
+                                <div className="swiper-button-prev-custom absolute -top-12 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
                                     <ChevronUp/>
                                 </div>
                                 
@@ -279,22 +270,18 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                             </div>
                             <div>
                                 <img src={currentProduct?.Images && currentProduct.Images.length > 0 ? getImageUrl(currentProduct.Images[currentMainImage]) : 'https://via.placeholder.com/400x600?text=No+Image'} 
-                                    alt={currentProduct?.Product_Name} className="h-[350px] md:h-[400px] lg:h-[650px] w-auto object-cover" />
+                                    alt={currentProduct?.Product_Name} className="h-[75dvh] w-[35rem] object-cover" />
                             </div>
                         </div>
 
-                        <div className="">
+                        <div className="py-10">
                             <div className="flex justify-between">
                                 <div className="space-y-2">
-                                    <p className="text-xl barlow font-semibold tracking-wider">
-                                        {currentProduct?.Product_Name || 'Product Name Not Available'}
-                                    </p>
-                                    <h3 className="text-gray-500">
-                                        {currentProduct?.tags || 'NEW DROP'}
-                                    </h3>
+                                    <p className="text-xl barlow font-semibold tracking-wider"> {currentProduct?.Product_Name || 'Product Name Not Available'} </p>
+                                    <h3 className="text-gray-500"> {currentProduct?.tags || 'NEW DROP'} </h3>
                                 </div>
                                 <div className="flex gap-5">
-                                    <i className={`fi ${wishlist ? "fi-sr-heart" : "fi-rr-heart"} hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(currentProduct); }}></i> 
+                                    <i className={`fi ${wishlist ? "fi-sr-heart" : "fi-rr-heart"} hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(); }}></i>
                                     <Share />
                                 </div>
                             </div>
@@ -307,7 +294,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                                 ₹ {pricingInfo.currentPrice}
                                             </p>
                                             <span className="text-lg text-gray-500 line-through">
-                                                ₹{pricingInfo.originalPrice}
+                                                ₹ {pricingInfo.originalPrice}
                                             </span>
                                         </>
                                     ) : (
@@ -325,22 +312,20 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                 
                                 <div className="mt-6">
                                     <div className="flex flex-wrap gap-3">
-                                        <div className={`cursor-pointer p-2  transition-all ${selectedVariant === null ? 'border-black bg-gray-100' : ''}`}
-                                            onClick={handlePrimaryProductClick} >
+                                        {/* <div onClick={handlePrimaryProductClick} className={`cursor-pointer p-2  transition-all ${selectedVariant === null ? 'border-black bg-gray-100' : ''}`} >
                                             <div className="flex items-center gap-2">
                                                 {product.Images && product.Images[0] && (
                                                     <img src={getImageUrl(product.Images[0])} alt={product.Product_Name} className="w-20 h-20 object-cover"/>
                                                 )}
                                                 
                                             </div>
-                                        </div>
+                                        </div> */}
 
                                         {product.variants?.map((variant, index) => (
-                                            <div key={variant._id}
+                                            <div key={variant._id} onClick={() => handleVariantClick(variant)}
                                                 className={`cursor-pointer p-2  transition-all ${
                                                     selectedVariant?._id === variant._id ? 'border-black bg-gray-200' : 'border-gray-300 hover:border-gray-400'
-                                                }`} onClick={() => handleVariantClick(variant)}
-                                            >
+                                                }`} >
                                                 <div className="flex items-center gap-2">
                                                     {variant.variant_images && variant.variant_images[0] && (
                                                         <img src={getImageUrl(variant.variant_images[0])} alt={variant.variant_name} className="w-20 h-20 object-cover"/>
@@ -356,7 +341,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                 <div className="lg:flex justify-between">
                                     <div className="space-y-3">
                                         <p className="font-semibold manrope">SIZE</p>
-                                         <div className="flex gap-2 text-lg overflow-auto">
+                                         <div className="flex gap-2 text-lg">
                                             {currentProduct?.sizes?.map((sizeObj, index) => {
                                                 const sizeValue = typeof sizeObj === 'string' ? sizeObj : sizeObj.size;
                                                 return (
@@ -396,7 +381,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                     <div className="grid md:grid-cols-1 gap-8">
                                         <div className="bg-white max-w-full mx-auto">
                                             <ul className="shadow-box">
-                                                <li className="relative border-b border-gray-200">
+                                                <li className="relative border-b border-gray-200 w-full">
                                                     <button type="button" className="w-full px-6 py-3 text-left" onClick={() => toggleAccordion(3)}>
                                                         <div className="flex items-center justify-between">
                                                             <span>DESCRIPTION</span>
@@ -405,7 +390,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                                     </button>
                                                     <div className="relative overflow-hidden transition-all duration-700" style={{maxHeight: selected === 3 ? container3Ref.current?.scrollHeight || "auto" : "0"}} ref={container3Ref}>
                                                         <div className="px-6 pb-6">
-                                                           <div dangerouslySetInnerHTML={{__html: currentProduct?.Product_Description || 'No description available for this product.',}}/>
+                                                           <div dangerouslySetInnerHTML={{__html: description}}/>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -419,7 +404,7 @@ export default function Productsview({selected, container2Ref, container3Ref, co
                                                     </button>
                                                     <div className="relative overflow-hidden transition-all duration-700" style={{maxHeight: selected === 7 ? container7Ref.current?.scrollHeight || "auto" : "0"}} ref={container7Ref}>
                                                         <div className="px-6 pb-6">
-                                                            <div dangerouslySetInnerHTML={{__html: currentProduct?.material_care || 'No description available for this product.',}}/>
+                                                            <div dangerouslySetInnerHTML={{__html: material_care}}/>
                                                         </div>
                                                     </div>
                                                 </li>

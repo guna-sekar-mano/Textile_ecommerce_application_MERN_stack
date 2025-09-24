@@ -195,7 +195,7 @@ export default function Bannerproducts() {
                                 <div className="group" key={item._id}>
                                     <div className="relative">
                                         <Link 
-                                            to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} 
+                                            to={`/products/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} 
                                             state={{ product: item, productId: item._id }} 
                                             onClick={scrollToTop}
                                         >

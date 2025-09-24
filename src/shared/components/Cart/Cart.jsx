@@ -10,12 +10,6 @@ import useAuth from "../../services/store/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import apiurl from "../../services/apiendpoint/apiendpoint";
 
-// const toUrlFriendly = (str) => {
-//   return str
-//     .toLowerCase()
-//     .replace(/[^a-z0-9]+/g, '-')
-//     .replace(/^-+|-+$/g, '');
-// };
 
 export default function Cart() {
     const { userdetails } = useAuth();
@@ -115,7 +109,7 @@ export default function Cart() {
     };
 
     const productView = (product) => {
-        navigate('/products-view/type/product', {
+        navigate('/products/type/product', {
             state: {
                 productId: product?.productId?._id,
                 // product: product
@@ -163,7 +157,7 @@ export default function Cart() {
                                                                     {item.variantId && <p className="text-gray-500 text-xs">Variant</p>}
                                                                 </div>
                                                                 {/* {item.productId ? (
-                                                                    <Link to={`/products-view/${toUrlFriendly(item.productId.Product_type)}/${toUrlFriendly(item.productId.Product_Name)}`} state={{ product: item.productId, productId: item.productId._id }} onClick={scrollToTop}>
+                                                                    <Link to={`/products/${toUrlFriendly(item.productId.Product_type)}/${toUrlFriendly(item.productId.Product_Name)}`} state={{ product: item.productId, productId: item.productId._id }} onClick={scrollToTop}>
                                                                         <img src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'} alt={productDetails.name} 
                                                                             className="h-20 w-20 object-cover object-center" />
                                                                     </Link>
@@ -213,12 +207,8 @@ export default function Cart() {
                                                     <div className="md:hidden bg-gray-100 p-4 rounded-lg">
                                                         <div className="flex gap-3">
                                                             <div className="flex-shrink-0">
-                                                                <img
-                                                                    onClick={() => { productView(item) }}
-                                                                    src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'}
-                                                                    alt={productDetails.name}
-                                                                    className="h-20 w-20 object-cover object-center rounded"
-                                                                />
+                                                                <img onClick={() => { productView(item) }} src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'}
+                                                                    alt={productDetails.name} className="h-20 w-20 object-cover object-center rounded" />
                                                             </div>
 
                                                             <div className="flex-1 min-w-0">

@@ -2,7 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Main from "../core/Main";
 import Homepage from "../components/Homepage";
 import ProductsViewPage from "../components/Productsviewpage";
-import Collectionpage from "../components/Collectionspage";
+// import Collectionpage from "../components/Collectionspage";
 import Loginpage from "../components/Loginpage";
 import SignupPage from "../components/Signuppage";
 import VerifyOtp from "../shared/components/Signup/VerifyOtp";
@@ -33,10 +33,9 @@ export default function Approuter () {
             <Routes>
                 <Route element={<Main/>}>
                     <Route path="/" element={<Homepage/>}/>
-                    {/* <Route path="/products-view/:id" element={<ProductsViewPage/>}/> */}
-                    <Route path="/products-view/:productType/:productName" element={<ProductsViewPage />} />
-                    <Route path="/collection/:collectionName" element={<Collectionpage/>}/>
-                    <Route path="/:categoryPath/*" element={<Categoryproducts />} />
+                    <Route path="/products/:productType/:productName" element={<ProductsViewPage />} />
+                    {/* <Route path="/collection/:collectionName" element={<Collectionpage/>}/> */}
+                    <Route path="/collections/:productType" element={<Categoryproducts />} />
                      <Route path="/banner-products" element={<Bannerproducts/>}/>
                     <Route path="/login" element={<Loginpage/>}/>
                     <Route path="/sign-up" element={<SignupPage/>}/>

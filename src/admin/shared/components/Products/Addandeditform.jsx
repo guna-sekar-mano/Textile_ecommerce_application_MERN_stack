@@ -6,32 +6,11 @@ import { useEffect, useState } from "react";
 import { MultiSelect } from 'primereact/multiselect';
 import { Dropdown } from 'primereact/dropdown';
 
-export default function Addandeditform({ visible, setVisible, formdata, handlechange, handlesave, handleupdate, hookupsData, customerCategories }) {
-    const [variants, setVariants] = useState([{ 
-        variant_name: '', 
-        variant_images: [], 
-        description: '',
-        tags:'',
-        material_care: '',
-        sizes: [],
-        gender: '',
-        Product_type: '',
-        price: '',
-        sale_price: '',
-        cost_price: '',
-        stock: 'Inactive',
-        status: 'Active'
-    }]);
+export default function Addandeditform({ visible, setVisible, formdata, handlechange, handlesave, handleupdate, hookupsData, customerCategories, swapItems }) {
+    const [variants, setVariants] = useState([{ variant_name: '', variant_images: [], description: '', tags:'', material_care: '', sizes: [], gender: '', Product_type: '',
+        price: '', sale_price: '', cost_price: '', stock: 'Inactive', status: 'Active' }]);
 
-    const [hookups, setHookups] = useState({
-        categories: [],
-        subcategories: [],
-        genders: [],
-        sizes: [],
-        tags: [],
-        producttype: [],
-        headerMenus: [],
-    });
+    const [hookups, setHookups] = useState({ categories: [], subcategories: [], genders: [], sizes: [], tags: [], producttype: [], headerMenus: [], });
 
     const [sizePricingMode, setSizePricingMode] = useState(false);
 
@@ -236,23 +215,16 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                     onChange={handlechange} required placeholder="Enter product name"/>
                             </div>
 
-                            <div>
+                            {/* <div>
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Category *</label>
-                                <Dropdown 
-                                    value={formdata?.Category || ""} 
-                                    options={customerCategories}
-                                    onChange={(e) => {
+                                <Dropdown value={formdata?.Category || ""} options={customerCategories} onChange={(e) => {
                                         const selectedCategory = customerCategories.find(cat => cat.value === e.value);
                                         handlechange({ target: { name: 'Category', value: e.value } });
                                         if (selectedCategory?.id) {
                                             handlechange({ target: { name: 'category_id', value: selectedCategory.id } });
                                         }
-                                    }}
-                                    placeholder="Select category"
-                                    className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black"
-                                    required
-                                />
-                            </div>
+                                    }} placeholder="Select category" className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black" required />
+                            </div> */}
 
                             {/* <div>
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Subcategory *</label>
@@ -341,7 +313,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                     required
                                 />
                             </div>
-                            <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-white col-span-full">
+                            {/* <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-white col-span-full">
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-sm font-semibold text-gray-800">Available Sizes</label>
                                     <div className="flex items-center gap-2">
@@ -405,9 +377,9 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                         ))}
                                     </div>
                                 )}
-                            </div>
+                            </div> */}
 
-                            {!sizePricingMode && (
+                            {/* {!sizePricingMode && (
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-800 mb-2">Price *</label>
@@ -430,7 +402,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                             placeholder="0.00" required/>
                                     </div>
                                 </div>
-                            )}
+                            )} */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Status *</label>
                                 <select name="status" value={formdata?.status || 'Active'} onChange={handlechange}
@@ -458,7 +430,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                             </div> */}
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-semibold text-gray-800 mb-2">Product Images</label>
                             
                             {formdata?.Images?.length > 0 && (
@@ -479,7 +451,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                             
                             <input type="file" multiple onChange={handleImageChange} accept="image/*" 
                                 className="w-full p-3 border border-dashed border-gray-300 rounded-lg text-sm hover:border-gray-400"/>
-                        </div>
+                        </div> */}
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg">
@@ -493,18 +465,26 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                 <div className="flex justify-between items-center mb-3">
                                     <h4 className="font-medium text-gray-800">Variant {index + 1}</h4>
                                     {variants.length > 1 && (
-                                        <button type="button" onClick={() => removeVariant(index)} 
-                                            className="text-red-500 hover:bg-red-50 px-3 py-1 rounded transition-colors">Remove</button>
+                                        <>
+                                            <div>
+                                                {index > 0 && ( <button type="button" onClick={() => swapItems(index, index - 1)} class="me-2 py-1 px-2 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden">
+                                                    ⬆️ up
+                                                </button>)}
+                                                {index < variants.length - 1 && ( <button type='button'  class="py-1 px-2 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden" onClick={() => swapItems(index, index + 1)}>⬇️ Down</button> )}
+                                            </div>
+
+                                            <button type="button" onClick={() => removeVariant(index)} className="text-red-500 hover:bg-red-50 px-3 py-1 rounded transition-colors">Remove</button>
+                                        </>
                                     )}
                                 </div>
 
-                                    <div className='mb-2'>
-                                        <label className="block text-sm font-medium mb-1">Variant Name *</label>
-                                        <input type="text" value={variant.variant_name || ''} onChange={(e) => updateVariantField(index, 'variant_name', e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
-                                            placeholder="e.g., Red, Blue, Green" required/>
-                                    </div>
-                                <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                                <div className='mb-2'>
+                                    <label className="block text-sm font-medium mb-1">Variant Name *</label>
+                                    <input type="text" value={variant.variant_name || ''} onChange={(e) => updateVariantField(index, 'variant_name', e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
+                                        placeholder="e.g., Red, Blue, Green" required/>
+                                </div>
+                                {/* <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
                                     <div className='mb-2'>
                                         <label className="block text-sm font-medium mb-1">Material Care</label>
                                          <SunEditor setContents={variant.material_care || ''} onChange={(content) => updateVariantField(index, 'material_care', content)}
@@ -523,27 +503,27 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                         />
                                     </div>
 
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium mb-1">Description</label>
-                                        <SunEditor setContents={variant.description || ''} onChange={(content) => updateVariantField(index, 'description', content)}
-                                            setOptions={{
-                                                defaultStyle: "font-family: Arial, sans-serif;",
-                                                font: ['Arial'],
-                                                buttonList: [
-                                                    ['undo', 'redo', 'fontSize', 'formatBlock'],
-                                                    ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
-                                                    ['fontColor', 'hiliteColor', 'textStyle'],
-                                                    ['align', 'list', 'lineHeight'],
-                                                    ['outdent', 'indent'],
-                                                ]
-                                            }}
-                                            height="150px"
-                                        />
-                                </div>
-                                </div>
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium mb-1">Description</label>
+                                            <SunEditor setContents={variant.description || ''} onChange={(content) => updateVariantField(index, 'description', content)}
+                                                setOptions={{
+                                                    defaultStyle: "font-family: Arial, sans-serif;",
+                                                    font: ['Arial'],
+                                                    buttonList: [
+                                                        ['undo', 'redo', 'fontSize', 'formatBlock'],
+                                                        ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
+                                                        ['fontColor', 'hiliteColor', 'textStyle'],
+                                                        ['align', 'list', 'lineHeight'],
+                                                        ['outdent', 'indent'],
+                                                    ]
+                                                }}
+                                                height="150px"
+                                            />
+                                    </div>
+                                </div> */}
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    <div className="mb-4">
+                                    {/* <div className="mb-4">
                                         <label className="block text-sm font-medium mb-1">Product type</label>
                                         <Dropdown 
                                             value={formdata?.Product_type || ""} 
@@ -563,7 +543,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                             placeholder="Select gender"
                                             className="w-full px-3 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                                         />
-                                    </div>
+                                    </div> */}
                                     <div className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50 col-span-full">
                                         <div className="flex items-center justify-between mb-3">
                                             <label className="block text-sm font-medium">Available Sizes</label>
@@ -612,34 +592,27 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                             <div>
                                                 <label className="block text-sm font-medium mb-1">Price</label>
-                                                <input type="number" value={variant.price || ''} 
-                                                    onChange={(e) => updateVariantField(index, 'price', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
-                                                    placeholder="0.00"/>
+                                                <input type="number" value={variant.price || ''} onChange={(e) => updateVariantField(index, 'price', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" placeholder="0.00"/>
                                             </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium mb-1">Sale Price</label>
-                                                <input type="number" value={variant.sale_price || ''} 
-                                                    onChange={(e) => updateVariantField(index, 'sale_price', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
-                                                    placeholder="0.00"/>
+                                                <input type="number" value={variant.sale_price || ''} onChange={(e) => updateVariantField(index, 'sale_price', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" placeholder="0.00"/>
                                             </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium mb-1">Cost of the Product</label>
-                                                <input type="number" value={variant.cost_price || ''} 
-                                                    onChange={(e) => updateVariantField(index, 'cost_price', e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
-                                                    placeholder="0.00"/>
+                                                <input type="number" value={variant.cost_price || ''} onChange={(e) => updateVariantField(index, 'cost_price', e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" placeholder="0.00"/>
                                             </div>
                                         </div>
                                     )}
 
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Status</label>
-                                        <select value={variant.status || 'Active'} 
-                                            onChange={(e) => updateVariantField(index, 'status', e.target.value)}
+                                        <select value={variant.status || 'Active'} onChange={(e) => updateVariantField(index, 'status', e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500">
                                             <option value="Active">Active</option>
                                             <option value="Inactive">Inactive</option>
@@ -648,8 +621,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
 
                                     <div>
                                         <label className="block text-sm font-medium mb-1">Stock Status</label>
-                                        <select value={variant.stock || 'Inactive'} 
-                                            onChange={(e) => updateVariantField(index, 'stock', e.target.value)}
+                                        <select value={variant.stock || 'Inactive'} onChange={(e) => updateVariantField(index, 'stock', e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500">
                                             <option value="Active">In Stock</option>
                                             <option value="Inactive">Out of Stock</option>

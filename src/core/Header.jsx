@@ -2,19 +2,28 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../shared/services/store/useAuth";
 import useCartStore from "../shared/services/store/usecart";
-import { apigetallHeaderproducts } from "../admin/shared/services/apiproducts/apiproducts";
-import { getallcustomercategory } from "../shared/services/apiCustomercategory/apicustomercategory";
+import { apigetallproductsCustomers } from "../shared/services/apicustomerProducts/apicustomerproducts";
+import Search from "../shared/components/Search/Search";
+
+const toUrlFriendly = (str) => {
+    return str
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+};
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [isCollectionHovered, setIsCollectionHovered] = useState(false);
+    const [isMenHovered, setIsMenHovered] = useState(false);
+    const [isWomenHovered, setIsWomenHovered] = useState(false);
     const { logout, userdetails } = useAuth();
     const { clearCart } = useCartStore();
     const navigate = useNavigate();
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [Data, setData] = useState([]);
+    const [menCategories, setMenCategories] = useState([]);
+    const [womenCategories, setWomenCategories] = useState([]);
     const { cart } = useCartStore();
 
     const toggleMenu = () => { setIsMenuOpen(!isMenuOpen); };
@@ -27,15 +36,55 @@ export default function Header() {
         navigate('/');
     };
 
-
-    const getallcustomercategories = useCallback(async () => {
+    const getProductCategories = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await getallcustomercategory();
-            setData(res.resdata);
-            console.log(res?.resdata)
+            const res = await apigetallproductsCustomers();
+            if (res?.resdata) {
+                const menProductTypes = {};
+                const womenProductTypes = {};
+                
+                res.resdata.forEach(product => {
+                    const productType = product.Product_type;
+                    const gender = product.gender;
+                    
+                    if (!productType) return;
+                    
+                    const firstVariant = product.variants?.find(v => v.status === 'Active') || product.variants?.[0];
+                    const categoryImage = firstVariant?.variant_images?.[0] || null;
+                    
+                    if (gender === 'Men') {
+                        if (!menProductTypes[productType]) {
+                            menProductTypes[productType] = {
+                                Category_Name: productType,
+                                redirect_link: `/collections/${toUrlFriendly(productType)}?gender=men`,
+                                image: categoryImage,
+                                productCount: 1
+                            };
+                        } else {
+                            menProductTypes[productType].productCount += 1;
+                        }
+                    }
+                    
+                    if (gender === 'Women') {
+                        if (!womenProductTypes[productType]) {
+                            womenProductTypes[productType] = {
+                                Category_Name: productType,
+                                redirect_link: `/collections/${toUrlFriendly(productType)}?gender=women`,
+                                image: categoryImage,
+                                productCount: 1
+                            };
+                        } else {
+                            womenProductTypes[productType].productCount += 1;
+                        }
+                    }
+                });
+                
+                setMenCategories(Object.values(menProductTypes));
+                setWomenCategories(Object.values(womenProductTypes));
+            }
         } catch (error) {
-            console.error("Error fetching categories:", error);
+            console.error("Error fetching product categories:", error);
         } finally {
             setLoading(false);
         }
@@ -44,14 +93,17 @@ export default function Header() {
     let isMounted = true;
     useEffect(() => {
         if (isMounted) {
-            getallcustomercategories();
+            getProductCategories();
         }
         return (() => isMounted = false);
     }, []);
 
-    const handleCategoryClick = (redirectLink, categoryId) => {
-        sessionStorage.setItem('currentCategoryId', categoryId);
+    const handleCategoryClick = (redirectLink) => {
         navigate(redirectLink);
+    };
+
+    const handleGenderClick = (gender) => {
+        navigate(`/collections/all?gender=${gender}`);
     };
 
     const scrollToTop = () => {
@@ -68,87 +120,66 @@ export default function Header() {
                                 <Link to={"/"}>
                                     <li className="text-lg hover:text-gray-300 transition-colors">Home</li>
                                 </Link>
-                                <li
-                                    className="text-lg cursor-pointer hover:text-gray-300 transition-colors relative"
-                                    onMouseEnter={() => setIsCollectionHovered(true)}
-                                    onMouseLeave={() => setIsCollectionHovered(false)}
-                                >
-                                    Collection
+                                <li className="text-lg cursor-pointer hover:text-gray-300 transition-colors relative" 
+                                    onMouseEnter={() => setIsMenHovered(true)} 
+                                    onMouseLeave={() => setIsMenHovered(false)}>
+                                    Men
 
-                                    <div className={`absolute top-full left-0 mt-2 w-fit bg-white text-black shadow-2xl overflow-hidden transition-all duration-300 z-50 ${isCollectionHovered ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
+                                    <div className={`absolute top-full left-0 mt-2 w-fit bg-white text-black shadow-2xl overflow-hidden transition-all duration-300 z-50 ${isMenHovered ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
                                         }`}>
                                         <div className="grid gap-0">
-
                                             <div className="p-6 bg-gray-50 border-r border-gray-200">
                                                 <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
-                                                    Collections
+                                                    Men's Collections
                                                 </h3>
-                                                <ul className="grid grid-rows-4 grid-flow-col">
-                                                    {Data.map((col, index) => {
-                                                        return (
-                                                            <li key={`${col._id || index}`} className={index > 3 ? 'border-l' : 'border-0'} >
-                                                                <div onClick={() => handleCategoryClick(col.redirect_link, col._id)}
-                                                                    className="text-gray-700 hover:text-black transition-colors text-sm whitespace-nowrap p-3">
-                                                                    {col?.Category_Name}
-                                                                </div>
-                                                            </li>
-                                                        );
-                                                    })}
-                                                </ul> 
-                                            </div>
-
-
-                                            {/* {Object.entries(groupedProducts).slice(0, 2).map(([category, products], categoryIndex) => (
-                                                <div key={categoryIndex} className="p-6 border-r border-gray-200">
-                                                    <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
-                                                        {category}
-                                                    </h3>
-                                                    <ul className="space-y-3">
-                                                        {products.slice(0, 6).map((product, productIndex) => (
-                                                            <li key={productIndex}>
-                                                                <Link
-                                                                    to={`/product/${product._id}`}
-                                                                    className="text-gray-700 hover:text-black transition-colors text-sm"
-                                                                >
-                                                                    {product.Subcategory || product.Product_type}
-                                                                </Link>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                                <div onClick={() => handleGenderClick('men')}
+                                                    className="text-gray-700 hover:text-black transition-colors text-sm whitespace-nowrap p-3 cursor-pointer font-medium border-b border-gray-200 mb-2"
+                                                >
+                                                    All Men's Products
                                                 </div>
-                                            ))}
-
-                                       
-                                            <div className="p-6">
-                                                <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
-                                                    Featured
-                                                </h3>
-                                                <ul className="space-y-3 mb-6">
-                                                    {headerData.filter(product => product.tags === "FRESH IN").slice(0, 4).map((product, index) => (
-                                                        <li key={index}>
-                                                            <Link
-                                                                to={`/product/${product._id}`}
-                                                                className="text-gray-700 hover:text-black transition-colors text-sm"
-                                                            >
-                                                                {product.Product_Name.length > 25
-                                                                    ? product.Product_Name.substring(0, 25) + "..."
-                                                                    : product.Product_Name
-                                                                }
-                                                            </Link>
+                                                <ul className="grid grid-rows-4 grid-flow-col">
+                                                    {menCategories.map((col, index) => (
+                                                        <li key={`men-${col.Category_Name}-${index}`} className={index > 3 ? 'border-l' : 'border-0'}>
+                                                            <div onClick={() => handleCategoryClick(col.redirect_link)}
+                                                                className="text-gray-700 hover:text-black transition-colors text-sm whitespace-nowrap p-3 cursor-pointer">
+                                                                {col?.Category_Name}
+                                                            </div>
                                                         </li>
                                                     ))}
-                                                </ul>
+                                                </ul> 
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li className="text-lg cursor-pointer hover:text-gray-300 transition-colors relative" 
+                                    onMouseEnter={() => setIsWomenHovered(true)} 
+                                    onMouseLeave={() => setIsWomenHovered(false)}>
+                                    Women
 
+                                    <div className={`absolute top-full left-0 mt-2 w-fit bg-white text-black shadow-2xl overflow-hidden transition-all duration-300 z-50 ${isWomenHovered ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-4'
+                                        }`}>
+                                        <div className="grid gap-0">
+                                            <div className="p-6 bg-gray-50 border-r border-gray-200">
                                                 <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
-                                                    Shop All
+                                                    Women's Collections
                                                 </h3>
-                                                <Link
-                                                    to="/collections"
-                                                    className="inline-block bg-black text-white px-4 py-2 rounded text-sm hover:bg-gray-800 transition-colors"
+                                                <div 
+                                                    onClick={() => handleGenderClick('women')}
+                                                    className="text-gray-700 hover:text-black transition-colors text-sm whitespace-nowrap p-3 cursor-pointer font-medium border-b border-gray-200 mb-2"
                                                 >
-                                                    View All Collections
-                                                </Link>
-                                            </div> */}
+                                                    All Women's Products
+                                                </div>
+                                                <ul className="grid grid-rows-4 grid-flow-col">
+                                                    {womenCategories.map((col, index) => (
+                                                        <li key={`women-${col.Category_Name}-${index}`} className={index > 3 ? 'border-l' : 'border-0'}>
+                                                            <div onClick={() => handleCategoryClick(col.redirect_link)}
+                                                                className="text-gray-700 hover:text-black transition-colors text-sm whitespace-nowrap p-3 cursor-pointer">
+                                                                {col?.Category_Name}
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul> 
+                                            </div>
                                         </div>
                                     </div>
                                 </li>
@@ -248,19 +279,43 @@ export default function Header() {
                                 </li>
 
                                 <li>
-                                    <p className="text-white text-xl font-medium py-2">Collections</p>
-                                    <ul className="space-y-3">
-                                        {Data.map((col, index) => (
-                                            <li key={index}>
-                                                <div
-                                                    onClick={() => { handleCategoryClick(col.redirect_link, col._id) }}
-                                                    className="text-gray-700 hover:text-black transition-colors text-sm"
-                                                >
-                                                    {col?.Category_Name}
-                                                </div>
-                                            </li>
+                                    <p className="text-white text-xl font-medium py-2">Men</p>
+                                    <div className="ml-4 space-y-3">
+                                        <div
+                                            onClick={() => { handleGenderClick('men'); toggleMenu(); }}
+                                            className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer font-medium"
+                                        >
+                                            All Men's Products
+                                        </div>
+                                        {menCategories.map((col, index) => (
+                                            <div key={`mobile-men-${index}`}
+                                                onClick={() => { handleCategoryClick(col.redirect_link); toggleMenu(); }}
+                                                className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer"
+                                            >
+                                                {col?.Category_Name}
+                                            </div>
                                         ))}
-                                    </ul>
+                                    </div>
+                                </li>
+
+                                <li>
+                                    <p className="text-white text-xl font-medium py-2">Women</p>
+                                    <div className="ml-4 space-y-3">
+                                        <div
+                                            onClick={() => { handleGenderClick('women'); toggleMenu(); }}
+                                            className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer font-medium"
+                                        >
+                                            All Women's Products
+                                        </div>
+                                        {womenCategories.map((col, index) => (
+                                            <div key={`mobile-women-${index}`}
+                                                onClick={() => { handleCategoryClick(col.redirect_link); toggleMenu(); }}
+                                                className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer"
+                                            >
+                                                {col?.Category_Name}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </li>
 
                                 <li>
@@ -269,13 +324,13 @@ export default function Header() {
                                     </Link>
                                 </li>
                                 <li className="pt-4 border-t border-gray-800">
-                                    <Link to="/support" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={toggleMenu}>
+                                    <Link to="/contact-us" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={toggleMenu}>
                                         Support
                                     </Link>
                                 </li>
                                 {!userdetails && (
                                     <li>
-                                        <Link to="/login" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={{ toggleMenu, scrollToTop }}>
+                                        <Link to="/login" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={() => { toggleMenu(); scrollToTop(); }}>
                                             Login / Sign up
                                         </Link>
                                     </li>
@@ -300,33 +355,7 @@ export default function Header() {
                 </div>
             </header>
 
-            <div className={`fixed inset-0 bg-black bg-opacity-95 z-[100] flex items-center justify-center transition-all duration-500 ease-in-out ${isSearchOpen ? 'opacity-100 visible backdrop-blur-sm' : 'opacity-0 invisible'}`}>
-                <div className={`w-full max-w-4xl px-6 transform transition-all duration-500 ease-out ${isSearchOpen ? 'translate-y-0 scale-100' : 'translate-y-8 scale-95'}`}>
-                    <button onClick={closeSearch} className="absolute top-8 right-8 text-white hover:text-gray-300 transition-colors z-10">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-
-                    <div className="text-center mb-12">
-                        <h2 className="text-white text-4xl md:text-5xl font-light mb-4 tracking-wide">
-                            What are you looking for?
-                        </h2>
-                        <p className="text-gray-400 text-lg">
-                            Search through our collection
-                        </p>
-                    </div>
-
-                    <div className="relative mb-16">
-                        <input type="text" placeholder="Search products, categories, brands..."
-                            className="w-full bg-transparent text-white text-2xl md:text-3xl font-light border-b-2 border-gray-600 focus:border-white outline-none py-4 px-0 placeholder-gray-500 transition-colors duration-300" autoFocus
-                        />
-                        <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
-                            <i className="fi fi-rr-search text-white text-2xl"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <Search closeSearch={closeSearch} isSearchOpen={isSearchOpen} />
         </>
     );
 }

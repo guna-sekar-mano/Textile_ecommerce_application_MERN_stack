@@ -17,7 +17,6 @@ const toUrlFriendly = (str) => {return str.toLowerCase().replace(/[^a-z0-9]+/g, 
 
 const SizeSelectionModal = ({ isOpen, onClose, product, onAddToCart, getImageUrl }) => {
     const [selectedSize, setSelectedSize] = useState('');
- 
 
     useEffect(() => {
         if (isOpen) {
@@ -39,12 +38,14 @@ const SizeSelectionModal = ({ isOpen, onClose, product, onAddToCart, getImageUrl
     };
 
     const getPricingInfo = () => {
-        const hasSizeSpecificPricing = product?.sizes && product.sizes.length > 0 && 
-            product.sizes.some(sizeObj => sizeObj.price || sizeObj.sale_price);
+        const productData = product;
+        
+        const hasSizeSpecificPricing = productData?.sizes && productData.sizes.length > 0 && 
+            productData.sizes.some(sizeObj => sizeObj.price || sizeObj.sale_price);
         
         if (hasSizeSpecificPricing) {
             if (selectedSize) {
-                const sizeData = product.sizes.find(s => s.size === selectedSize);
+                const sizeData = productData.sizes.find(s => s.size === selectedSize);
                 if (sizeData) {
                     return {
                         currentPrice: sizeData.sale_price && sizeData.sale_price !== "0" ? sizeData.sale_price : sizeData.price,
@@ -55,16 +56,16 @@ const SizeSelectionModal = ({ isOpen, onClose, product, onAddToCart, getImageUrl
             }
         }
         
-        if (product?.sale_price && product.sale_price !== "0" && product?.price) {
+        if (productData?.sale_price && productData.sale_price !== "0" && productData?.price) {
             return {
-                currentPrice: product.sale_price,
-                originalPrice: product.price,
+                currentPrice: productData.sale_price,
+                originalPrice: productData.price,
                 hasDiscount: true
             };
         }
         
         return {
-            currentPrice: product?.price || 'Price not available',
+            currentPrice: productData?.price || 'Price not available',
             originalPrice: null,
             hasDiscount: false
         };
@@ -90,6 +91,7 @@ const SizeSelectionModal = ({ isOpen, onClose, product, onAddToCart, getImageUrl
                         <div className="flex-1">
                             <h3 className="font-medium text-gray-900 line-clamp-2">
                                 {product?.Product_Name}
+                                {product?.variantName && <span className="text-sm text-gray-600 block">({product.variantName})</span>}
                             </h3>
                             <div className="flex items-center gap-2 mt-2">
                                 {pricingInfo.hasDiscount ? (
@@ -149,16 +151,16 @@ const SizeSelectionModal = ({ isOpen, onClose, product, onAddToCart, getImageUrl
                             Cancel
                         </button>
                        <button 
-    onClick={handleAddToCart} // Remove the parameter here
-    disabled={!selectedSize || product?.stock !== 'Active'}
-    className={`flex-1 py-3 font-semibold transition-colors ${
-        !selectedSize || product?.stock !== 'Active' 
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-            : 'bg-black text-white hover:bg-gray-800'
-    }`}
->
-    Add to Cart
-</button>
+                            onClick={handleAddToCart}
+                            disabled={!selectedSize || product?.stock !== 'Active'}
+                            className={`flex-1 py-3 font-semibold transition-colors ${
+                                !selectedSize || product?.stock !== 'Active' 
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                    : 'bg-black text-white hover:bg-gray-800'
+                            }`}
+                        >
+                        Add to Cart
+                    </button>
                     </div>
                 </div>
             </div>
@@ -173,6 +175,57 @@ export default function Wishlist() {
     const isMountedRef = useRef(true);
     const { userdetails } = useAuth();
     const { addToCart, cart: cartItems } = useCartStore();
+
+    // Helper function to get variant data from variants array
+    const getVariantData = (item) => {
+        if (item.variantId && item.variants) {
+            const variant = item.variants.find(v => v._id === item.variantId);
+            if (variant) {
+                return {
+                    variantName: variant.variant_name,
+                    Images: variant.variant_images,
+                    sizes: variant.sizes,
+                    price: variant.price,
+                    sale_price: variant.sale_price,
+                    stock: variant.stock
+                };
+            }
+        }
+        return null;
+    };
+
+    // Helper function to get processed item data
+    const getProcessedItem = (item) => {
+        const variantData = getVariantData(item);
+        
+        if (variantData) {
+            return {
+                ...item,
+                variantName: variantData.variantName,
+                Images: variantData.Images,
+                sizes: variantData.sizes,
+                price: variantData.price,
+                sale_price: variantData.sale_price,
+                stock: variantData.stock
+            };
+        }
+        
+        // For main products without variantId, we need to get data from the first available variant
+        // since main product fields are commented out in your schema
+        if (!item.variantId && item.variants && item.variants.length > 0) {
+            const firstVariant = item.variants[0];
+            return {
+                ...item,
+                Images: firstVariant.variant_images,
+                sizes: firstVariant.sizes,
+                price: firstVariant.price,
+                sale_price: firstVariant.sale_price,
+                stock: firstVariant.stock
+            };
+        }
+        
+        return item;
+    };
 
     const getAllWishlistData = useCallback(async () => {
         try {
@@ -223,12 +276,14 @@ export default function Wishlist() {
         }
     };
 
-    const handleAddToCartClick = (product) => {
-        if (product.sizes && product.sizes.length > 0) {
-            setSelectedProduct(product);
+    const handleAddToCartClick = (item) => {
+        const processedItem = getProcessedItem(item);
+        
+        if (processedItem.sizes && processedItem.sizes.length > 0) {
+            setSelectedProduct(processedItem);
             setShowSizeModal(true);
         } else {
-            handleAddToCart(product, null);
+            handleAddToCart(processedItem, null);
         }
     };
 
@@ -269,52 +324,30 @@ export default function Wishlist() {
             
             await apisavecart(cartData);
             
-            let productWithSize;
-            
+            let productWithSize = {
+                _id: product._id,
+                productId: productId,
+                Product_Name: product.Product_Name,
+                Images: product.Images,
+                price: product.price,
+                sale_price: product.sale_price,
+                sizes: product.sizes,
+                stock: product.stock,
+                variantId: variantId,
+                selectedSize: selectedSize,
+                Quantity: 1,
+                description: product.description,
+                material_care: product.material_care,
+                tags: product.tags,
+                Product_type: product.Product_type,
+                gender: product.gender,
+                Category: product.Category,
+                Subcategory: product.Subcategory
+            };
+
+            // Add variant-specific data if it exists
             if (variantId && product.variantName) {
-                productWithSize = {
-                    _id: product._id,
-                    productId: productId,
-                    Product_Name: product.Product_Name,
-                    variant_name: product.variantName,
-                    Images: product.Images,
-                    variant_images: product.variant_images,
-                    price: product.price,
-                    sale_price: product.sale_price,
-                    sizes: product.sizes,
-                    stock: product.stock,
-                    variantId: variantId,
-                    selectedSize: selectedSize,
-                    Quantity: 1,
-                    description: product.description,
-                    material_care: product.material_care,
-                    tags: product.tags,
-                    Product_type: product.Product_type,
-                    gender: product.gender,
-                    Category: product.Category,
-                    Subcategory: product.Subcategory
-                };
-            } else {
-                productWithSize = {
-                    _id: product._id,
-                    productId: productId,
-                    Product_Name: product.Product_Name,
-                    Images: product.Images,
-                    price: product.price,
-                    sale_price: product.sale_price,
-                    sizes: product.sizes,
-                    stock: product.stock,
-                    variantId: variantId,
-                    selectedSize: selectedSize,
-                    Quantity: 1,
-                    description: product.description,
-                    material_care: product.material_care,
-                    tags: product.tags,
-                    Product_type: product.Product_type,
-                    gender: product.gender,
-                    Category: product.Category,
-                    Subcategory: product.Subcategory
-                };
+                productWithSize.variant_name = product.variantName;
             }
 
             addToCart(productWithSize);
@@ -327,6 +360,49 @@ export default function Wishlist() {
         }
     };
 
+    const renderPricing = (item) => {
+        const processedItem = getProcessedItem(item);
+        
+        if (processedItem.price || processedItem.sale_price) {
+            const hasGlobalSalePrice = processedItem.sale_price && parseFloat(processedItem.sale_price) > 0;
+            if (hasGlobalSalePrice) {
+                return (
+                    <>
+                        <span className="text-lg font-semibold text-gray-900">₹{processedItem.sale_price}</span>
+                        <span className="text-sm text-gray-500 line-through">₹{processedItem.price}</span>
+                    </>
+                );
+            } else {
+                return (
+                    <span className="text-lg font-semibold text-gray-900">₹{processedItem.price}</span>
+                );
+            }
+        } else if (processedItem.sizes && processedItem.sizes.length > 0) {
+            const firstSize = processedItem.sizes[0];
+            const hasSizeWiseSalePrice = firstSize.sale_price && parseFloat(firstSize.sale_price) > 0;
+            if (hasSizeWiseSalePrice) {
+                return (
+                    <>
+                        <span className="text-lg font-semibold text-gray-900">₹{firstSize.sale_price}</span>
+                        <span className="text-sm text-gray-500 line-through">₹{firstSize.price}</span>
+                        <span className="text-xs text-gray-400">(from {firstSize.size})</span>
+                    </>
+                );
+            } else {
+                return (
+                    <>
+                        <span className="text-lg font-semibold text-gray-900">₹{firstSize.price}</span>
+                        <span className="text-xs text-gray-400">(from {firstSize.size})</span>
+                    </>
+                );
+            }
+        } else {
+            return (
+                <span className="text-lg font-semibold text-gray-900">Price not available</span>
+            );
+        }
+    };
+
     return (
         <>
             <section className="px-4 py-10 azeret-mono">
@@ -336,100 +412,84 @@ export default function Wishlist() {
                         <span className="text-gray-500">({data?.totallength || 0} items)</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-6">
-                        {data?.products?.map((item) => (
-                            <div className="group" key={item._id}>
-                                <div className="relative">
-                                    <Link to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item.productId }} >
-                                        <Swiper 
-                                            navigation={{
-                                                nextEl: `.swiper-button-next-${item._id}`,
-                                                prevEl: `.swiper-button-prev-${item._id}`,
-                                            }} 
-                                            modules={[Navigation]} className="mySwiper relative" loop={item.Images?.length > 1} allowTouchMove={true}>
-                                            {item.Images?.map((img, index) => (
-                                                <SwiperSlide key={index}>
-                                                    <img src={getImageUrl(img)} alt={`${item.Product_Name} - Image ${index + 1}`} className="w-full h-[55dvh] object-cover"/>
-                                                </SwiperSlide>
-                                            ))}
-                                        </Swiper>
-                                    </Link>
-                                    
-                                    {item.tags && (
-                                        <div className="absolute top-2 left-2 bg-white/80 px-2 py-1 rounded z-10">
-                                            <p className="text-xs font-medium text-black">{item.tags}</p>
+                        {data?.products?.map((item) => {
+                            const processedItem = getProcessedItem(item);
+                            const displayImages = processedItem.Images || item.Images || [];
+                            
+                            return (
+                                <div className="group" key={item._id}>
+                                    <div className="relative">
+                                        <Link to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} 
+                                              state={{ product: item, productId: item.productId, variantId: item.variantId }} >
+                                          <Swiper 
+                                                navigation={{
+                                                    nextEl: `.swiper-button-next-${item._id}`,
+                                                    prevEl: `.swiper-button-prev-${item._id}`,
+                                                }} 
+                                                modules={[Navigation]} className="mySwiper relative" 
+                                                loop={displayImages.length > 1} 
+                                                allowTouchMove={true}>
+                                                {displayImages.map((img, index) => (
+                                                    <SwiperSlide key={index}>
+                                                        <img src={getImageUrl(img)} 
+                                                             alt={`${item.Product_Name} - Image ${index + 1}`} 
+                                                             className="w-full h-[55dvh] object-cover"/>
+                                                    </SwiperSlide>
+                                                ))}
+                                            </Swiper>
+                                        </Link>
+                                        
+                                        {item.tags && (
+                                            <div className="absolute top-2 left-2 bg-white/80 px-2 py-1 rounded z-10">
+                                                <p className="text-xs font-medium text-black">{item.tags}</p>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="absolute top-2 right-2 bg-white p-2 z-10 hover:bg-white cursor-pointer">
+                                            <i className="fi fi-sr-heart flex justify-center items-center hover:cursor-pointer text-xl text-red-700" 
+                                               onClick={() => removeFromWishlist(item._id)}></i>
                                         </div>
-                                    )}
-                                    
-                                    <div className="absolute top-2 right-2 bg-white p-2 z-10 hover:bg-white cursor-pointer">
-                                        <i className="fi fi-sr-heart flex justify-center items-center hover:cursor-pointer text-xl text-red-700" onClick={() => removeFromWishlist(item._id)}></i>
+                                        
+                                        {displayImages.length > 1 && (
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                <div className={`swiper-button-prev-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
+                                                    <ChevronLeft />
+                                                </div>
+                                                <div className={`swiper-button-next-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
+                                                    <ChevronRight />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    
-                                    {item.Images?.length > 1 && (
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <div className={`swiper-button-prev-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
-                                                <ChevronLeft />
-                                            </div>
-                                            <div className={`swiper-button-next-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
-                                                <ChevronRight />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="mt-3">
-                                    <button onClick={() => handleAddToCartClick(item)} disabled={item.stock !== 'Active'}
-                                        className={`text-center w-full py-2 cursor-pointer border transition-colors ${item.stock === 'Active' ? 'bg-black text-white hover:text-black hover:bg-white border-black' : 'bg-gray-400 text-gray-200 cursor-not-allowed border-gray-400'}`}
-                                    >
-                                        {item.stock === 'Active' ? 'Add to cart' : 'Out of Stock'}
-                                    </button>
-                                </div>
-                                <div className="mt-3 px-1">
-                                    <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{item.Product_Name}</h3>
+                                    <div className="mt-3">
+                                        <button onClick={() => handleAddToCartClick(item)} 
+                                                disabled={processedItem.stock !== 'Active'}
+                                            className={`text-center w-full py-2 cursor-pointer border transition-colors ${
+                                                processedItem.stock === 'Active' 
+                                                    ? 'bg-black text-white hover:text-black hover:bg-white border-black' 
+                                                    : 'bg-gray-400 text-gray-200 cursor-not-allowed border-gray-400'
+                                            }`}
+                                        >
+                                            {processedItem.stock === 'Active' ? 'Add to cart' : 'Out of Stock'}
+                                        </button>
+                                    </div>
+                                    <div className="mt-3 px-1">
+                                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                                            {item.Product_Name}
+                                            {processedItem.variantName && (
+                                                <span className="text-xs text-gray-600 block">
+                                                    {processedItem.variantName}
+                                                </span>
+                                            )}
+                                        </h3>
 
-                                    <div className="mt-1 flex items-center gap-2">
-                                        {(() => {
-                                            if (item.price || item.sale_price) {
-                                                const hasGlobalSalePrice = item.sale_price && parseFloat(item.sale_price) > 0;
-                                                if (hasGlobalSalePrice) {
-                                                    return (
-                                                        <>
-                                                            <span className="text-lg font-semibold text-gray-900">₹{item.sale_price}</span>
-                                                            <span className="text-sm text-gray-500 line-through">₹{item.price}</span>
-                                                        </>
-                                                    );
-                                                } else {
-                                                    return (
-                                                        <span className="text-lg font-semibold text-gray-900">₹{item.price}</span>
-                                                    );
-                                                }
-                                            } else if (item.sizes && item.sizes.length > 0) {
-                                                const firstSize = item.sizes[0];
-                                                const hasSizeWiseSalePrice = firstSize.sale_price && parseFloat(firstSize.sale_price) > 0;
-                                                if (hasSizeWiseSalePrice) {
-                                                    return (
-                                                        <>
-                                                            <span className="text-lg font-semibold text-gray-900">₹{firstSize.sale_price}</span>
-                                                            <span className="text-sm text-gray-500 line-through">₹{firstSize.price}</span>
-                                                            <span className="text-xs text-gray-400">(from {firstSize.size})</span>
-                                                        </>
-                                                    );
-                                                } else {
-                                                    return (
-                                                        <>
-                                                            <span className="text-lg font-semibold text-gray-900">₹{firstSize.price}</span>
-                                                            <span className="text-xs text-gray-400">(from {firstSize.size})</span>
-                                                        </>
-                                                    );
-                                                }
-                                            } else {
-                                                return (
-                                                    <span className="text-lg font-semibold text-gray-900">Price not available</span>
-                                                );
-                                            }
-                                        })()}
+                                        <div className="mt-1 flex items-center gap-2">
+                                            {renderPricing(item)}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                     
                     {data?.products?.length === 0 && (
@@ -443,7 +503,13 @@ export default function Wishlist() {
                 </div>
             </section>
 
-            <SizeSelectionModal isOpen={showSizeModal} onClose={() => setShowSizeModal(false)} product={selectedProduct} onAddToCart={handleAddToCart} getImageUrl={getImageUrl}/>
+            <SizeSelectionModal 
+                isOpen={showSizeModal} 
+                onClose={() => setShowSizeModal(false)} 
+                product={selectedProduct} 
+                onAddToCart={handleAddToCart} 
+                getImageUrl={getImageUrl}
+            />
         </>
     );
 }

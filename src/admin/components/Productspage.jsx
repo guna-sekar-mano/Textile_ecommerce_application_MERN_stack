@@ -351,10 +351,19 @@ export default function Productspage() {
         });
     };
 
+    const swapItems = (fromIndex, toIndex) => {
+        setFormdata((prev) => {
+            const newArr = [...prev.variants];
+            [newArr[fromIndex], newArr[toIndex]] = [newArr[toIndex], newArr[fromIndex]];
+            return {...prev,variants:newArr};
+        });
+    };
+
     return (
         <div className="">
             <Tableheadpanel openform={openform} setGlobalFilter={setGlobalFilter} />
-            <Addandeditform visible={visible} setVisible={setVisible} customerCategories={customerCategories} formdata={formdata} handlechange={handlechange} handlesave={handlesave} handleupdate={handleupdate}  hookupsData={tableData?.hookups || []}  />
+            <Addandeditform visible={visible} setVisible={setVisible} customerCategories={customerCategories} formdata={formdata} handlechange={handlechange}
+                handlesave={handlesave} handleupdate={handleupdate}  hookupsData={tableData?.hookups || []} swapItems={swapItems} />
             <Tableview loading={loading} onPage={onPage} tableData={tableData?.products || []} editform={editform} confirm={confirm} />
             {tableData?.products?.length > 0 && (
                 <Cuspagination first={first} rows={rows} totalRecords={tableData?.totallength || 0} onPage={onPage}/>

@@ -14,6 +14,7 @@ export default function ProductsViewPage() {
   const [error, setError] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [currentMainImage, setCurrentMainImage] = useState(0);
+  const [selectedSize, setSelectedSize] = useState('');
   const { productType, productName } = useParams();
   const location = useLocation();
 
@@ -25,8 +26,15 @@ export default function ProductsViewPage() {
     return `${apiurl()}/${imagePath}`;
   };
 
+  useEffect(() => {
+    if (product?.variants?.[0]?.sizes?.[0]) {
+      setSelectedSize(product.variants[0].sizes[0].size);
+    }
+  }, [product]);
+
   const getCurrentProductData = () => {
     if (!product) return null;
+
     if (selectedVariant) {
       return {
         ...selectedVariant,
@@ -35,11 +43,10 @@ export default function ProductsViewPage() {
         Images: selectedVariant.variant_images,
         tags: selectedVariant.tags || product.tags,
       };
+    } else {
+      setSelectedVariant({ ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images, })
+      return { ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images };
     }
-    return {
-      ...product,
-      Product_Description: product.description,
-    };
   };
 
   const currentProduct = getCurrentProductData();
@@ -113,8 +120,9 @@ export default function ProductsViewPage() {
 
   return (
     <Productsview selected={selected} container2Ref={container2Ref} container3Ref={container3Ref} container7Ref={container7Ref} currentProduct={currentProduct} 
-        getImageUrl={getImageUrl} currentMainImage={currentMainImage} selectedVariant={selectedVariant} handlePrimaryProductClick={handlePrimaryProductClick} 
-        product={product} handleVariantClick={handleVariantClick} handleThumbnailClick={handleThumbnailClick} toggleAccordion={toggleAccordion}
+      getImageUrl={getImageUrl} currentMainImage={currentMainImage} selectedVariant={selectedVariant} handlePrimaryProductClick={handlePrimaryProductClick} 
+      product={product} handleVariantClick={handleVariantClick} handleThumbnailClick={handleThumbnailClick} toggleAccordion={toggleAccordion} selectedSize={selectedSize} 
+      setSelectedSize={setSelectedSize}
     />
   );
 } 
