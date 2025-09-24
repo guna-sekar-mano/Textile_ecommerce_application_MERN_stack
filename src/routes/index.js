@@ -9,6 +9,7 @@ import categoryRouter from './categoryroutes.js';
 import homebannerRouter from './homeBannerroutes.js';
 import OrderRouter from './orderroutes.js';
 import PopularproductsRouter from './popularproductsroutes.js';
+import SearchRouter from './searchroutes.js';
 
 const router = express.Router()
 
@@ -22,6 +23,7 @@ router.use('/categories', categoryRouter)
 router.use('/homeBanner', homebannerRouter)
 router.use('/order', OrderRouter)
 router.use('/popular-products', PopularproductsRouter)
+router.use('/search', SearchRouter)
 
 
 

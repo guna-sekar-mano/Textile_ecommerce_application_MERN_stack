@@ -3,7 +3,7 @@ import Wishlist from "../models/wishlistmodel.js"
 export const saveitems = async (req, res, next) => {
   try {
     const response = await new Wishlist (req.body).save()
-    console.log(response)
+    // console.log(response)
     res.status(200).send(response)
   } catch (err) {
     console.log(err)

@@ -9,17 +9,13 @@ const WishlistSchema = mongoose.Schema({
     
     Product_Name: String,
     Category: String,
-    category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'categories' },
-    Subcategory: String,
+    category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'categories' }, 
+    Subcategory: String,   
     Images: [String],
-    variant_images: [String],
-    
     description: String,
     material_care: String,
     tags: String,
-    sizes: [{
-        type: mongoose.Schema.Types.Mixed
-    }],
+    sizes: [{ type: mongoose.Schema.Types.Mixed }],
     gender: String,
     Product_type: String,
     price: String,
@@ -44,7 +40,8 @@ const WishlistSchema = mongoose.Schema({
         sale_price: String,
         cost_price: String,
         stock: { type: String, default: 'Inactive' },
-        status: { type: String, default: 'Active' }
+        status: { type: String, default: 'Active' },
+        _id: { type: mongoose.Schema.Types.ObjectId }
     }]
 }, { timestamps: true });
 
