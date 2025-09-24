@@ -580,12 +580,13 @@ export default function Homeproducts() {
 
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-6">
                     {filteredData?.products?.map((item) => {
-
+                        const allImages = getAllProductImages(item);
+                        const priceInfo = getPriceDisplay(item);
                         
                         return (
-                              <div className="group" key={item._id}>
-                            <div className="relative">
-                                <Link to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
+                            <div className="group" key={item._id}>
+                                <div className="relative">
+                                      <Link to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
                                     <Swiper 
                                         navigation={{
                                             nextEl: `.swiper-button-next-${item._id}`,
