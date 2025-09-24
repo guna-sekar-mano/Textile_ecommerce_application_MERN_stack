@@ -2,7 +2,10 @@ import axios from "axios";
 import apiurl from "../../../../shared/services/apiendpoint/apiendpoint";
 import { gettoken } from "../../../../shared/services/token/token";
 
+const token = gettoken();
+
 export const apisaveProducts = async (datas) => {
+
     try {
         const formData = new FormData();
         
@@ -49,7 +52,6 @@ export const apisaveProducts = async (datas) => {
             }
         }
 
-        const token = gettoken();
         const res = await axios.post(`${apiurl()}/products/apisaveproductdata`, formData, { 
             headers: {
                 "Authorization": `Bearer ${token}`, 
@@ -127,7 +129,6 @@ export const apiupdateproductss = async (_id, formData) => {
             }
         }
 
-        const token = gettoken();
         const res = await axios.put(`${apiurl()}/products/apiupdateproductdata/${_id}`, multipartFormData, {
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -145,7 +146,6 @@ export const apiupdateproductss = async (_id, formData) => {
 
 export const apigetallproducts = async (params) => {
     try {
-        const token = gettoken();
         const res = await axios.get(`${apiurl()}/products/apigetproductdata`, {params: params, headers: { "Authorization": `Bearer ${token}` } });
         return res.data;
     } catch (err) {
@@ -156,7 +156,6 @@ export const apigetallproducts = async (params) => {
 
 export const apideleteproducts = async (_id) => {
     try {
-        const token = gettoken();
         const res = await axios.delete(`${apiurl()}/products/apideleteproductsdata/${_id}`, {headers: { "Authorization": `Bearer ${token}` }});
         return res.data;
     } catch (err) {
@@ -167,7 +166,6 @@ export const apideleteproducts = async (_id) => {
 
 export const apigetallHeaderproducts = async (params) => {
     try {
-        const token = gettoken();
         const res = await axios.get(`${apiurl()}/products/apigetHeaderProducts`, {params: params, headers: { "Authorization": `Bearer ${token}` } });
         return res.data;
     } catch (err) {
@@ -175,3 +173,8 @@ export const apigetallHeaderproducts = async (params) => {
         throw err;
     }
 };
+
+export const getFilterOptions = async(data)=>{
+   var res = await axios.post(`${apiurl()}/products/getfilteroptions`,{field:data},{headers: {"Authorization" : `Bearer ${token}`}});
+   return res.data;
+}

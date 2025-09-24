@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { MultiSelect } from 'primereact/multiselect';
 import { Dropdown } from 'primereact/dropdown';
 
-export default function Addandeditform({ visible, setVisible, formdata, handlechange, handlesave, handleupdate, hookupsData, customerCategories, swapItems }) {
+export default function Addandeditform(props) {
+    const { visible, setVisible, formdata, handlechange, handlesave, handleupdate, hookupsData, customerCategories, swapItems } = props;
     const [variants, setVariants] = useState([{ variant_name: '', variant_images: [], description: '', tags:'', material_care: '', sizes: [], gender: '', Product_type: '',
         price: '', sale_price: '', cost_price: '', stock: 'Inactive', status: 'Active' }]);
 
@@ -224,7 +225,7 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                             handlechange({ target: { name: 'category_id', value: selectedCategory.id } });
                                         }
                                     }} placeholder="Select category" className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black" required />
-                            </div> */}
+                            </div>
 
                             {/* <div>
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Subcategory *</label>
@@ -467,10 +468,10 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                     {variants.length > 1 && (
                                         <>
                                             <div>
-                                                {index > 0 && ( <button type="button" onClick={() => swapItems(index, index - 1)} class="me-2 py-1 px-2 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden">
+                                                {index > 0 && ( <button type="button" onClick={() => swapItems(index, index - 1)} className="me-2 py-1 px-2 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden">
                                                     ⬆️ up
                                                 </button>)}
-                                                {index < variants.length - 1 && ( <button type='button'  class="py-1 px-2 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden" onClick={() => swapItems(index, index + 1)}>⬇️ Down</button> )}
+                                                {index < variants.length - 1 && ( <button type='button'  className="py-1 px-2 inline-flex items-center gap-x-2 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden" onClick={() => swapItems(index, index + 1)}>⬇️ Down</button> )}
                                             </div>
 
                                             <button type="button" onClick={() => removeVariant(index)} className="text-red-500 hover:bg-red-50 px-3 py-1 rounded transition-colors">Remove</button>
@@ -564,12 +565,22 @@ export default function Addandeditform({ visible, setVisible, formdata, handlech
                                                     onChange={(e) => handleVariantSizeChange(index, e.value)} placeholder="Select sizes"
                                                     className="w-full px-3 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 mb-3" display="chip" 
                                                 />
-                                                
+                                                <div className="grid grid-cols-5 gap-2 mb-2 p-2 bg-white rounded">
+                                                    <div> Size </div>
+                                                    <div>Stock</div>
+                                                    <div>Price</div>
+                                                    <div> Sale Price </div>
+                                                    <div>Cost Price</div>
+                                                </div>
                                                 {(variant.sizes || []).map((sizeObj, sizeIndex) => (
-                                                    <div key={sizeIndex} className="grid grid-cols-4 gap-2 mb-2 p-2 bg-white rounded">
+                                                    <div key={sizeIndex} className="grid grid-cols-5 gap-2 mb-2 p-2 bg-white rounded">
                                                         <div className="font-medium text-xs text-gray-700 flex items-center">
                                                             {typeof sizeObj === 'object' ? sizeObj.size : sizeObj}
                                                         </div>
+                                                        <input type="number" placeholder="Stock" value={typeof sizeObj === 'object' ? sizeObj.Stock : ''}
+                                                            onChange={(e) => handleVariantSizePriceChange(index, sizeIndex, 'Stock', e.target.value)}
+                                                            className="px-2 py-1 border border-gray-300 rounded text-xs"
+                                                        />
                                                         <input type="number" placeholder="Price" value={typeof sizeObj === 'object' ? sizeObj.price : ''}
                                                             onChange={(e) => handleVariantSizePriceChange(index, sizeIndex, 'price', e.target.value)}
                                                             className="px-2 py-1 border border-gray-300 rounded text-xs"

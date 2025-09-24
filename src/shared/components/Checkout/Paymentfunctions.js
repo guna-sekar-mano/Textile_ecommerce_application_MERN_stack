@@ -45,15 +45,15 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
 
             const orderItems = cart.map(item => {
                 const productData = getProductData(item);
-                
+                console.log(item,productData)
                 return {
                     Order_id: orderId,
                     productId: item.productId?._id || item.productId,
                     variantId: item.variantId || null,
                     Product_Name: productData.name,
                     variant_name: item.variantId ? productData.variant_name : null,
-                    Images: productData.images,
-                    variant_images: item.variantId ? productData.variant_images : null,
+                    // Images: productData.images,
+                    Images: item.variantId ? productData.variant_images : null,
                     price: productData.price.toString(),
                     sale_price: productData.sale_price ? productData.sale_price.toString() : null,
                     selectedSize: item.selectedSize,
@@ -117,10 +117,7 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                 const selectedSizeData = item.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
                 if (selectedSizeData) {
                     productData.price = Number(selectedSizeData.price) || 0;
-                    productData.sale_price = selectedSizeData.sale_price && 
-                                           selectedSizeData.sale_price !== "0" && 
-                                           selectedSizeData.sale_price !== "" ? 
-                                           Number(selectedSizeData.sale_price) : null;
+                    productData.sale_price = selectedSizeData.sale_price && selectedSizeData.sale_price !== "0" && selectedSizeData.sale_price !== "" ? Number(selectedSizeData.sale_price) : null;
                 } else {
                     productData.price = Number(item.price) || Number(item.sale_price) || 0;
                     productData.sale_price = item.sale_price ? Number(item.sale_price) : null;
@@ -136,10 +133,7 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                 const selectedSizeData = item.variantData.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
                 if (selectedSizeData) {
                     productData.price = Number(selectedSizeData.price) || 0;
-                    productData.sale_price = selectedSizeData.sale_price && 
-                                           selectedSizeData.sale_price !== "0" && 
-                                           selectedSizeData.sale_price !== "" ? 
-                                           Number(selectedSizeData.sale_price) : null;
+                    productData.sale_price = selectedSizeData.sale_price && selectedSizeData.sale_price !== "0" && selectedSizeData.sale_price !== "" ? Number(selectedSizeData.sale_price) : null;
                 } else {
                     productData.price = Number(item.variantData.price) || Number(item.variantData.sale_price) || 0;
                     productData.sale_price = item.variantData.sale_price ? Number(item.variantData.sale_price) : null;
@@ -157,10 +151,7 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                     const selectedSizeData = variant.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
                     if (selectedSizeData) {
                         productData.price = Number(selectedSizeData.price) || 0;
-                        productData.sale_price = selectedSizeData.sale_price && 
-                                               selectedSizeData.sale_price !== "0" && 
-                                               selectedSizeData.sale_price !== "" ? 
-                                               Number(selectedSizeData.sale_price) : null;
+                        productData.sale_price = selectedSizeData.sale_price && selectedSizeData.sale_price !== "0" && selectedSizeData.sale_price !== "" ? Number(selectedSizeData.sale_price) : null;
                     } else {
                         productData.price = Number(variant.price) || Number(variant.sale_price) || 0;
                         productData.sale_price = variant.sale_price ? Number(variant.sale_price) : null;
@@ -176,10 +167,7 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
             const selectedSizeData = item.productId.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
             if (selectedSizeData) {
                 productData.price = Number(selectedSizeData.price) || 0;
-                productData.sale_price = selectedSizeData.sale_price && 
-                                       selectedSizeData.sale_price !== "0" && 
-                                       selectedSizeData.sale_price !== "" ? 
-                                       Number(selectedSizeData.sale_price) : null;
+                productData.sale_price = selectedSizeData.sale_price && selectedSizeData.sale_price !== "0" && selectedSizeData.sale_price !== "" ? Number(selectedSizeData.sale_price) : null;
             } else {
                 productData.price = Number(item.productId.price) || Number(item.productId.sale_price) || 0;
                 productData.sale_price = item.productId.sale_price ? Number(item.productId.sale_price) : null;
@@ -195,10 +183,7 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
             const selectedSizeData = item.sizes?.find(sizeObj => sizeObj.size === item.selectedSize);
             if (selectedSizeData) {
                 productData.price = Number(selectedSizeData.price) || 0;
-                productData.sale_price = selectedSizeData.sale_price && 
-                                       selectedSizeData.sale_price !== "0" && 
-                                       selectedSizeData.sale_price !== "" ? 
-                                       Number(selectedSizeData.sale_price) : null;
+                productData.sale_price = selectedSizeData.sale_price && selectedSizeData.sale_price !== "0" && selectedSizeData.sale_price !== "" ?  Number(selectedSizeData.sale_price) : null;
             } else {
                 productData.price = Number(item.price) || Number(item.sale_price) || 0;
                 productData.sale_price = item.sale_price ? Number(item.sale_price) : null;
@@ -208,7 +193,5 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
         return productData;
     };
 
-    return {
-        createOrder
-    };
+    return { createOrder };
 };

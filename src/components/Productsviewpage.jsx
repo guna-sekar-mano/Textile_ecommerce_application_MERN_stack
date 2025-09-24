@@ -26,6 +26,23 @@ export default function ProductsViewPage() {
     return `${apiurl()}/${imagePath}`;
   };
 
+  // const getCurrentProductData = () => {
+  //   if (!product) return null;
+  //   if (selectedVariant) {
+  //     // console.log({ ...selectedVariant, Product_Name: selectedVariant.variant_name, Product_Description: selectedVariant.description, Images: selectedVariant.variant_images,
+  //     //   tags: selectedVariant.tags || product.tags })
+  //     return { ...selectedVariant, Product_Name: selectedVariant.variant_name, Product_Description: selectedVariant.description, Images: selectedVariant.variant_images,
+  //       tags: selectedVariant.tags || product.tags };
+  //   }
+  //   else{
+  //     // console.log({ ...product,...product.variants[0],Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images })
+  //     console.log(product.variants[0].sizes[0].size )
+  //     setSelectedSize( product.variants[0].sizes[0]);
+  //     return { ...product,...product.variants[0],Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images };
+  //   }
+  //   // return { ...product, Product_Description: product.description, };
+  // };
+
   useEffect(() => {
     if (product?.variants?.[0]?.sizes?.[0]) {
       setSelectedSize(product.variants[0].sizes[0].size);
@@ -34,7 +51,7 @@ export default function ProductsViewPage() {
 
   const getCurrentProductData = () => {
     if (!product) return null;
-
+    // console.log(product)
     if (selectedVariant) {
       return {
         ...selectedVariant,
@@ -44,8 +61,9 @@ export default function ProductsViewPage() {
         tags: selectedVariant.tags || product.tags,
       };
     } else {
-      setSelectedVariant({ ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images, })
-      return { ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images };
+      setSelectedVariant({ ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images,_id:product._id,productId:product._id,variantId:product.variants[0]._id });
+      // console.log(product,{ ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images })
+      return { ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images,_id:product._id ,productId:product._id,variantId:product.variants[0]._id};
     }
   };
 

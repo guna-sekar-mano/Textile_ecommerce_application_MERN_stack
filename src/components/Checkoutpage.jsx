@@ -4,7 +4,7 @@ export default function Checkoutpage () {
 
     return (
         <>
-        <Checkout/>
+            <Checkout/>
         </>
     )
 }

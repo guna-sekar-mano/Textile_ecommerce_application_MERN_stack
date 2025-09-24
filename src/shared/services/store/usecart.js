@@ -14,8 +14,7 @@ const useCartStore = create(
             if (apiItem._id === localItem._id) return true;
             
             if (apiItem.variantId && localItem.variantId) {
-              return apiItem.variantId === localItem.variantId && 
-                     apiItem.selectedSize === localItem.selectedSize;
+              return apiItem.variantId === localItem.variantId && apiItem.selectedSize === localItem.selectedSize;
             }
             
             return false;
@@ -50,41 +49,28 @@ const useCartStore = create(
       addToCart: (product) => set((state) => {
         const existingItem = state.cart.find((item) => {
           if (product.variantId && item.variantId) {
-            return item.variantId === product.variantId && 
-                   item.selectedSize === product.selectedSize;
+            return item.variantId === product.variantId && item.selectedSize === product.selectedSize;
           }
           
-          return item._id === product._id && 
-                 item.selectedSize === product.selectedSize;
+          return item._id === product._id && item.selectedSize === product.selectedSize;
         });
         
         if (existingItem) {
           return {
             cart: state.cart.map((item) =>
-              item === existingItem ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+              item === existingItem ? { ...item, Quantity: (item.Quantity || 1) + 1 } : item
             ),
           };
         }
         
-        return { cart: [...state.cart, { ...product, quantity: 1 }] };
+        return { cart: [...state.cart, { ...product, Quantity: 1 }] };
       }),
       
-      removeFromCart: (itemId) =>
-        set((state) => ({
-          cart: state.cart.filter((item) => item._id !== itemId),
-        })),
+      removeFromCart: (itemId) => set((state) => ({ cart: state.cart.filter((item) => item._id !== itemId) })),
         
-      updateQuantity: (itemId, quantity) =>
-        set((state) => ({
-          cart: state.cart.map((item) =>
-            item._id === itemId ? { ...item, quantity } : item
-          ),
-        })),
+      updateQuantity: (itemId, Quantity) => set((state) => ({ cart: state.cart.map((item) => item._id === itemId ? { ...item, Quantity } : item ) })),
         
-      clearCart: () =>
-        set(() => ({
-          cart: [],
-        })),
+      clearCart: () => set(() => ({ cart: [] })),
     }),
     {
       name: 'cart-storage',

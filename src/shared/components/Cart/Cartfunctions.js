@@ -1,18 +1,25 @@
+import toast from "react-hot-toast";
 import { deleteAllcartItems, deletecartItem, getcartItems, updatecartItem } from "../../services/apicart/apicart";
 
 let isLoadingCart = false;
 
 export const handleIncreaseQuantity = async (index, cart, userdetails, setCartItems) => {
-    if (index < 0 || index >= cart.length) return;
-    const item = cart[index];
-    if (!item) return;
-    const currentQuantity = Number(item?.Quantity) || 1;
-    const updatedQuantity = currentQuantity + 1;
     try {
-        await updatecartItem(item._id, updatedQuantity, userdetails?.Email);
-        const newCart = [...cart];
-        newCart[index] = { ...item, Quantity: updatedQuantity };
-        setCartItems(newCart);
+        if (index < 0 || index >= cart.length) return;
+        const item = cart[index];
+        if (!item) return;
+        if(item.variants.sizes.filter(s => s.size === item.selectedSize)[0].Stock >= item.Quantity){
+            const currentQuantity = Number(item?.Quantity) || 1;
+            const updatedQuantity = currentQuantity + 1;
+
+            await updatecartItem(item._id, updatedQuantity, userdetails?.Email);
+            const newCart = [...cart];
+            newCart[index] = { ...item, Quantity: updatedQuantity };
+            setCartItems(newCart);
+        }else{
+            toast.error("Sorry, you've reached the maximum stock limit for this item.");
+            return;
+        }
     } catch (error) {
         console.error("Error updating quantity:", error);
     }
@@ -76,10 +83,7 @@ export const getallcart = async (userdetails, cart, setCartItems) => {
             const hasChanges = !cart || cart.length !== response.response.length || 
                 cart.some((item, index) => {
                     const apiItem = response.response[index];
-                    return !apiItem || 
-                           item._id !== apiItem._id || 
-                           item.Quantity !== apiItem.Quantity ||
-                           item.selectedSize !== apiItem.selectedSize;
+                    return !apiItem || item._id !== apiItem._id || item.Quantity !== apiItem.Quantity || item.selectedSize !== apiItem.selectedSize;
                 });
 
             if (hasChanges) {

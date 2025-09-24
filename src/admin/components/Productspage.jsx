@@ -16,9 +16,12 @@ export default function Productspage() {
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
     const [globalFilter, setGlobalFilter] = useState('');
+    const [colfilter, setcolFilter] = useState({});
+    const [Sort, setSort] = useState({});
     const [loading, setLoading] = useState(false);
     const [tableData, setTableData] = useState();
     const [customerCategories, setCustomerCategories] = useState([]);
+    const [tempFilterValues, setTempFilterValues] = useState([]);
 
     let isMounted = true;
 
@@ -62,10 +65,47 @@ export default function Productspage() {
         setVisible(true);
     }
 
-    const onPage = (page) => {
-        setPage(page);
-        setFirst(rows * (page - 1));
+    const getAllProductsData = useCallback(async () => {
+        try {
+            // console.log(first, rows, globalFilter, colfilter,Sort)
+            setLoading(true);
+            const res = await apigetallproducts({ first, rows, globalFilter, colfilter,Sort });
+            const res1 = await getallHookupsforProduct();
+            setTableData({products:res?.resdata?.products || [], totallength: res?.resdata?.totallength, hookups: res1 || []});
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            setTableData({ products: [], totallength: 0 });
+            toast.error("Failed to fetch products data");
+        }
+    }, [first, rows, globalFilter, colfilter,Sort]);
+
+    useEffect(() => {
+        if (isMounted) {
+            getAllProductsData();
+        }
+        return () => isMounted = false;
+    }, [getAllProductsData]);
+
+    const onPage = (pages) => {
+        setPage(pages);
+        // console.log(rows,pages )
+        setFirst(pages.first);
         setRows(rows);
+    };
+
+    const clearFilter = (event)=>{
+        setcolFilter(null);
+        setGlobalFilter('')
+        setTempFilterValues([])
+        setFirst(0)
+        setSort({})
+    }
+
+    const cusfilter = (field, value) => {
+        setcolFilter(prev => ({ ...prev, [field]: {$in:value} }));
+        setFirst(0); // Reset to first page when applying a new filter
+        console.log(first)
     };
 
     const resetForm = () => {
@@ -166,28 +206,6 @@ export default function Productspage() {
             }
         }
     };
-
-    const getAllProductsData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const res = await apigetallproducts({ first, rows, globalFilter });
-            const res1 = await getallHookupsforProduct();
-            setTableData({products:res?.resdata?.products || [], totallength: res?.resdata?.totallength, hookups: res1 || []});
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            setTableData({ products: [], totallength: 0 });
-            toast.error("Failed to fetch products data");
-        } finally {
-            setLoading(false);
-        }
-    }, [first, rows, globalFilter]);
-
-    useEffect(() => {
-        if (isMounted) {
-            getAllProductsData();
-        }
-        return () => isMounted = false;
-    }, [getAllProductsData]);
 
     const editform = (data) => {
         
@@ -361,10 +379,14 @@ export default function Productspage() {
 
     return (
         <div className="">
-            <Tableheadpanel openform={openform} setGlobalFilter={setGlobalFilter} />
+            <Tableheadpanel openform={openform} setGlobalFilter={setGlobalFilter} globalFilter={globalFilter} clearFilter={clearFilter} />
+
+            <Tableview loading={loading} onPage={onPage} tableData={tableData?.products || []} totalRecords={tableData?.totallength || []} editform={editform} confirm={confirm} cusfilter={cusfilter} Sort={Sort}
+                setSort={setSort} clearFilter={clearFilter} tempFilterValues={tempFilterValues} setTempFilterValues={setTempFilterValues} />
+
             <Addandeditform visible={visible} setVisible={setVisible} customerCategories={customerCategories} formdata={formdata} handlechange={handlechange}
                 handlesave={handlesave} handleupdate={handleupdate}  hookupsData={tableData?.hookups || []} swapItems={swapItems} />
-            <Tableview loading={loading} onPage={onPage} tableData={tableData?.products || []} editform={editform} confirm={confirm} />
+
             {tableData?.products?.length > 0 && (
                 <Cuspagination first={first} rows={rows} totalRecords={tableData?.totallength || 0} onPage={onPage}/>
             )}

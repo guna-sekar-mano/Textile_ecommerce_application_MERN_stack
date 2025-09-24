@@ -406,10 +406,7 @@ export default function Homeproducts() {
             const filtered = data.products.filter(product => 
                 product.Product_type === selectedProductType
             );
-            setFilteredData({ 
-                products: filtered, 
-                totallength: filtered.length 
-            });
+            setFilteredData({ products: filtered,  totallength: filtered.length });
         }
     }, [data, selectedProductType]);
 
@@ -583,30 +580,29 @@ export default function Homeproducts() {
 
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-6">
                     {filteredData?.products?.map((item) => {
-                        const allImages = getAllProductImages(item);
-                        const priceInfo = getPriceDisplay(item);
+
                         
                         return (
-                            <div className="group" key={item._id}>
-                                <div className="relative">
-                                    <Link to={`/products/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
-                                        <Swiper 
-                                            navigation={{
-                                                nextEl: `.swiper-button-next-${item._id}`,
-                                                prevEl: `.swiper-button-prev-${item._id}`,
-                                            }} 
-                                            modules={[Navigation]} 
-                                            className="mySwiper relative" 
-                                            loop={allImages.length > 1}
-                                            allowTouchMove={true}
-                                        >
-                                            {allImages.map((img, index) => (
-                                                <SwiperSlide key={index}>
-                                                    <img src={getImageUrl(img)} alt={`${item.Product_Name} - Image ${index + 1}`} className="w-full h-[230px] md:h-[400px] lg:h-[500px] object-cover"/>
-                                                </SwiperSlide>
-                                            ))}
-                                        </Swiper>
-                                    </Link>
+                              <div className="group" key={item._id}>
+                            <div className="relative">
+                                <Link to={`/products-view/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
+                                    <Swiper 
+                                        navigation={{
+                                            nextEl: `.swiper-button-next-${item._id}`,
+                                            prevEl: `.swiper-button-prev-${item._id}`,
+                                        }} 
+                                        modules={[Navigation]} 
+                                        className="mySwiper relative" 
+                                        loop={item.Images?.length > 1}
+                                        allowTouchMove={true}
+                                    >
+                                        {item.variants[0].variant_images?.map((img, index) => (
+                                            <SwiperSlide key={index}>
+                                                <img src={getImageUrl(img)} alt={`${item.variants[0].variant_name} - Image ${index + 1}`} className="w-full h-[55dvh] object-cover"/>
+                                            </SwiperSlide>
+                                        ))}
+                                    </Swiper>
+                                </Link>
                                     
                                     {item.tags && (
                                         <div className="absolute top-2 left-2 bg-white/80 px-2 py-1 rounded z-10">

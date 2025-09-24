@@ -17,7 +17,7 @@ export default function Hookuppage () {
     const [rows, setRows] = useState(10);
     const [globalFilter, setGlobalFilter] = useState('');
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('Category');
+    const [activeTab, setActiveTab] = useState('tags');
 
     let isMounted = true;
 

@@ -157,153 +157,149 @@ export default function Checkout () {
 
     return (
         <>
-         <section className="py-10">
-            <div className="max-w-[85rem] mx-auto px-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div>
-                        <h3 className="barlow-condensed text-2xl">Shipping Details</h3>
-                        <div className="flex justify-between">
-                            <p className="azeret-mono mt-4">DELIVERY</p>
-                            {!checked && (<button className="azeret-mono mt-4 bg-black text-white text-xs px-1 py-1 cursor-pointer">Add Billing Address</button>)}
-                        </div>
-                        {shippingDetails.length > 0 ? (
-                        <div className="grid grid-cols-1 mt-2 space-y-2">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.First_Name || ''} className="w-full border border-gray-400 p-2" placeholder="First Name" readOnly />
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Last_Name || ''} className="w-full border border-gray-400 p-2" placeholder="Last Name" readOnly />
+            <section className="py-10">
+                <div className="max-w-[85rem] mx-auto px-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div>
+                            <h3 className="barlow-condensed text-2xl">Shipping Details</h3>
+                            <div className="flex justify-between">
+                                <p className="azeret-mono mt-4">DELIVERY</p>
+                                {!checked && (<button className="azeret-mono mt-4 bg-black text-white text-xs px-1 py-1 cursor-pointer">Add Billing Address</button>)}
                             </div>
-                            <div>
-                                <textarea type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Address || ''} className="w-full border border-gray-400 p-2" placeholder="Address" readOnly />
+                            {shippingDetails.length > 0 ? (
+                            <div className="grid grid-cols-1 mt-2 space-y-2">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                                    <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.First_Name || ''} className="w-full border border-gray-400 p-2" placeholder="First Name" readOnly />
+                                    <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Last_Name || ''} className="w-full border border-gray-400 p-2" placeholder="Last Name" readOnly />
+                                </div>
+                                <div>
+                                    <textarea type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Address || ''} className="w-full border border-gray-400 p-2" placeholder="Address" readOnly />
+                                </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
+                                    <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.City || ''} className="w-full border border-gray-400 p-2" placeholder="City" readOnly />
+                                    <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.State || ''} className="w-full border border-gray-400 p-2" placeholder="State" readOnly />
+                                    <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Zipcode || ''} className="w-full border border-gray-400 p-2" placeholder="Zipcode" readOnly />
+                                </div>
+                                <div>
+                                    <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Mobilenumber || ''} className="w-full border border-gray-400 p-2" placeholder="Phone" readOnly />
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.City || ''} className="w-full border border-gray-400 p-2" placeholder="City" readOnly />
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.State || ''} className="w-full border border-gray-400 p-2" placeholder="State" readOnly />
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Zipcode || ''} className="w-full border border-gray-400 p-2" placeholder="Zipcode" readOnly />
-                            </div>
-                            <div>
-                                <input type="text" name="" id="" value={shippingDetails[selectedAddressIndex]?.Mobilenumber || ''} className="w-full border border-gray-400 p-2" placeholder="Phone" readOnly />
-                            </div>
-                        </div>
-                        ) : (
-                            <p className="text-center py-5">Loading shipping details...</p>
-                        )}
-                        <div className="flex gap-3 mt-5">
-                            <div className="checkbox-wrapper-30">
-                            <span className="checkbox">
-                                <input type="checkbox" />
-                                <svg>
-                                <use xlinkHref="#checkbox-30" className="checkbox"></use>
-                                </svg>
-                            </span>
-                            <svg xmlns="http://www.w3.org/2000/svg" style={{display:"none"}}>
-                                <symbol id="checkbox-30" viewBox="0 0 22 22">
-                                <path fill="none" stroke="currentColor" d="M5.5,11.3L9,14.8L20.2,3.3l0,0c-0.5-1-1.5-1.8-2.7-1.8h-13c-1.7,0-3,1.3-3,3v13c0,1.7,1.3,3,3,3h13 c1.7,0,3-1.3,3-3v-13c0-0.4-0.1-0.8-0.3-1.2"/>
-                                </symbol>
-                            </svg>
-                            </div>
-                            <p>Save this Information for next time</p>
-                        </div>
-                        <div className="flex gap-3 mt-2">
-                            <div className="checkbox-wrapper-30">
-                                <span className="checkbox">
-                                    <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)}  />
-                                    <svg>
-                                    <use xlinkHref="#checkbox-30" className="checkbox"></use>
+                            ) : (
+                                <p className="text-center py-5">Loading shipping details...</p>
+                            )}
+                            <div className="flex gap-3 mt-5">
+                                <div className="checkbox-wrapper-30">
+                                    <span className="checkbox">
+                                        <input type="checkbox" />
+                                        <svg>
+                                        <use xlinkHref="#checkbox-30" className="checkbox"></use>
+                                        </svg>
+                                    </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" style={{display:"none"}}>
+                                        <symbol id="checkbox-30" viewBox="0 0 22 22">
+                                        <path fill="none" stroke="currentColor" d="M5.5,11.3L9,14.8L20.2,3.3l0,0c-0.5-1-1.5-1.8-2.7-1.8h-13c-1.7,0-3,1.3-3,3v13c0,1.7,1.3,3,3,3h13 c1.7,0,3-1.3,3-3v-13c0-0.4-0.1-0.8-0.3-1.2"/>
+                                        </symbol>
                                     </svg>
-                                </span>
-                                <svg xmlns="http://www.w3.org/2000/svg" style={{display:"none"}}>
-                                    <symbol id="checkbox-30" viewBox="0 0 22 22">
-                                    <path fill="none" stroke="currentColor" d="M5.5,11.3L9,14.8L20.2,3.3l0,0c-0.5-1-1.5-1.8-2.7-1.8h-13c-1.7,0-3,1.3-3,3v13c0,1.7,1.3,3,3,3h13 c1.7,0,3-1.3,3-3v-13c0-0.4-0.1-0.8-0.3-1.2"/>
-                                    </symbol>
-                                </svg>
+                                </div>
+                                <p>Save this Information for next time</p>
                             </div>
-                            <p>Use shipping address as billing address</p>
-                        </div>
-                    </div>
-                    <div>
-                       
-                        <div  className="bg-[#D9D9D9] lg:px-10 px-2 py-5 ">
-                            <div className="">
-                                <h3 className="azeret-mono font-semibold">Summary</h3>
-                            </div>
-                        {safeCart.map((item, index) => {
-                            const productDetails = getProductDetails(item);
-                            const itemPrice = productDetails.discountedPrice || productDetails.price;
-                            const itemTotal = (Number(item?.Quantity) || 0) * itemPrice;
-                        return (
-                            
-                            <div className="mt-3  bg-white rounded-lg" key={item._id || index}>
-                                <div className=" p-4 flex justify-between">
-                                    <div className="flex justify-center items-center gap-6">
-                                        <div className="relative"> 
-                                            <div className="relative"> 
-                                                <img src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'} alt="" className="w-20 h-20 object-cover" /> 
-                                            </div> 
-                                            <p className="absolute -top-2 -right-2 text-xs z-30 rounded-full bg-black h-5 w-5 flex justify-center items-center text-white">{item.Quantity}</p> 
-                                        </div>
-                                        <div>
-                                            <p>{productDetails.name}</p>
-                                            <span className="text-xs">SIZE:  {item.selectedSize}</span>
-                                            {item.variantId && <p className="text-gray-500 text-xs">Variant</p>}
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-center items-center">
-                                        <div>
-                                            {productDetails.discountedPrice ? (
-                                                    <div>
-                                                        <span className="line-through text-gray-500 text-sm">₹{productDetails.price}</span>
-                                                        <br />
-                                                        <span>₹{productDetails.discountedPrice}</span>
-                                                    </div>
-                                                ) : (
-                                                    <span>₹{productDetails.price}</span>
-                                            )}
-                                        </div>
-                                    </div>
+                            <div className="flex gap-3 mt-2">
+                                <div className="checkbox-wrapper-30">
+                                    <span className="checkbox">
+                                        <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)}  />
+                                        <svg><use xlinkHref="#checkbox-30" className="checkbox"></use></svg>
+                                    </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" style={{display:"none"}}>
+                                        <symbol id="checkbox-30" viewBox="0 0 22 22">
+                                        <path fill="none" stroke="currentColor" d="M5.5,11.3L9,14.8L20.2,3.3l0,0c-0.5-1-1.5-1.8-2.7-1.8h-13c-1.7,0-3,1.3-3,3v13c0,1.7,1.3,3,3,3h13 c1.7,0,3-1.3,3-3v-13c0-0.4-0.1-0.8-0.3-1.2"/>
+                                        </symbol>
+                                    </svg>
                                 </div>
-                            </div>
-                            );
-                        })}
-                            <div className="py-6 space-y-3">
-                                <div className="flex justify-between">
-                                    <p>Sub Total : ({totalQuantity}) items</p>
-                                    <span>₹ {subTotal}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <p>Shipping</p>
-                                    <span>₹ 0</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <p>Total</p>
-                                    <span>₹ {subTotal}</span>
-                                </div>
+                                <p>Use shipping address as billing address</p>
                             </div>
                         </div>
+                        <div>
+                            <div  className="bg-[#D9D9D9] lg:px-10 px-2 py-5 ">
+                                <div className="">
+                                    <h3 className="azeret-mono font-semibold">Summary</h3>
+                                </div>
+                            {safeCart.map((item, index) => {
+                                const productDetails = getProductDetails(item);
+                                const itemPrice = productDetails.discountedPrice || productDetails.price;
+                                const itemTotal = (Number(item?.Quantity) || 0) * itemPrice;
+                                return (
+                                    <div className="mt-3  bg-white rounded-lg" key={item._id || index}>
+                                        <div className=" p-4 flex justify-between">
+                                            <div className="flex justify-center items-center gap-6">
+                                                <div className="relative"> 
+                                                    <div className="relative"> 
+                                                        <img src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'} alt="" className="w-20 h-20 object-cover" /> 
+                                                    </div> 
+                                                    <p className="absolute -top-2 -right-2 text-xs z-30 rounded-full bg-black h-5 w-5 flex justify-center items-center text-white">{item.Quantity}</p> 
+                                                </div>
+                                                <div>
+                                                    <p>{productDetails.name}</p>
+                                                    <span className="text-xs">SIZE:  {item.selectedSize}</span>
+                                                    {item.variantId && <p className="text-gray-500 text-xs">Variant</p>}
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-center items-center">
+                                                <div>
+                                                    {productDetails.discountedPrice ? (
+                                                            <div>
+                                                                <span className="line-through text-gray-500 text-sm">₹{productDetails.price}</span>
+                                                                <br />
+                                                                <span>₹{productDetails.discountedPrice}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span>₹{productDetails.price}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    );
+                                })}
+                                <div className="py-6 space-y-3">
+                                    <div className="flex justify-between">
+                                        <p>Sub Total : ({totalQuantity}) items</p>
+                                        <span>₹ {subTotal}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <p>Shipping</p>
+                                        <span>₹ 0</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <p>Total</p>
+                                        <span>₹ {subTotal}</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                     
-                        <div className="">
-                           <button 
-                                className={`w-full mt-5 text-white p-2 cursor-pointer ${
-                                    isLoading ? 'bg-gray-500' : 'bg-black hover:bg-gray-800'
-                                }`}
-                                onClick={handlePlaceOrder}
-                                disabled={isLoading}
-                            >
-                                {isLoading ? 'Placing Order...' : 'Place Order'}
-                            </button>
-                        </div>
-                        <hr className="mt-8" />
-                        <div className="flex justify-between mt-5 manrope">
-                            <Link className="underline">Refund policy</Link>
-                            <Link className="underline">Shipping</Link>
-                            <Link className="underline">Privacy policy</Link>
-                            <Link className="underline">Terms of service</Link>
-                            <Link className="underline">Contact</Link>
+                        
+                            <div className="">
+                            <button 
+                                    className={`w-full mt-5 text-white p-2 cursor-pointer ${
+                                        isLoading ? 'bg-gray-500' : 'bg-black hover:bg-gray-800'
+                                    }`}
+                                    onClick={handlePlaceOrder}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? 'Placing Order...' : 'Place Order'}
+                                </button>
+                            </div>
+                            <hr className="mt-8" />
+                            <div className="flex justify-between mt-5 manrope">
+                                <Link className="underline">Refund policy</Link>
+                                <Link className="underline">Shipping</Link>
+                                <Link className="underline">Privacy policy</Link>
+                                <Link className="underline">Terms of service</Link>
+                                <Link className="underline">Contact</Link>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-         </section>
+            </section>
         </>
     )
 }

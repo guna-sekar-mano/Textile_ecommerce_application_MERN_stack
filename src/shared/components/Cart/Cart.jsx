@@ -86,19 +86,36 @@ export default function Cart() {
         return { name, image, price, discountedPrice };
     };
 
+    // const calculateTotals = () => {
+    //     let totalQuantity = 0;
+    //     let subTotal = 0;
+
+    //     safeCart.forEach(item => {
+    //         const quantity = Number(item?.Quantity) || 0;
+    //         totalQuantity += quantity;
+
+    //         const productDetails = getProductDetails(item);
+    //         const itemPrice = productDetails.discountedPrice || productDetails.price;
+    //         subTotal += quantity * itemPrice;
+    //     });
+
+    //     console.log(safeCart)
+
+    //     return { totalQuantity, subTotal };
+    // };
+
     const calculateTotals = () => {
-        let totalQuantity = 0;
-        let subTotal = 0;
-
-        safeCart.forEach(item => {
+        const { totalQuantity, subTotal } = safeCart.reduce((acc, item) => {
             const quantity = Number(item?.Quantity) || 0;
-            totalQuantity += quantity;
-
             const productDetails = getProductDetails(item);
             const itemPrice = productDetails.discountedPrice || productDetails.price;
-            subTotal += quantity * itemPrice;
-        });
 
+            return {
+                totalQuantity: acc.totalQuantity + quantity,
+                subTotal: acc.subTotal + quantity * itemPrice,
+            } },
+            { totalQuantity: 0, subTotal: 0 }
+        );
         return { totalQuantity, subTotal };
     };
 
@@ -143,9 +160,7 @@ export default function Cart() {
                                             const itemTotal = (Number(item?.Quantity) || 0) * itemPrice;
 
                                             return (
-                                                <div key={item._id} className="cursor-pointer">
-                                                    {console.log('Rendering cart item:', item)}
-
+                                                <div key={index}>
                                                     <div className="hidden md:grid grid-cols-12 gap-4 bg-gray-100 p-5 items-center">
                                                         <div className="col-span-5">
                                                             <div className="flex items-center gap-3">
@@ -188,9 +203,9 @@ export default function Cart() {
                                                                     -
                                                                 </button>
                                                                 <span className="font-medium">{item.Quantity}</span>
-                                                                <button
-                                                                    className="w-8 h-8 bg-white border border-gray-300 hover:bg-gray-50 flex items-center justify-center"
-                                                                    onClick={() => handleIncreaseQuantity(index, safeCart, userdetails, setCartItems)}
+                                                                <button 
+                                                                    className="w-8 h-8 bg-white border border-gray-300 hover:bg-gray-50 flex items-center justify-center" 
+                                                                    onClick={() => handleIncreaseQuantity(index, safeCart, userdetails, setCartItems,item)}
                                                                 >
                                                                     +
                                                                 </button>

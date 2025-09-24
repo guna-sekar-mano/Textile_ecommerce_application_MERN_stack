@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import useAuth from "../../services/store/useAuth";
-import { apisavecart } from "../../services/apicart/apicart";
+import { apisavecart, getcartItems, updatecartItem } from "../../services/apicart/apicart";
 import useCartStore from "../../services/store/usecart";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
@@ -13,9 +13,9 @@ import Swal from 'sweetalert2'
 
 export default function Productsview(props) {
 
-    const { selected, container2Ref, container3Ref, container7Ref, currentProduct, getImageUrl, currentMainImage, setSelectedVariant, selectedVariant, handlePrimaryProductClick, product,
+    const { selected, container2Ref, container3Ref, container7Ref, currentProduct, getImageUrl, currentMainImage, selectedVariant, handlePrimaryProductClick, product,
         handleVariantClick, handleThumbnailClick, toggleAccordion,selectedSize, setSelectedSize } = props;
-   
+
     const {addToCart, cart: cartItems, cart} = useCartStore();
     const { userdetails } = useAuth();
     const [wishlist, setwishlist] = useState(false);
@@ -143,34 +143,35 @@ export default function Productsview(props) {
             return;
         }
 
-        const cartItemsFromStore = cartItems || [];
-        
-        const existingItem = cartItemsFromStore.find(item => {
+        const cartItemsFromStore = await getcartItems(userdetails?.Email);
+        // console.log(cartItemsFromStore.response)
+        const existingItem = cartItemsFromStore.response.length!=0?cartItemsFromStore.response.find(item => {
             const itemProductId = item.productId?._id || item.productId || item.productId?.id;
-            
-            return itemProductId === product._id && 
-                item.selectedSize === selectedSize &&
-                (item.variantId || null) === (selectedVariant?._id || null);
-        });
-
-        if (existingItem) {
-            const productType = selectedVariant ? 'variant' : 'main product';
-            toast.error(`This ${productType} with size ${selectedSize} is already in your cart!`);
-            return;
-        }
+            return itemProductId === product._id && item.selectedSize === selectedSize && (item.variantId || null) === (selectedVariant?.variantId || null);
+        }):null;
 
         try {
-            const cartData = { productId: product._id, Email: userDetails.Email, Quantity: 1, selectedSize: selectedSize, variantId: selectedVariant?._id || null};
-            
-            await apisavecart(cartData);
-            
-            const productWithSize = {...product,selectedSize: selectedSize,variantId: selectedVariant?._id || null};
-
-            addToCart(productWithSize);
-            const productType = selectedVariant ? 'Variant' : 'Main product';
-            toast.success(`${productType} added to cart successfully!`);
-            
-            setSelectedSize('');
+            if (existingItem) {
+                if(existingItem.variantData.sizes.filter(s => s.size === selectedSize)[0].Stock >= existingItem.Quantity){
+                    const productWithSize = {...product,selectedSize: selectedSize,variantId: selectedVariant?.variantId || null};
+                    addToCart(productWithSize);
+                    await updatecartItem(existingItem._id, existingItem.Quantity+1, existingItem?.Email);
+                    // const productType = selectedVariant ? 'Variant' : 'Main product';
+                    toast.success(`Product Quantity increases as ${existingItem.Quantity+1} successfully!`);
+                    return;
+                }else{
+                    toast.error("Sorry, you've reached the maximum stock limit for this item.");
+                    return;
+                }
+            }
+            else{
+                const cartData = { productId: product._id, Email: userDetails.Email, Quantity: 1, selectedSize: selectedSize, variantId: selectedVariant?.variantId || null};
+                await apisavecart(cartData);
+                const productWithSize = {...product,selectedSize: selectedSize,variantId: selectedVariant?.variantId || null};
+                addToCart(productWithSize);
+                const productType = selectedVariant ? 'Variant' : 'Main product';
+                toast.success(`Product added to cart successfully!`);
+            }
         } catch (error) {
             toast.error("Failed to add product to cart.");
             console.error("Error adding product to cart:", error);
@@ -341,7 +342,7 @@ export default function Productsview(props) {
                                 <div className="lg:flex justify-between">
                                     <div className="space-y-3">
                                         <p className="font-semibold manrope">SIZE</p>
-                                         <div className="flex gap-2 text-lg">
+                                        <div className="flex gap-2 text-lg">
                                             {currentProduct?.sizes?.map((sizeObj, index) => {
                                                 const sizeValue = typeof sizeObj === 'string' ? sizeObj : sizeObj.size;
                                                 return (
