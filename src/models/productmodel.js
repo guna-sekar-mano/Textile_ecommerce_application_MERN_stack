@@ -64,6 +64,9 @@ const ProductsSchema = mongoose.Schema({
     stock: { type: String, default: 'Inactive' },
     status: { type: String, default: 'Active' },
     variants: [{
+        // Stock: Number,
+        SKU: String,
+        variant_color: String,
         variant_name: String,
         variant_images: [String],
         description: String,
@@ -71,8 +74,12 @@ const ProductsSchema = mongoose.Schema({
         gender: String,
         Product_type: String,
         tags: String,
-       sizes: [{
-            type: mongoose.Schema.Types.Mixed
+        sizes: [{
+            size: String,
+            price: String,
+            sale_price: String,
+            cost_price: String,
+            Stock: Number
         }],
         price: String,
         sale_price: String,

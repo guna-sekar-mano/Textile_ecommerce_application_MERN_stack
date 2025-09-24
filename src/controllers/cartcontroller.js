@@ -21,33 +21,29 @@ export const savecart = async (req, res, next) => {
 };
 
 export const getAllCart = async (req, res, next) => {
-    try {
-        const { Email } = req.query;
-        
-        const response = await Cart.find({ Email }).populate('productId');
-        
-        const processedResponse = response.map(item => {
-            const itemObj = item.toObject();
-            
-            if (itemObj.variantId && itemObj.productId && itemObj.productId.variants) {
-                const variant = itemObj.productId.variants.find(v => 
-                    v._id.toString() === itemObj.variantId.toString()
-                );
-                
-                if (variant) {
-                    itemObj.variantData = variant;
-                }
-            }
-            
-            return itemObj;
-        });
-        
-        const totalLength = processedResponse.length;
-        res.send({ response: processedResponse, totalLength });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send({ message: 'Error fetching cart items' });
-    }
+  try {
+    const { Email } = req.query;
+    
+    const response = await Cart.find({ Email }).populate('productId');
+    
+    const processedResponse = response.map(item => {
+      const itemObj = item.toObject();
+      if (itemObj.variantId && itemObj.productId && itemObj.productId.variants) { 
+        const variant = itemObj.productId.variants.find(v => v._id.toString() === itemObj.variantId.toString() );
+        if (variant) {
+          itemObj.variantData = variant;
+        }
+      }
+      
+      return itemObj;
+    });
+    
+    const totalLength = processedResponse.length;
+    res.send({ response: processedResponse, totalLength });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: 'Error fetching cart items' });
+  }
 };
 
   export const updateCart = async (req, res, next) => {
