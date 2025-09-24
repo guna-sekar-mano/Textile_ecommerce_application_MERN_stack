@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import authMiddleware from '../middlewares/authmiddlewares.js';
-import { deleteProducts, getallheaderProducts, getallproducts, getallproductsforCustomer, getBannerProducts, getCustomerProductById, saveproduct, updateproducts } from '../controllers/productscontroller.js';
+import { deleteProducts, getallheaderProducts, getallproducts, getallproductsforCustomer, getBannerProducts, getCustomerProductById, getfilteroptions, saveproduct, updateproducts } from '../controllers/productscontroller.js';
 
 const ProductRouter = express.Router();
 const storage = multer.memoryStorage()
@@ -32,7 +32,7 @@ ProductRouter.delete('/apideleteproductsdata/:id', authMiddleware(['Admin']), de
 ProductRouter.get('/apigetproductdataforCustomer', getallproductsforCustomer);
 ProductRouter.get('/apigetproductsbyID/:id/:productType/:productName', getCustomerProductById);
 ProductRouter.get('/apigetHeaderProducts', getallheaderProducts);
-// ProductRouter.get('/apigetPopularProducts', getPopularProductsforCustomer);
+ProductRouter.post('/getfilteroptions', getfilteroptions);
 
 ProductRouter.get('/apigetBannerProducts', getBannerProducts);
 

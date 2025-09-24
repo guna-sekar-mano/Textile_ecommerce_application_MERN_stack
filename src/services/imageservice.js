@@ -10,7 +10,7 @@ export const Saveimage = async (image, folpath) => {
     const binaryData = image.buffer;
     const timestamp = new Date().getTime();
     const directoryPath = path.join(__dirname, '../../uploads', folpath);
-    
+    console.log(directoryPath)
     if (!fs.existsSync(directoryPath)) {
       fs.mkdirSync(directoryPath, { recursive: true });
     }

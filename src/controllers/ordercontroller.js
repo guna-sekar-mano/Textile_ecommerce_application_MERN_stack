@@ -1,23 +1,24 @@
 import { Order, Ordermaster } from "../models/ordermodel.js";
+import Products from "../models/productmodel.js";
 import { uniqueorderid } from "../services/uniqueidService.js";
 
 export const saveOrder = async (req, res) => {
   try {
     const { orderData, orderItems } = req.body;
 
-    if (!orderData || !orderItems) {
-      return res.status(400).json({ error: 'Order data and order items are required' });
-    }
+    // if (!orderData || !orderItems) {
+    //   return res.status(400).json({ error: 'Order data and order items are required' });
+    // }
 
-    if (!Array.isArray(orderItems)) {
-      return res.status(400).json({ error: 'Order items must be an array' });
-    }
+    // if (!Array.isArray(orderItems)) {
+    //   return res.status(400).json({ error: 'Order items must be an array' });
+    // }
 
-    const existingOrder = await Order.findOne({ Order_id: orderData.Order_id });
+    // const existingOrder = await Order.findOne({ Order_id: orderData.Order_id });
     
-    if (existingOrder) {
-      return res.status(200).json({ message: "Order already exists", savedOrder: existingOrder});
-    }
+    // if (existingOrder) {
+    //   return res.status(200).json({ message: "Order already exists", savedOrder: existingOrder});
+    // }
 
     const Invoice_ID = await uniqueorderid();
 
@@ -45,6 +46,7 @@ export const saveOrder = async (req, res) => {
     const savedOrder = await orderDoc.save();
 
     if (orderItems.length > 0) {
+      console.log(orderItems)
       const orderMasterDocs = orderItems.map(item => ({
         Order_id: orderData.Order_id,
         Invoice_ID,
@@ -64,11 +66,26 @@ export const saveOrder = async (req, res) => {
         Product_type: item.Product_type,
         tags: item.tags
       }));
+      
+      var updateSotck = await Promise.all( orderMasterDocs.map(async (item) => {
+        const { productId, variantId, selectedSize, Quantity } = item;
+        console.log(productId, variantId, selectedSize, Quantity)
+
+
+        // Update stock atomically in MongoDB
+        await Products.updateOne(
+          { _id: productId, "variants._id": variantId, "variants.sizes.size": selectedSize },
+          { $inc: { "variants.$[v].sizes.$[s].Stock": - Quantity } },
+          { arrayFilters: [ { "v._id": variantId }, { "s.size": selectedSize } ] }
+        );
+      }))
+
+      // console.log(updateSotck)
 
       await Ordermaster.insertMany(orderMasterDocs);
     }
 
-    res.json({ message: "Order saved successfully", savedOrder, success: true});
+    res.json({ messsage: "Order saved successfully", savedOrder, success: true});
 
   } catch (error) {
     console.error('Order save error:', error);

@@ -6,22 +6,23 @@ const ProductsSchema = mongoose.Schema({
     Category: String,
     category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'categories' }, 
     Subcategory: String,   
-    Images: [String],
+    // Images: [String],
     description: String,
     material_care: String,
     tags: String,
-   sizes: [{
-            type: mongoose.Schema.Types.Mixed
-        }],
+    // sizes: [{ type: mongoose.Schema.Types.Mixed }],
     gender: String,
     Product_type: String,
-    price: String,
-    sale_price: String,
-    cost_price: String,
+    // price: String,
+    // sale_price: String,
+    // cost_price: String,
     is_popular_products: { type: Boolean, default: false },
     stock: { type: String, default: 'Inactive' },
     status: { type: String, default: 'Active' },
     variants: [{
+        // Stock: Number,
+        SKU: String,
+        variant_color: String,
         variant_name: String,
         variant_images: [String],
         description: String,
@@ -29,8 +30,12 @@ const ProductsSchema = mongoose.Schema({
         gender: String,
         Product_type: String,
         tags: String,
-       sizes: [{
-            type: mongoose.Schema.Types.Mixed
+        sizes: [{
+            size: String,
+            price: String,
+            sale_price: String,
+            cost_price: String,
+            Stock: Number
         }],
         price: String,
         sale_price: String,
