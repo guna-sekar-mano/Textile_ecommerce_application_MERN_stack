@@ -4,7 +4,7 @@ import db from "../config/db.js";
 
 const Orderschema = mongoose.Schema({
     Order_id: { type: String, unique: true },
-    Order_Date: { type: Date, default: moment().tz('Asia/Kolkata').format('YYYY-MM-DD') },
+    Order_Date: { type: Date, default: new Date(moment().tz('America/Los_Angeles').format('YYYY-MM-DD')) },
     Billing_Name: String,
     Email: { type: String },
     Mobilenumber: { type: String },
@@ -19,7 +19,9 @@ const Orderschema = mongoose.Schema({
     Total_Amount: Number,
     shipment_id: Number,
     Payment_Date: { type: Date },
-    failed_reason: String,
+    failed_reason: String,    
+    Courier_ID: String,
+    Tracking_Link: String
 }, { timestamps: true });
 
 const Ordersmasterschema = mongoose.Schema({
