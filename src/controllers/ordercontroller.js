@@ -1,6 +1,8 @@
+import moment from "moment-timezone";
 import { Order, Ordermaster } from "../models/ordermodel.js";
 import Products from "../models/productmodel.js";
 import { uniqueorderid } from "../services/uniqueidService.js";
+import { generatepdf } from "../services/invoicedesign.js";
 
 export const saveOrder = async (req, res) => {
   try {
@@ -110,13 +112,19 @@ export const getorderdetails = async (req, res) => {
 
 export const getallOrders = async (req, res, next) => {
   try {
-    const { first, rows, globalfilter, colfilter } = req.query;
+    const { first, rows, globalfilter, colfilter, Sort } = req.query;
 
     const fieldArray = Object.keys(Order.schema.obj);
     const globalFilter = globalfilter ? { $or: fieldArray.filter((field1) => Order.schema.path(field1) instanceof mongoose.Schema.Types.String).map(field => ({ [field]: { $regex: globalfilter, $options: 'i' } })) } : {};
     const emailFilter = req.user.Role == 'Customer' ? {...globalFilter, Email: req.user.Email } : globalFilter;
     const filter = colfilter?{ ...colfilter, ...emailFilter }:emailFilter;
-    const resdata = await Order.find(filter).sort({ createdAt: -1 }).skip(first).limit(rows);
+    var resdata;
+      if(Sort&&Sort.sortField){
+        resdata = await Order.find(filter).sort({[`${Sort.sortField}`]:parseInt(Sort.sortOrder, 10),createdAt:-1}).skip(first).limit(rows);
+      }else{
+        resdata = await Order.find(filter).sort({ createdAt: -1 }).skip(first).limit(rows);
+      }
+    // const resdata = await Order.find(filter).sort({ createdAt: -1 }).skip(first).limit(rows);
     const totallength = await Order.countDocuments(filter);
     res.send({ resdata, totallength });
   } catch (err) {
@@ -137,23 +145,34 @@ export const getfilteroptions= async (req, res, next) => {
 };
 
 export const updateOrder = async (req, res, next) => {
-    try {
-      const { _id } = req.query
-      let previousVal = await Order.find({_id}).lean();
-      let updateData = req.body.Order_Status != previousVal.Order_Status ?{...req.body,Order_Last_Update_Date: new Date(moment().format('YYYY-MM-DD'))}:req.body;
-      const resdata = await Order.findOneAndUpdate({ _id }, updateData, { new: true });
-      res.send(resdata)
-    } catch (err) {
-      console.error(err)
-    }
+  try {
+    const { _id } = req.query
+    // let previousVal = await Order.find({_id}).lean();
+    // let updateData = req.body.Order_Status != previousVal.Order_Status ?{...req.body,Order_Last_Update_Date: new Date(moment().format('YYYY-MM-DD'))}:req.body;
+    const resdata = await Order.findOneAndUpdate({ _id }, req.body, { new: true });
+    res.send(resdata)
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 export const getOrderitemsbyid = async (req, res, next) => {
-    try {
-      const { Order_id } = req.query
-      const resdata = await Ordermaster.find({ Order_id })
-      res.send(resdata)
-    } catch (err) {
-      console.error(err)
-    }
+  try {
+    const { Order_id } = req.query
+    const resdata = await Ordermaster.find({ Order_id })
+    res.send(resdata)
+  } catch (err) {
+    console.error(err)
+  }
 }
+
+export const downloadPDF = async (req, res) => {
+  try {
+    const { Order_id } = req.body;
+    var datas = await generatepdf(Order_id);
+    res.send(datas)
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
