@@ -2,7 +2,9 @@ import mongoose from 'mongoose'
 import db from '../config/db.js'
 
 const HomeBannerschema = mongoose.Schema({
-    Images: [String],
+    DesktopImage: String,
+    MobileImage: String,
+    select_type: String,
     Banner_Name: String,
     redirect_link: String,
     ProductId: [{type: mongoose.Schema.Types.ObjectId, ref: 'products', required: true}],

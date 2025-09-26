@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 import { Saveimage } from '../services/imageservice.js';
 import { Category } from '../models/categorymodel.js';
-// import Products from '../models/productmodel.js';
 
 export const getallcategory = async (req, res, next) => {
     try {

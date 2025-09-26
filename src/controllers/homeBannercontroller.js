@@ -26,18 +26,19 @@ export const getallBanner = async (req, res, next) => {
 
 export const saveBanner = async (req, res, next) => {
     try {
-        if (req.files && req.files.length > 0) {
-            const imageUrls = [];
-            
-            for (const file of req.files) {
-                if (file.buffer && file.buffer.length > 0) {
-                    const imageUrl = await Saveimage(file, 'banner');
-                    imageUrls.push(imageUrl);
-                }
+        if (req.files && req.files.DesktopImage && req.files.DesktopImage.length > 0) {
+            const desktopFile = req.files.DesktopImage[0];
+            if (desktopFile.buffer && desktopFile.buffer.length > 0) {
+                const desktopImageUrl = await Saveimage(desktopFile, 'banner/desktop');
+                req.body.DesktopImage = desktopImageUrl;
             }
-            
-            if (imageUrls.length > 0) {
-                req.body.Images = imageUrls;
+        }
+        
+        if (req.files && req.files.MobileImage && req.files.MobileImage.length > 0) {
+            const mobileFile = req.files.MobileImage[0];
+            if (mobileFile.buffer && mobileFile.buffer.length > 0) {
+                const mobileImageUrl = await Saveimage(mobileFile, 'banner/mobile');
+                req.body.MobileImage = mobileImageUrl;
             }
         }
         
@@ -65,20 +66,22 @@ export const updateBanner = async (req, res, next) => {
     try {
         const { _id } = req.query;
         
-        if (req.files && req.files.length > 0) {
-            const imageUrls = [];
-            
-            for (const file of req.files) {
-                if (file.buffer && file.buffer.length > 0) {
-                    const imageUrl = await Saveimage(file, 'banner');
-                    imageUrls.push(imageUrl);
-                }
-            }
-            
-            if (imageUrls.length > 0) {
-                req.body.Images = imageUrls;
+        if (req.files && req.files['DesktopImage'] && req.files['DesktopImage'][0]) {
+            const desktopFile = req.files['DesktopImage'][0];
+            if (desktopFile.buffer && desktopFile.buffer.length > 0) {
+                const desktopImageUrl = await Saveimage(desktopFile, 'banner/desktop');
+                req.body.DesktopImage = desktopImageUrl;
             }
         }
+        
+        if (req.files && req.files['MobileImage'] && req.files['MobileImage'][0]) {
+            const mobileFile = req.files['MobileImage'][0];
+            if (mobileFile.buffer && mobileFile.buffer.length > 0) {
+                const mobileImageUrl = await Saveimage(mobileFile, 'banner/mobile');
+                req.body.MobileImage = mobileImageUrl;
+            }
+        }
+        
         
         if (req.body['ProductId[]']) {
             req.body.ProductId = Array.isArray(req.body['ProductId[]']) 
@@ -93,15 +96,11 @@ export const updateBanner = async (req, res, next) => {
             );
         }
         
-        const resdata = await HomeBanner.findOneAndUpdate(
-            { _id }, 
-            req.body, 
-            { new: true }
-        ).populate('ProductId', 'Product_Name');
+        const resdata = await HomeBanner.findOneAndUpdate({ _id }, req.body, { new: true }).populate('ProductId', 'Product_Name');
         
         res.send(resdata);
     } catch (err) {
-        console.error('Error in updateCategory:', err);
+        console.error('Error in updateBanner:', err);
         res.status(500).send({ error: err.message });
     }
 }

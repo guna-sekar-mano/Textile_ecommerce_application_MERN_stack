@@ -63,6 +63,7 @@ const ProductsSchema = mongoose.Schema({
     is_popular_products: { type: Boolean, default: false },
     stock: { type: String, default: 'Inactive' },
     status: { type: String, default: 'Active' },
+    Router_Link: String,
     variants: [{
         // Stock: Number,
         SKU: String,

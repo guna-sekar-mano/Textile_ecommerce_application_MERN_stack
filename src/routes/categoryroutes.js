@@ -7,7 +7,7 @@ const storage = multer.memoryStorage()
 const upload = multer({ storage })
 const categoryRouter = express.Router()
 
-categoryRouter.get('/apigetallcategory',authMiddleware(['Admin']), getallcategory)
+categoryRouter.get('/apigetallcategory', getallcategory)
 categoryRouter.get('/apigetCustomercategory', getallCustomercategory)
 // categoryRouter.get('/products/category/:categoryId', getProductsByCategory)
 

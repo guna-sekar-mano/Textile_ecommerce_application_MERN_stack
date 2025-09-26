@@ -71,40 +71,7 @@ export const getfilteroptions= async (req, res, next) => {
 export const saveproduct = async (req, res) => {
     try {
         const { variants, ...productData } = req.body;
-        
-        // if (productData.category_id === 'undefined' || productData.category_id === '' || !productData.category_id) {
-        //     delete productData.category_id;
-        // }
-
-        // if (productData.sizes) {
-        //     productData.sizes = normalizeSizes(productData.sizes);
-        // }
-        
-        // if (productData.sizes) {
-        //     if (typeof productData.sizes === 'string') {
-        //         try {
-        //             productData.sizes = JSON.parse(productData.sizes);
-        //         } catch (e) {
-        //             productData.sizes = productData.sizes.split(',').map(size => size.trim()).filter(size => size);
-        //         }
-        //     } else if (Array.isArray(productData.sizes)) {
-        //         productData.sizes = productData.sizes.flatMap(size => 
-        //             typeof size === 'string' && size.includes(',') 
-        //                 ? size.split(',').map(s => s.trim()).filter(s => s) 
-        //                 : size
-        //         ).filter(size => size);
-        //     }
-        // }
-        
-        // const mainImageUrls = [];
-        // if (req.files && req.files.length > 0) {
-        //     const mainFiles = req.files.filter(file => file.fieldname === 'Images');
-        //     for (const file of mainFiles) {
-        //         const imageUrl = await Saveimage(file, `product_image/${req.body.Product_Name}`);
-        //         mainImageUrls.push(imageUrl);
-        //     }
-        // }
-        
+  
         let processedVariants = [];
         if (variants && typeof variants === 'string') {
             try {
@@ -158,7 +125,7 @@ export const saveproduct = async (req, res) => {
             processedVariants[i].variant_images = [...existingImages, ...variantImageUrls];
         }
         
-        const finalProductData = { ...productData, variants: processedVariants };        
+        const finalProductData = { ...productData, variants: processedVariants,Router_Link: productData.Product_Name.replace(/\s+/g, '-').toLowerCase()};   
         const resdata = await new Products(finalProductData).save();
         res.send({message: resdata ? "Successfully saved" : "Error saving product data",productId: resdata?._id});
         
@@ -173,32 +140,8 @@ export const updateproducts = async (req, res) => {
         const { id } = req.params;
         const { variants, ...productData } = req.body;
 
-        // if (productData.category_id === 'undefined' || productData.category_id === '' || !productData.category_id) {
-        //     delete productData.category_id;
-        // }
-
         const product = await Products.findById(id);
-        // if (!product) return res.status(404).send({ message: "Product not found" });
 
-        //  if (productData.sizes) {
-        //     productData.sizes = normalizeSizes(productData.sizes);
-        // }
-
-        // if (productData.sizes) {
-        //     if (typeof productData.sizes === 'string') {
-        //         try {
-        //             productData.sizes = JSON.parse(productData.sizes);
-        //         } catch (e) {
-        //             productData.sizes = productData.sizes.split(',').map(size => size.trim()).filter(size => size);
-        //         }
-        //     } else if (Array.isArray(productData.sizes)) {
-        //         productData.sizes = productData.sizes.flatMap(size => 
-        //             typeof size === 'string' && size.includes(',') 
-        //                 ? size.split(',').map(s => s.trim()).filter(s => s) 
-        //                 : size
-        //         ).filter(size => size);
-        //     }
-        // }
 
         let processedVariants = [];
         if (variants && typeof variants === 'string') {
@@ -239,16 +182,6 @@ export const updateproducts = async (req, res) => {
             }
         }
 
-
-        // let existingMainImagesToKeep = [];
-        // if (req.body.existingMainImages) {
-        //     try {
-        //         existingMainImagesToKeep = JSON.parse(req.body.existingMainImages);
-        //     } catch (e) {
-        //         console.error('Error parsing existing main images:', e);
-        //     }
-        // }
-
            if (product.variants && product.variants.length > 0) {
             product.variants.forEach(oldVariant => {
                 if (oldVariant.variant_images && oldVariant.variant_images.length > 0) {
@@ -267,28 +200,6 @@ export const updateproducts = async (req, res) => {
                 }
             });
         }
-
-        // if (product.Images && product.Images.length > 0) {
-        //     product.Images.forEach(imgPath => {
-        //         const stillUsed = existingMainImagesToKeep.includes(imgPath);
-        //         if (!stillUsed) {
-        //             const fullPath = path.join(process.cwd(), "uploads", imgPath.replace("uploads/", ""));
-        //             fs.unlink(fullPath, (err) => {
-        //                 if (err) console.error("Error deleting old main image:", fullPath, err);
-        //             });
-        //         }
-        //     });
-        // }
-
-        // const mainImageUrls = [];
-        // if (req.files && req.files.length > 0) {
-        //     const mainFiles = req.files.filter(file => file.fieldname === 'Images');
-            
-        //     for (const file of mainFiles) {
-        //         const imageUrl = await Saveimage(file, `product_image/${productData.Product_Name}`);
-        //         mainImageUrls.push(imageUrl);
-        //     }
-        // }
 
         for (let i = 0; i < processedVariants.length; i++) {
             const variant = processedVariants[i];
@@ -316,6 +227,7 @@ export const updateproducts = async (req, res) => {
         const updateData = {
             ...productData,
             variants: processedVariants,
+            Router_Link: productData.Product_Name.replace(/\s+/g, '-').toLowerCase()
             // Images: [...existingMainImagesToKeep, ...mainImageUrls]
         };
 
@@ -385,9 +297,9 @@ export const getallproductsforCustomer = async (req, res) => {
 
 export const getCustomerProductById = async (req, res) => {
   try {
-    const { id, productType, productName } = req.params;
+    const { routerLink, productType } = req.params;
 
-    const query = { _id: id, status: "Active" };
+    const query = { Router_Link: routerLink, status: "Active" };
     const resdata = await Products.findOne(query);
 
     if (!resdata) {
@@ -401,41 +313,17 @@ export const getCustomerProductById = async (req, res) => {
         .replace(/^-+|-+$/g, "");
     };
 
-    if (
-      productType &&
-      productName &&
-      (toUrlFriendly(resdata.Product_type) !== productType ||
-        toUrlFriendly(resdata.Product_Name) !== productName)
-    ) {
+    if (productType && toUrlFriendly(resdata.Product_type) !== productType) {
       console.warn(
-        `URL mismatch: Expected ${toUrlFriendly(resdata.Product_type)}/${toUrlFriendly(
-          resdata.Product_Name
-        )}, Got ${productType}/${productName}`
+        `URL mismatch: Expected ${toUrlFriendly(resdata.Product_type)}, Got ${productType}`
       );
     }
 
     res.send({ resdata });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send("Error fetching Product");
   }
-};
-
-export const getallheaderProducts = async (req, res) => {
-    try {
-        const query = {header_menu: { $exists: true, $ne: null }};
-
-        const products = await Products.find(query).select('_id header_menu').sort({ createdAt: -1 });
-
-        const totalRecords = products.length;
-
-        res.send({
-            resdata: {products: products, totallength: totalRecords}
-        });
-    } catch (err) {
-        console.error('Get Products Error:', err);
-        res.status(500).send({ error: "An error occurred while fetching products" });
-    }
 };
 
 // export const getPopularProductsforCustomer = async (req, res) => {
@@ -449,44 +337,55 @@ export const getallheaderProducts = async (req, res) => {
 //     }
 // };
 
-export const getBannerProducts = async (req, res) => {
+
+export const getNewArrivalproducts = async (req, res, next) => {
     try {
-        const { productIds } = req.query;
+        const { query } = req.query;
+        console.log(req.query);
+        const currentDate = new Date();
+        const fifteenDaysAgo = new Date();
+        fifteenDaysAgo.setDate(currentDate.getDate() - 15);
         
-        if (!productIds) {
-            return res.status(400).send({ 
-                error: "Product IDs are required" 
-            });
-        }
+        const dateFilter = {createdAt: {$gte: fifteenDaysAgo,$lte: currentDate}};
         
-        let productIdArray;
-        if (typeof productIds === 'string') {
-            try {
-                productIdArray = JSON.parse(productIds);
-            } catch {
-                productIdArray = productIds.split(',');
-            }
-        } else if (Array.isArray(productIds)) {
-            productIdArray = productIds;
-        } else {
-            productIdArray = [productIds];
-        }
+        const products = await Products.find(dateFilter).sort({ createdAt: -1 });
         
-        const products = await Products.find({
-            _id: { $in: productIdArray }
-        }).sort({ createdAt: -1 });
+        const totalRecords = products.length;
         
-        res.send({ 
-            resdata: products, 
-            totallength: products.length 
-        });
-        
+        res.send({resdata: products,totallength: totalRecords});
     } catch (err) {
-        console.error("Get Banner Products Error:", err);
-        res.status(500).send({ 
-            error: "An error occurred while fetching banner products",
-            details: err.message 
-        });
+        console.error('Get Products Error:', err);
+        res.status(500).send({ error: "An error occurred while fetching products" });
     }
 };
 
+export const getSalePriceproducts = async (req, res) => {
+    try {
+        const { category_id } = req.query;
+        
+        let query = {};
+        
+        if (category_id) {
+            query.category_id = category_id;
+        }
+        
+        const products = await Products.find(query).sort({ createdAt: -1 });
+        
+        const productsWithSale = products.filter(product => {
+            return product.variants && product.variants.some(variant => {
+                if (variant.sizes && variant.sizes.length > 0) {
+                    return variant.sizes.some(size => 
+                        size.sale_price && parseFloat(size.sale_price) > 0
+                    );
+                }
+                return variant.sale_price && parseFloat(variant.sale_price) > 0;
+            });
+        });
+        
+        res.send({ resdata: productsWithSale, totallength: productsWithSale.length });
+        
+    } catch (err) {
+        console.error("Get Products Error:", err);
+        res.status(500).send({ error: "An error occurred while fetching products", details: err.message });
+    }
+};
