@@ -14,6 +14,7 @@ export default function Customerpage () {
     const [Sort, setSort] = useState({});
     const [loading, setLoading] = useState(false);
     const [tableData, setTableData] = useState();
+    const [tempFilterValues, setTempFilterValues] = useState([]);
 
     let isMounted = true;
 
@@ -21,6 +22,7 @@ export default function Customerpage () {
         setLoading(true);
         try {
             const res = await getallcustomers({first, rows, globalFilter, colfilter,Sort});
+            // console.log(res)
             setTableData({resdata:res?.resdata,totallength: res?.totallength}); 
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -55,16 +57,16 @@ export default function Customerpage () {
     const cusfilter = (field, value) => {
         setcolFilter(prev => ({ ...prev, [field]: {$in:value} }));
         setFirst(0); // Reset to first page when applying a new filter
-        console.log(first)
+        // console.log(first)
     };
 
     return (
         <>
-            <Tableheadpanel setGlobalFilter={setGlobalFilter}/>
-            <Tableview loading={loading} onPage={onPage} tableData={tableData.resdata} totallength={tableData.totallength} cusfilter={cusfilter} Sort={Sort}
-                setSort={setSort} clearFilter={clearFilter} tempFilterValues={tempFilterValues} setTempFilterValues={setTempFilterValues} />
+            <Tableheadpanel setGlobalFilter={setGlobalFilter} globalFilter={globalFilter} clearFilter={clearFilter}/>
+            <Tableview loading={loading} onPage={onPage} tableData={tableData?.resdata} totallength={tableData?.totallength} cusfilter={cusfilter} Sort={Sort}
+                setSort={setSort} clearFilter={clearFilter} tempFilterValues={tempFilterValues} setTempFilterValues={setTempFilterValues} first={first} />
                 
-            {tableData?.length > 0 && (
+            {tableData?.totallength > 0 && (
                 <Cuspagination first={first} rows={rows} totalRecords={tableData?.totallength || 0} onPage={onPage}/>
             )}
         </>

@@ -194,7 +194,6 @@ export default function Wishlist() {
         return null;
     };
 
-    // Helper function to get processed item data
     const getProcessedItem = (item) => {
         const variantData = getVariantData(item);
         
@@ -210,8 +209,6 @@ export default function Wishlist() {
             };
         }
         
-        // For main products without variantId, we need to get data from the first available variant
-        // since main product fields are commented out in your schema
         if (!item.variantId && item.variants && item.variants.length > 0) {
             const firstVariant = item.variants[0];
             return {
@@ -345,7 +342,6 @@ export default function Wishlist() {
                 Subcategory: product.Subcategory
             };
 
-            // Add variant-specific data if it exists
             if (variantId && product.variantName) {
                 productWithSize.variant_name = product.variantName;
             }
@@ -495,7 +491,7 @@ export default function Wishlist() {
                     {data?.products?.length === 0 && (
                         <div className="text-center py-8">
                             <p className="text-gray-500">Your wishlist is empty</p>
-                            <Link to="/products" className="text-blue-600 hover:underline mt-2 inline-block">
+                            <Link to="/" className="text-blue-600 hover:underline mt-2 inline-block">
                                 Continue Shopping
                             </Link>
                         </div>
@@ -503,13 +499,7 @@ export default function Wishlist() {
                 </div>
             </section>
 
-            <SizeSelectionModal 
-                isOpen={showSizeModal} 
-                onClose={() => setShowSizeModal(false)} 
-                product={selectedProduct} 
-                onAddToCart={handleAddToCart} 
-                getImageUrl={getImageUrl}
-            />
+            <SizeSelectionModal isOpen={showSizeModal} onClose={() => setShowSizeModal(false)} product={selectedProduct} onAddToCart={handleAddToCart} getImageUrl={getImageUrl} />
         </>
     );
 }

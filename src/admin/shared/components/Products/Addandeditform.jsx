@@ -99,19 +99,21 @@ export default function Addandeditform(props) {
         handlechange({ target: { name: 'variants', value: updatedVariants } });
     };
 
-     const handleVariantSizeChange = (variantIndex, sizes) => {
-        const updatedVariants = [...variants];
-        if (updatedVariants[variantIndex].sizePricingMode) {
-            const sizeObjects = sizes.map(size => ({
-                size,
-                price: '',
-                sale_price: '',
-                cost_price: ''
-            }));
-            updatedVariants[variantIndex].sizes = sizeObjects;
-        } else {
-            updatedVariants[variantIndex].sizes = sizes;
-        }
+    const handleVariantSizeChange = (variantIndex, sizes) => {
+        const dataMap = Object.fromEntries(formdata.variants[variantIndex].sizes.map(item => [item.size, item]));
+        // console.log(sizes)
+        // Ensure all reference sizes exist
+        var size = sizes.map(size => {
+            if (dataMap[size]) {
+                return dataMap[size]; // keep existing object
+            }
+            return { size, price: "", sale_price: "", cost_price: "" }; // add missing one
+        });
+
+        var updatedVariants = formdata.variants;
+        updatedVariants[variantIndex].sizes = size;
+        // console.log(updatedVariants,variants)
+
         setVariants(updatedVariants);
         handlechange({ target: { name: 'variants', value: updatedVariants } });
     };
@@ -225,7 +227,7 @@ export default function Addandeditform(props) {
                                             handlechange({ target: { name: 'category_id', value: selectedCategory.id } });
                                         }
                                     }} placeholder="Select category" className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black" required />
-                            </div>
+                            </div> */}
 
                             {/* <div>
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Subcategory *</label>
@@ -548,11 +550,11 @@ export default function Addandeditform(props) {
                                     <div className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50 col-span-full">
                                         <div className="flex items-center justify-between mb-3">
                                             <label className="block text-sm font-medium">Available Sizes</label>
-                                            <div className="flex items-center gap-2">
+                                            {/* <div className="flex items-center gap-2">
                                                 <span className="text-xs text-gray-600">Size-specific pricing</span>
                                                 <input type="checkbox" checked={variant.sizePricingMode || false} onChange={(e) => handleVariantSizePricingToggle(index, e.target.checked)}
                                                     className="w-4 h-4"/>
-                                            </div>
+                                            </div> */}
                                         </div>
 
                                         {!variant.sizePricingMode ? (

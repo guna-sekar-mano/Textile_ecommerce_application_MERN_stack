@@ -73,7 +73,7 @@ export default function Tableview ({loading, tabledata, handledelete, editfrom }
         { field: 'Images', header: 'Image', body: imageBodyTemplate, width: '100px', sortable: false },
         { field: 'Banner_Name', header: 'Banner Name', body: categoryNameBodyTemplate, width: '200px', sortable: true},
         // { field: 'redirect_link', header: 'Redirect Link',  width: '200px'},
-        { field: 'ProductId', header: 'Products',body: productsBodyTemplate, width: '300px', sortable: false},
+        // { field: 'ProductId', header: 'Products',body: productsBodyTemplate, width: '300px', sortable: false},
         { field: 'Status', header: 'Status', body: statusBodyTemplate, width: '120px', sortable: true }
     ];
 

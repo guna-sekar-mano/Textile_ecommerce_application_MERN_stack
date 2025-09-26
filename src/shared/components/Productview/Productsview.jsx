@@ -323,7 +323,7 @@ export default function Productsview(props) {
                                         </div> */}
 
                                         {product.variants?.map((variant, index) => (
-                                            <div key={variant._id} onClick={() => handleVariantClick(variant)}
+                                            <div key={variant._id} onClick={() => handleVariantClick(variant,index)}
                                                 className={`cursor-pointer p-2  transition-all ${
                                                     selectedVariant?._id === variant._id ? 'border-black bg-gray-200' : 'border-gray-300 hover:border-gray-400'
                                                 }`} >

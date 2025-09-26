@@ -48,13 +48,13 @@ export default function Tableview ({tableData, editform, confirm, activeTab}) {
             return [
                 { header: 'Action', body: edittemplateBody },
                 { header: 'Header Menu Details', body: headerMenuBody },
-                { field: 'Status', header: 'Status', filter: true },
+                { field: 'Status', header: 'Status' },
             ];
         } else {
             return [
                 { header: 'Action', body: edittemplateBody },
-                { field: activeTab, header: getFieldLabel(activeTab), filter: true },
-                { field: 'Status', header: 'Status', filter: true },
+                { field: activeTab, header: getFieldLabel(activeTab) },
+                { field: 'Status', header: 'Status' },
             ];
         }
     };
@@ -65,6 +65,9 @@ export default function Tableview ({tableData, editform, confirm, activeTab}) {
         <>
         <DataTable value={tableData?.resdata || tableData}  scrollable scrollHeight="680px" className="!text-sm border border-gray-200 rounded" emptyMessage={`No ${getFieldLabel(activeTab).toLowerCase()} data found`}>
             {columns.map((col, i) => (
+                col.header === 'S.No' ?(
+                    <Column key={index} field={col.field} header={col.header} body={(rowData,{rowIndex})=>Sno(rowIndex)} headerClassName="text-gray-700 bg-gray-50" />
+                ):
                 <Column key={i} field={col.field} header={col.header} body={col.body} filter={col.filter} headerClassName="text-gray-700 bg-gray-50 font-semibold" className="border-b border-gray-100"/>
             ))}
         </DataTable>

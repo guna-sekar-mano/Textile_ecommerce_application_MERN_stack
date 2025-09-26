@@ -27,12 +27,10 @@ export default function Homecategoriespage () {
     const getcategories = useCallback(async ()=>{
         setLoading(true)
         try {
-            const res= await getallCategories({first,rows,globalfilter,...colfilter});
-            
+            const res= await getallCategories({ first, rows, globalfilter, ...colfilter });
             setTabledata(res?.resdata);
             setTotalRecords(res?.totallength);
  
-            
         } catch (error) {
             console.error("Error in getcategories:", error);
         }

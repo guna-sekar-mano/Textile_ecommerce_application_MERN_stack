@@ -12,7 +12,6 @@ import Cartpage from "../components/Cartpage";
 import Checkoutpage from "../components/Checkoutpage";
 import Wishlistpage from "../components/Wishlistpage";
 import Categoryproducts from "../shared/components/CategoryProducts/Categoryproducts";
-import Bannerproducts from "../shared/components/BannerProducts/Bannerproducts";
 import SupportMain from "../shared/components/Support/core/SupportMain";
 import Contactus from "../shared/components/Support/pages/Contactus";
 import Trackorder from "../shared/components/Support/pages/Trackorder";
@@ -22,6 +21,7 @@ import MyAccountMain from "../shared/components/MyAccount/core/MyAccountMain";
 import Myorders from "../shared/components/MyAccount/pages/MyOrders";
 import AccountDetails from "../shared/components/MyAccount/pages/AccountDetails";
 import Rough from "../shared/components/rough";
+import BannerProducts from "../shared/components/BannerProducts/Bannerproducts";
 
 
 export default function Approuter () {
@@ -33,10 +33,9 @@ export default function Approuter () {
             <Routes>
                 <Route element={<Main/>}>
                     <Route path="/" element={<Homepage/>}/>
-                    <Route path="/products/:productType/:productName" element={<ProductsViewPage />} />
-                    {/* <Route path="/collection/:collectionName" element={<Collectionpage/>}/> */}
+                    <Route path="/products/:productType/:routerLink" element={<ProductsViewPage />} />
                     <Route path="/collections/:productType" element={<Categoryproducts />} />
-                     <Route path="/banner-products" element={<Bannerproducts/>}/>
+                    <Route path="/banner-products/:bannerId" element={<BannerProducts />} />
                     <Route path="/login" element={<Loginpage/>}/>
                     <Route path="/sign-up" element={<SignupPage/>}/>
                     <Route path="/verify-otp" element={<VerifyOtp/>}/>

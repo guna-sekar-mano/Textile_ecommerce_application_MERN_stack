@@ -13,11 +13,11 @@ export const apigetallproductsCustomers = async (params) => {
     }
 };
 
-export const getCustomerProductById = async (id, productType, productName) => {
+export const getCustomerProductById = async (routerLink, productType) => {
   try {
     const token = gettoken();
     const response = await axios.get(
-      `${apiurl()}/products/apigetproductsbyID/${id}/${productType}/${productName}`,
+    `${apiurl()}/products/apigetproductsbyRouterLink/${productType}/${routerLink}`,
       {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       }
@@ -40,23 +40,24 @@ export const apigetPopularProducts = async (params) => {
     }
 };
 
-export const apigetBannerProducts = async (params) => {
+export const apigetNewArrivalProducts = async (params) => {
     try {
         const token = gettoken();
-        
-        // Convert array to comma-separated string if productIds is an array
-        let queryParams = { ...params };
-        if (params.productIds && Array.isArray(params.productIds)) {
-            queryParams.productIds = params.productIds.join(',');
-        }
-        
-        const res = await axios.get(`${apiurl()}/products/apigetBannerProducts`, { 
-            params: queryParams,
-            headers: { "Authorization": `Bearer ${token}` }
-        });
+        const res = await axios.get(`${apiurl()}/products/apigetNewArrivalProducts`, { params: params,headers: { "Authorization": `Bearer ${token}` }});
         return res.data;
     } catch (err) {
-        console.error('API Get Banner Products Error:', err.response ? err.response.data : err);
+        console.error('API Get Products Error:', err.response ? err.response.data : err);
+        throw err;
+    }
+};
+
+export const apigetSalePriceProducts = async (params) => {
+    try {
+        const token = gettoken();
+        const res = await axios.get(`${apiurl()}/products/apigetSalePriceProducts`, { params: params,headers: { "Authorization": `Bearer ${token}` }});
+        return res.data;
+    } catch (err) {
+        console.error('API Get Products Error:', err.response ? err.response.data : err);
         throw err;
     }
 };

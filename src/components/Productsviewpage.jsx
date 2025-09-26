@@ -15,7 +15,7 @@ export default function ProductsViewPage() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [currentMainImage, setCurrentMainImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
-  const { productType, productName } = useParams();
+  const { productType, productName, routerLink } = useParams();
   const location = useLocation();
 
   const toggleAccordion = (id) => {
@@ -26,22 +26,12 @@ export default function ProductsViewPage() {
     return `${apiurl()}/${imagePath}`;
   };
 
-  // const getCurrentProductData = () => {
-  //   if (!product) return null;
-  //   if (selectedVariant) {
-  //     // console.log({ ...selectedVariant, Product_Name: selectedVariant.variant_name, Product_Description: selectedVariant.description, Images: selectedVariant.variant_images,
-  //     //   tags: selectedVariant.tags || product.tags })
-  //     return { ...selectedVariant, Product_Name: selectedVariant.variant_name, Product_Description: selectedVariant.description, Images: selectedVariant.variant_images,
-  //       tags: selectedVariant.tags || product.tags };
-  //   }
-  //   else{
-  //     // console.log({ ...product,...product.variants[0],Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images })
-  //     console.log(product.variants[0].sizes[0].size )
-  //     setSelectedSize( product.variants[0].sizes[0]);
-  //     return { ...product,...product.variants[0],Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images };
-  //   }
-  //   // return { ...product, Product_Description: product.description, };
-  // };
+  useEffect(() => {
+    if (location.state?.product) {
+      setProduct(location.state.product);
+      setLoading(false);
+    }
+  }, [location]);
 
   useEffect(() => {
     if (product?.variants?.[0]?.sizes?.[0]) {
@@ -51,7 +41,6 @@ export default function ProductsViewPage() {
 
   const getCurrentProductData = () => {
     if (!product) return null;
-    // console.log(product)
     if (selectedVariant) {
       return {
         ...selectedVariant,
@@ -61,16 +50,39 @@ export default function ProductsViewPage() {
         tags: selectedVariant.tags || product.tags,
       };
     } else {
-      setSelectedVariant({ ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images,_id:product._id,productId:product._id,variantId:product.variants[0]._id });
-      // console.log(product,{ ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images })
-      return { ...product, ...product.variants[0], Product_Name: product.variants[0].variant_name, Images: product.variants[0].variant_images,_id:product._id ,productId:product._id,variantId:product.variants[0]._id};
+      setSelectedVariant({
+        ...product,
+        ...product.variants[0],
+        Product_Name: product.variants[0].variant_name,
+        Images: product.variants[0].variant_images,
+        _id: product._id,
+        productId: product._id,
+        variantId: product.variants[0]._id,
+      });
+      return {
+        ...product,
+        ...product.variants[0],
+        Product_Name: product.variants[0].variant_name,
+        Images: product.variants[0].variant_images,
+        _id: product._id,
+        productId: product._id,
+        variantId: product.variants[0]._id,
+      };
     }
   };
 
   const currentProduct = getCurrentProductData();
 
-  const handleVariantClick = (variant) => {
-    setSelectedVariant(variant);
+  const handleVariantClick = (variant, index) => {
+    setSelectedVariant({
+      ...product,
+      ...product.variants[index],
+      Product_Name: product.variants[index].variant_name,
+      Images: product.variants[index].variant_images,
+      _id: product._id,
+      productId: product._id,
+      variantId: product.variants[index]._id,
+    });
     setCurrentMainImage(0);
   };
 
@@ -87,19 +99,19 @@ export default function ProductsViewPage() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        
-        const productId = location.state?.productId || location.state?.product?._id;
-        
-        if (!productId) {
-          throw new Error('Product ID not provided');
+        const productRouterLink = location.state?.product?.Router_Link || routerLink;
+
+        if (!productRouterLink) {
+          throw new Error('Router Link not provided');
         }
 
-        const data = await getCustomerProductById(productId, productType, productName);
-        
-        if (data && data.resdata) {
-          setProduct(data.resdata);
-        } else {
-          setError('Product not found');
+        if (!product) {
+          const data = await getCustomerProductById(productRouterLink, productType, productName);
+          if (data && data.resdata) {
+            setProduct(data.resdata);
+          } else {
+            setError('Product not found');
+          }
         }
       } catch (err) {
         console.error('Error fetching product:', err);
@@ -110,7 +122,7 @@ export default function ProductsViewPage() {
     };
 
     fetchProduct();
-  }, [location.state, productType, productName]);
+  }, [location.state, productType, productName, routerLink, product]);
 
   if (loading) {
     return (
@@ -137,10 +149,22 @@ export default function ProductsViewPage() {
   }
 
   return (
-    <Productsview selected={selected} container2Ref={container2Ref} container3Ref={container3Ref} container7Ref={container7Ref} currentProduct={currentProduct} 
-      getImageUrl={getImageUrl} currentMainImage={currentMainImage} selectedVariant={selectedVariant} handlePrimaryProductClick={handlePrimaryProductClick} 
-      product={product} handleVariantClick={handleVariantClick} handleThumbnailClick={handleThumbnailClick} toggleAccordion={toggleAccordion} selectedSize={selectedSize} 
+    <Productsview
+      selected={selected}
+      container2Ref={container2Ref}
+      container3Ref={container3Ref}
+      container7Ref={container7Ref}
+      currentProduct={currentProduct}
+      getImageUrl={getImageUrl}
+      currentMainImage={currentMainImage}
+      selectedVariant={selectedVariant}
+      handlePrimaryProductClick={handlePrimaryProductClick}
+      product={product}
+      handleVariantClick={handleVariantClick}
+      handleThumbnailClick={handleThumbnailClick}
+      toggleAccordion={toggleAccordion}
+      selectedSize={selectedSize}
       setSelectedSize={setSelectedSize}
     />
   );
-} 
+}

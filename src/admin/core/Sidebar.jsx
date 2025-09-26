@@ -53,14 +53,14 @@ export default function Sidebar({ isOpen }) {
             {isMobile && isMobileOpen && (
                 <div className="fixed inset-0 z-[50] bg-black/30 bg-opacity-50 transition-opacity lg:hidden" onClick={() => setIsMobileOpen(false)} />
             )}
-            <div className={`fixed inset-y-0 start-0 z-[60] bg-black shadow-xl border-r border-gray-800/10 transition-all duration-300 transform
+            <div className={`fixed flex-nowrap overflow-x-hidden inset-y-0 start-0 z-[60] bg-black shadow-xl border-r border-gray-800/10 transition-all duration-300 transform
                 ${isMobile ? isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full' : isOpen ? 'w-64' : 'w-20' }
                 ${isMobile ? 'lg:translate-x-0' : ''}
             `}>
-                <div className="flex flex-col items-center justify-center px-2 pt-6 pb-8">
-                    <div className="p-1 shadow-lg bg-white backdrop-blur-sm flex w-full gap-3">
+                <div className="flex flex-col items-center justify-center px-4 pt-6 pb-8">
+                    <div className="p-1 shadow-lg bg-white backdrop-blur-sm flex flex-nowrap w-full gap-3">
                         <img src="/images/logo/logo1.png" alt="" className='w-10 h-10'/>
-                        <p className='text-sm flex justify-center items-center font-handelgothic'>EXTREME CULTURE</p>
+                        <p className={`text-sm flex flex-nowrap justify-center items-center font-handelgothic `}>EXTREME CULTURE</p>
                     </div>
                 </div>
                 <nav className="flex flex-col flex-wrap w-full py-4">
@@ -71,7 +71,7 @@ export default function Sidebar({ isOpen }) {
                                 <NavItem icon="fi fi-rr-box-open" label="Products" to="/dashboard/products" isOpen={isMobile ? isMobileOpen : isOpen} />
                                 <NavItem icon="fi fi-sr-target-audience" label="Customers" to="/dashboard/customer" isOpen={isMobile ? isMobileOpen : isOpen} />
                                 <NavItem icon="fi fi-rr-back-up" label="Hookups" to="/dashboard/hookups" isOpen={isMobile ? isMobileOpen : isOpen} />
-                                {/* <NavItem icon="fi fi-brands-c" label="Categories" to="/dashboard/categories" isOpen={isMobile ? isMobileOpen : isOpen} /> */}
+                                <NavItem icon="fi fi-brands-c" label="Categories" to="/dashboard/categories" isOpen={isMobile ? isMobileOpen : isOpen} />
                                 <NavItem icon="fi fi-rr-banner" label="Home Banner" to="/dashboard/home-banner" isOpen={isMobile ? isMobileOpen : isOpen} />
                                 <NavItem icon="fi fi-br-supplier-alt" label="Popular Products" to="/dashboard/popular-products" isOpen={isMobile ? isMobileOpen : isOpen} />
                                 <NavItem icon="fi fi-sr-order-history" label="Orders" to="/dashboard/orders" isOpen={isMobile ? isMobileOpen : isOpen} />

@@ -48,6 +48,7 @@ export default function Productspage() {
             stock: 'Inactive',
             status: 'Active',
             variants: [{ 
+                sizePricingMode: true,
                 variant_name: '', 
                 variant_images: [], 
                 description: '',
@@ -382,7 +383,7 @@ export default function Productspage() {
             <Tableheadpanel openform={openform} setGlobalFilter={setGlobalFilter} globalFilter={globalFilter} clearFilter={clearFilter} />
 
             <Tableview loading={loading} onPage={onPage} tableData={tableData?.products || []} totalRecords={tableData?.totallength || []} editform={editform} confirm={confirm} cusfilter={cusfilter} Sort={Sort}
-                setSort={setSort} clearFilter={clearFilter} tempFilterValues={tempFilterValues} setTempFilterValues={setTempFilterValues} />
+                setSort={setSort} clearFilter={clearFilter} tempFilterValues={tempFilterValues} setTempFilterValues={setTempFilterValues} first={first} />
 
             <Addandeditform visible={visible} setVisible={setVisible} customerCategories={customerCategories} formdata={formdata} handlechange={handlechange}
                 handlesave={handlesave} handleupdate={handleupdate}  hookupsData={tableData?.hookups || []} swapItems={swapItems} />

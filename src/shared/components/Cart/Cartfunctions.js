@@ -8,7 +8,7 @@ export const handleIncreaseQuantity = async (index, cart, userdetails, setCartIt
         if (index < 0 || index >= cart.length) return;
         const item = cart[index];
         if (!item) return;
-        if(item.variants.sizes.filter(s => s.size === item.selectedSize)[0].Stock >= item.Quantity){
+        if(item.variantData.sizes.filter(s => s.size === item.selectedSize)[0].Stock >= item.Quantity){
             const currentQuantity = Number(item?.Quantity) || 1;
             const updatedQuantity = currentQuantity + 1;
 

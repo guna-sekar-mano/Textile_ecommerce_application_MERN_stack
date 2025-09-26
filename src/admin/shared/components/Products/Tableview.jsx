@@ -80,7 +80,19 @@ export default function Tableview (props) {
         );
     };
 
+    const Sno = (rowIndex) => {
+        console.log(first  , rowIndex);
+        return (
+            <>
+              <div className="flex gap-3">
+                {first+rowIndex+1}
+              </div>
+            </>
+        );
+    };
+
     const columns = [
+        { header: 'S.No', body: Sno },
         { header: 'Action', body: edittemplateBody },
         { field: 'Images', header: 'Images', formattype: 'image' },
         { field: 'Product_Name', header: 'Product Name', filter: true },
@@ -95,7 +107,8 @@ export default function Tableview (props) {
         { field: 'status', header: 'Status', filter: true },
     ];
 
-    const img = (rowData) => {
+    const img = (rowData, index) => {
+        // console.log(rowData);
         return (
             <div>  
                 {rowData.variants[0].variant_images && rowData.variants[0].variant_images.length > 0 ? (
@@ -109,18 +122,21 @@ export default function Tableview (props) {
 
     return (
         <>
-            <DataTable value={tableData} totalRecords={totalRecords} scrollable lazy rows={rows} first={first} scrollHeight="calc(100vh - 320px)"
+            <DataTable value={tableData} loading={loading} scrollable scrollHeight="calc(100vh - 320px)"
                 className="!text-sm border border-gray-200 rounded" onSort={onSort} sortField={Sort.sortField} sortOrder={Sort.sortOrder}>
-                {columns.map((col, i) => {
+                {columns.map((col, index) => {
                     return(
-                    col.formattype === 'image' ? (
-                        <Column key={i} header={col.header} field={col.field} style={{ minWidth: col.width }} body={img} headerClassName="text-gray-700 bg-gray-50"/>
+                    col.header === 'S.No' ?(
+                        <Column key={index} field={col.field} header={col.header} body={(rowData,{rowIndex})=>Sno(rowIndex)} headerClassName="text-gray-700 bg-gray-50" />
+                    ):
+                    col.formattype === 'image' ?(
+                        <Column key={index} header={col.header} field={col.field} style={{ minWidth: col.width }} body={img} headerClassName="text-gray-700 bg-gray-50"/>
                     ):
                     col.formattype === 'array' ? (
-                        <Column key={i} header={col.header} field={col.field} style={{ minWidth: col.width }} body={array} filter={col.filter} filterElement={renderColumnFilter(col.field)}
+                        <Column key={index} header={col.header} field={col.field} style={{ minWidth: col.width }} body={array} filter={col.filter} filterElement={renderColumnFilter(col.field)}
                             showFilterMenuOptions={false} showFilterMatchModes={false} showApplyButton={false} showClearButton={false} sortable headerClassName="text-gray-700 bg-gray-50"/>
                     ) : (
-                        <Column key={i} field={col.field} header={col.header} body={col.body} filter={col.filter} filterElement={renderColumnFilter(col.field)}
+                        <Column key={index} field={col.field} header={col.header} body={col.body} filter={col.filter} filterElement={renderColumnFilter(col.field)}
                             showFilterMenuOptions={false} showFilterMatchModes={false} showApplyButton={false} showClearButton={false} sortable headerClassName="text-gray-700 bg-gray-50" />
                     )
                 )})}

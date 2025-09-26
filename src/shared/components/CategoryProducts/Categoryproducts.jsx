@@ -437,7 +437,7 @@ export default function Categoryproducts() {
                                 return (
                                     <div className="group" key={item._id}>
                                         <div className="relative">
-                                            <Link to={`/products/${toUrlFriendly(item.Product_type)}/${toUrlFriendly(item.Product_Name)}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
+                                            <Link to={`/products/${toUrlFriendly(item.Product_type)}/${item.Router_Link}`} state={{ product: item }} onClick={scrollToTop}>
                                                 <Swiper 
                                                     navigation={{
                                                         nextEl: `.swiper-button-next-${item._id}`,

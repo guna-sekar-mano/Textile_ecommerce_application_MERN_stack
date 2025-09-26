@@ -7,13 +7,15 @@ import toast from "react-hot-toast";
 import Tableview from "../shared/components/HomeBanner/Tableview";
 import Cuspagination from "../hooks/CustomPagination";
 import { confirmDialog, ConfirmDialog } from "primereact/confirmdialog";
+import apiurl from "../../shared/services/apiendpoint/apiendpoint";
 
 export default function Homebannerpage () {
 
     const [visible, setVisible] = useState(false);
     const [globalfilter,setglobalfilter]=useState('');
     const [formdata,setFormdata]=useState({});
-    const [file, setFile] = useState();
+    const [desktopFile, setDesktopFile] = useState();
+    const [mobileFile, setMobileFile] = useState();
     const [productname,setProductname]=useState([])
     const [productData, setProductData] = useState([]);
     const [totalRecords, setTotalRecords] = useState(0);
@@ -86,16 +88,26 @@ export default function Homebannerpage () {
         setfiltervalues(res)
     }
 
-    const reader = new FileReader();
+    const desktopReader = new FileReader();
+    const mobileReader = new FileReader();
 
-    reader.onloadend = () => {
-      setFile(reader.result);
+    desktopReader.onloadend = () => {
+    setDesktopFile(desktopReader.result);
+    };
+
+    mobileReader.onloadend = () => {
+    setMobileFile(mobileReader.result);
     };
 
     const handlechange = (e)=>{
         if(e.target.files){
-            setFormdata({...formdata,...{[e.target.name]:e.target.files}});
-            reader.readAsDataURL(e.target.files[0]);
+            setFormdata({...formdata,...{[e.target.name]:e.target.files[0]}});
+            
+            if(e.target.name === 'DesktopImage') {
+                desktopReader.readAsDataURL(e.target.files[0]);
+            } else if(e.target.name === 'MobileImage') {
+                mobileReader.readAsDataURL(e.target.files[0]);
+            }
         }
         else {
             setFormdata({...formdata,...{[e.target.name]:e.target.value}});
@@ -151,7 +163,8 @@ export default function Homebannerpage () {
 
     const newform=()=>{
         setFormdata({});
-        setFile();
+        setDesktopFile();
+        setMobileFile();
         setVisible(true)
     }
     
@@ -168,7 +181,8 @@ export default function Homebannerpage () {
 
         setFormdata({...data, productname: productNamesForEdit});
         setVisible(true);
-        setFile(apiurl()+"/"+data.Images[0])
+        setDesktopFile(data.DesktopImage ? apiurl()+"/"+data.DesktopImage : null);
+        setMobileFile(data.MobileImage ? apiurl()+"/"+data.MobileImage : null);
     }
 
     const handledelete = (id) => {
@@ -191,7 +205,7 @@ export default function Homebannerpage () {
         <>
         <Tableheadpanel newform={newform} setglobalfilter={setglobalfilter}/>
         <AddandEditform visible={visible} setVisible={setVisible} productname={productname} setFormdata={setFormdata} 
-            handlechange={handlechange} handlesave={handlesave} handleupdate={handleupdate} file={file} formdata={formdata} loading={loading} />
+            handlechange={handlechange} handlesave={handlesave} handleupdate={handleupdate} desktopFile={desktopFile} mobileFile={mobileFile} formdata={formdata} loading={loading} />
         <Tableview loading={loading} 
             tabledata={tabledata} 
             handledelete={handledelete} 

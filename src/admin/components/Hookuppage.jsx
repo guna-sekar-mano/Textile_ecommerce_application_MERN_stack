@@ -18,6 +18,9 @@ export default function Hookuppage () {
     const [globalFilter, setGlobalFilter] = useState('');
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('tags');
+    const [colfilter, setcolFilter] = useState({});
+    const [Sort, setSort] = useState({});
+    const [tempFilterValues, setTempFilterValues] = useState([]);
 
     let isMounted = true;
 
@@ -57,7 +60,7 @@ export default function Hookuppage () {
     const getAllHookups = useCallback(async () =>{
         setLoading(true);
         try {
-            const res = await apigetallHookups({first, rows, globalFilter});
+            const res = await apigetallHookups({ first, rows, globalFilter, colfilter,Sort });
             const allData = res?.resdata || [];
             const filteredData = allData.filter(item => 
                 item[activeTab] && 
@@ -72,20 +75,36 @@ export default function Hookuppage () {
         } finally {
             setLoading(false);
         }
-    },[first, rows, globalFilter, activeTab])
+    },[first, rows, globalFilter, colfilter, Sort, activeTab])
     
     useEffect(()=>{
         if(isMounted){
             getAllHookups();
         }
         return(()=>isMounted = false);
-    },[first,rows,globalFilter, activeTab]);
+    },[first, rows, globalFilter, colfilter, Sort, activeTab]);
 
-    const onPage = (page) => {
-        setPage(page)
-        setFirst(rows *(page -1));
+    const onPage = (pages) => {
+        setPage(pages);
+        // console.log(rows,pages )
+        setFirst(pages.first);
         setRows(rows);
     };
+
+    const clearFilter = (event)=>{
+        setcolFilter(null);
+        setGlobalFilter('')
+        setTempFilterValues([])
+        setFirst(0)
+        setSort({})
+    }
+
+    const cusfilter = (field, value) => {
+        setcolFilter(prev => ({ ...prev, [field]: {$in:value} }));
+        setFirst(0); // Reset to first page when applying a new filter
+        console.log(first)
+    };
+
 
     const editform = (data) => {
         const cleanData = { ...data };
@@ -154,7 +173,7 @@ export default function Hookuppage () {
             </div>
         </div>
         <div className="">
-            <Tableheadpanel openform={openform} setGlobalFilter={setGlobalFilter} />
+            <Tableheadpanel openform={openform} setGlobalFilter={setGlobalFilter} globalFilter={globalFilter} clearFilter={clearFilter} />
             <Addandeditform formdata={formdata} visible={visible} setVisible={setVisible} handlechange={handlechange} handlesave={handlesave} handleupdate={handleupdate} activeTab={activeTab} />
             <Tableview confirm={confirm} loading={loading} onPage={onPage} tableData={tableData} editform={editform} activeTab={activeTab} />
             {tableData?.resdata?.length > 0 && (

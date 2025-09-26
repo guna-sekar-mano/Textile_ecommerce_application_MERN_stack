@@ -16,15 +16,9 @@ export const saveBanners = async(datas) => {
         const formData = new FormData();
         
         for (const key in datas) {
-            if (key === 'Images') {
-                if (datas['Images']) {
-                    for(let i = 0; i < datas['Images'].length; i++) {
-                        if (datas['Images'][i] instanceof File) {
-                            formData.append(key, datas['Images'][i]);
-                        } else {
-                            formData.append(key, datas['Images'][i]);
-                        }
-                    }
+            if (key === 'DesktopImage' || key === 'MobileImage') {
+                if (datas[key] && datas[key] instanceof File) {
+                    formData.append(key, datas[key]);
                 }
             } else if (key === 'ProductId') {
                 if (Array.isArray(datas['ProductId'])) {

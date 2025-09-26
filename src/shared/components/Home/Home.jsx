@@ -13,7 +13,19 @@ export default function Home() {
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const checkIsMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        checkIsMobile();
+        window.addEventListener('resize', checkIsMobile);
+        
+        return () => window.removeEventListener('resize', checkIsMobile);
+    }, []);
 
     useEffect(() => {
         if (!isAutoPlaying) return;
@@ -38,27 +50,6 @@ export default function Home() {
     const goToSlide = (index) => {
         setCurrentSlide(index);
         setIsAutoPlaying(false);
-    };
-
-    const handleBannerClick = (redirectLink, productIds, bannerName) => {
-        
-        if (redirectLink && redirectLink.trim() !== '') {
-            navigate(redirectLink, { 
-                state: { 
-                    productIds: productIds,
-                    bannerName: bannerName,
-                    bannerProducts: true 
-                } 
-            });
-        } else if (productIds && productIds.length > 0) {
-            navigate('/banner-products', { 
-                state: { 
-                    productIds: productIds,
-                    bannerName: bannerName,
-                    bannerProducts: true 
-                } 
-            });
-        }
     };
 
     let isMounted = true;
@@ -88,31 +79,56 @@ export default function Home() {
         return `${apiurl()}/${imagePath}`;
     };
 
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const handleBannerClick = () => {
+        const currentBanner = data[currentSlide];
+        if (currentBanner) {            
+            if (currentBanner.redirect_link && currentBanner.redirect_link.trim() !== '') {
+                window.open(currentBanner.redirect_link, '_parent');
+            } else if (currentBanner.ProductId && currentBanner.ProductId.length > 0) {
+                const bannerNameSlug = currentBanner.Banner_Name
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, '');
+                
+                navigate(`/banner-products/${bannerNameSlug}?id=${currentBanner._id}`);
+            }
+        }
+    };
+
+    const getBannerImage = (item) => {
+        if (isMobile && item.MobileImage) {
+            return getImageUrl(item.MobileImage);
+        } else if (item.DesktopImage) {
+            return getImageUrl(item.DesktopImage);
+        } else if (item.Images && item.Images.length > 0) {
+            return getImageUrl(item.Images[0]);
+        }
+        return null;
     };
 
     return (
         <>
         <section className="relative w-full h-[92vh] overflow-hidden">
             <div className="relative w-full h-full">
-                {data.map((item, index) => (
-                    <div key={item._id} className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
-                        {item.Images?.map((img, imgIndex) => (
-                            <div 
-                                key={imgIndex} 
-                                className='w-full h-full cursor-pointer' 
-                                onClick={() => handleBannerClick(
-                                    item.redirect_link, 
-                                    item.ProductId?.map(product => product._id),
-                                    item.Banner_Name
-                                )}
-                            >
-                                <img src={getImageUrl(img)} alt={`${item.Banner_Name} - Slide ${index + 1}`} className="w-full h-full object-cover"/>
-                            </div>
-                        ))}
-                    </div>
-                ))}
+                {data.map((item, index) => {
+                    const imageUrl = getBannerImage(item);
+                    
+                    return (
+                        <div key={item._id} className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
+                            {imageUrl && (
+                                <div className='w-full h-full cursor-pointer' onClick={handleBannerClick}>
+                                    <img 
+                                        src={imageUrl} 
+                                        alt={`${item.Banner_Name} - Slide ${index + 1}`} 
+                                        className="w-full h-full object-cover" 
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
