@@ -348,7 +348,14 @@ export const getNewArrivalproducts = async (req, res, next) => {
         
         const dateFilter = {createdAt: {$gte: fifteenDaysAgo,$lte: currentDate}};
         
-        const products = await Products.find(dateFilter).sort({ createdAt: -1 });
+        let products = await Products.find(dateFilter).sort({ createdAt: -1 });
+
+          if (products.length === 0) {
+            products = await Products.find()
+                .sort({ updatedAt: -1, createdAt: -1 })
+                .limit(4);
+        }
+        
         
         const totalRecords = products.length;
         
@@ -388,4 +395,28 @@ export const getSalePriceproducts = async (req, res) => {
         console.error("Get Products Error:", err);
         res.status(500).send({ error: "An error occurred while fetching products", details: err.message });
     }
+};
+
+export const getHeaderProductsforCustomer = async (req, res) => {
+ try {
+    const { productType, gender } = req.query;
+    
+    const query = { status: "Active" };
+    
+    if (productType && productType !== 'all') {
+      const searchTerm = productType.split('-').map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[ -]');
+      query.Product_type = { $regex: new RegExp(`^${searchTerm}$`, 'i') };
+    }
+    
+    if (gender) {
+      query.gender = { $regex: new RegExp(`^${gender}$`, 'i') };
+    }
+
+    const resdata = await Products.find(query);
+   
+    res.send({ resdata });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching Products");
+  }
 };

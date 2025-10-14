@@ -1,5 +1,5 @@
 import express from 'express';
-import { downloadPDF, getallOrders, getfilteroptions, getorderdetails, getOrderitemsbyid, saveOrder, updateOrder } from "../controllers/ordercontroller.js";
+import { checkFirstTimeUser, downloadPDF, getallOrders, getfilteroptions, getorderdetails, getOrderitemsbyid, saveOrder, updateOrder } from "../controllers/ordercontroller.js";
 import authMiddleware from "../middlewares/authmiddlewares.js";
 
 const OrderRouter = express.Router();
@@ -12,5 +12,5 @@ OrderRouter.get('/apigetorderitemsbyid', authMiddleware(['Customer', 'Admin']), 
 OrderRouter.put('/apiupdateorder', authMiddleware(['Customer', 'Admin']), updateOrder);
 // OrderRouter.post('/createorder',createOrder);
 OrderRouter.get('/apigetorderdetails',authMiddleware(['Admin','Customer']),getorderdetails);
-
+OrderRouter.get('/checkCustomerOrderforCoupon', authMiddleware(['Customer', 'Admin']), checkFirstTimeUser);
 export default OrderRouter;

@@ -3,6 +3,7 @@ import { Order, Ordermaster } from "../models/ordermodel.js";
 import Products from "../models/productmodel.js";
 import { uniqueorderid } from "../services/uniqueidService.js";
 import { generatepdf } from "../services/invoicedesign.js";
+import mongoose from "mongoose";
 
 export const saveOrder = async (req, res) => {
   try {
@@ -112,11 +113,11 @@ export const getorderdetails = async (req, res) => {
 
 export const getallOrders = async (req, res, next) => {
   try {
-    const { first, rows, globalfilter, colfilter, Sort } = req.query;
+    const { first, rows, globalFilter, colfilter, Sort } = req.query;
 
     const fieldArray = Object.keys(Order.schema.obj);
-    const globalFilter = globalfilter ? { $or: fieldArray.filter((field1) => Order.schema.path(field1) instanceof mongoose.Schema.Types.String).map(field => ({ [field]: { $regex: globalfilter, $options: 'i' } })) } : {};
-    const emailFilter = req.user.Role == 'Customer' ? {...globalFilter, Email: req.user.Email } : globalFilter;
+  const globalFilters = globalFilter ? { $or: fieldArray.filter((field1) => Order.schema.path(field1) instanceof mongoose.Schema.Types.String).map(field => ({ [field]: { $regex: globalFilter, $options: 'i' } })) } : {};
+    const emailFilter = req.user.Role == 'Customer' ? {...globalFilters, Email: req.user.Email } : globalFilters;
     const filter = colfilter?{ ...colfilter, ...emailFilter }:emailFilter;
     var resdata;
       if(Sort&&Sort.sortField){
@@ -174,5 +175,20 @@ export const downloadPDF = async (req, res) => {
   } catch (error) {
     console.error('Error generating PDF:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const checkFirstTimeUser = async (req, res, next) => {
+  try {
+    const { Email } = req.user;
+    
+    const orderCount = await Order.countDocuments({ Email, Order_Status: { $ne: "cancelled" }});
+    
+    const isFirstTimeUser = orderCount === 0;
+    
+    res.send({success: true,isFirstTimeUser,orderCount});
+  } catch (err) {
+    console.error('Error checking first-time user:', err);
+    res.status(500).send({success: false,message: 'Error checking user status',isFirstTimeUser: false});
   }
 };

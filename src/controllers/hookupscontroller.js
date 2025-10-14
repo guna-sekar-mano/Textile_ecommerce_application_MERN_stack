@@ -12,17 +12,26 @@ export const saveHookups = async (req, res) => {
 };
 
 export const getallHookups = async (req, res) => {
-    try{
-        let { first, rows, globalFilter } = req.query
-        const fieldArray = Object.keys(Hookups.schema.obj)
-        const filter = { $or: fieldArray.filter((field1) => field1 !== '_id').map(field => ({ [field]: { $regex: globalFilter, $options: 'i' } })) }
-        globalFilter = globalFilter !== '' ? filter : {}
-        const resdata = await Hookups.find(globalFilter).skip(first).limit(rows)
-        const totallength = await Hookups.countDocuments(globalFilter)
-        res.send({ resdata, totallength })
-    }
-    catch(err){
-        console.log(err);
+    try {
+        const { first = 0, rows = 10, globalFilter = '', colfilter, Sort } = req.query;
+        const parsedColFilter = typeof colfilter === 'string' ? JSON.parse(colfilter) : (colfilter || {});
+        const parsedSort = typeof Sort === 'string' ? JSON.parse(Sort) : (Sort || {});
+        
+        let query = { ...parsedColFilter };
+        
+        if (globalFilter) {
+            const fields = Object.keys(Hookups.schema.obj).filter(f => f !== '_id' && f !== '__v');
+            const searchQuery = { $or: fields.map(f => ({ [f]: { $regex: globalFilter, $options: 'i' } })) };
+            query = Object.keys(parsedColFilter).length > 0 ? { $and: [parsedColFilter, searchQuery] } : searchQuery;
+        }
+        
+        const resdata = await Hookups.find(query).sort(Object.keys(parsedSort).length > 0 ? parsedSort : { createdAt: -1 }).skip(parseInt(first)).limit(parseInt(rows));
+        const totallength = await Hookups.countDocuments(query);
+        res.send({ resdata, totallength });
+        
+    } catch (err) {
+        console.error('Error in getallHookups:', err);
+        res.status(500).send({ message: 'Error fetching hookups data', error: err.message });
     }
 }
 

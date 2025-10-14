@@ -21,6 +21,7 @@ const shipingschema = mongoose.Schema(
     Address: String,
     City: String,
     State : String,
+    Country: String,
     Zipcode: String
   },
   { timestamps: true }

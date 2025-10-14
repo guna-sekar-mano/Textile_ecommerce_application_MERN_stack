@@ -4,15 +4,15 @@ import { Saveimage } from "../services/imageservice.js";
 
 export const getallBanner = async (req, res, next) => {
     try {
-        const { first, rows, globalfilter, ...othersdata } = req.query;
+        const { first, rows, globalFilter, ...othersdata } = req.query;
         const individualFilters = Object.keys(othersdata).map(field => ({ [field]: { $regex: req.query[field] ?? '' } }));
         const fieldArray = Object.keys(HomeBanner.schema.obj);
-        const globalFilter = globalfilter ? {
+        const globalFilters = globalFilter ? {
           $or: fieldArray
             .filter(field => HomeBanner.schema.path(field) instanceof mongoose.Schema.Types.String)
-            .map(field => ({ [field]: { $regex: globalfilter, $options: 'i' } }))
+            .map(field => ({ [field]: { $regex: globalFilter, $options: 'i' } }))
         } : {};
-        const filter = { $and: [globalFilter, ...individualFilters] };
+        const filter = { $and: [globalFilters, ...individualFilters] };
         
         const resdata = await HomeBanner.find(filter).populate('ProductId', 'Product_Name').skip(Number(first)).limit(Number(rows));
             

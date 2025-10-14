@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Popularproducts } from "../models/popularproductmodal.js";
+import { Saveimage } from "../services/imageservice.js";
 
 export const getallPopularproducts = async (req, res, next) => {
     try {
@@ -25,6 +26,20 @@ export const getallPopularproducts = async (req, res, next) => {
 
 export const savePopularproducts = async (req, res, next) => {
     try {
+        if (req.files && req.files.length > 0) {
+            const imageUrls = [];
+            
+            for (const file of req.files) {
+                if (file.buffer && file.buffer.length > 0) {
+                    const imageUrl = await Saveimage(file, 'popularproducts');
+                    imageUrls.push(imageUrl);
+                }
+            }
+            
+            if (imageUrls.length > 0) {
+                req.body.Images = imageUrls;
+            }
+        }
     
         if (req.body['ProductId[]']) {
             req.body.ProductId = Array.isArray(req.body['ProductId[]']) ? req.body['ProductId[]'] : [req.body['ProductId[]']];
@@ -52,11 +67,23 @@ export const updatePopularproducts = async (req, res, next) => {
     try {
         const { _id } = req.query;
         
+        if (req.files && req.files.length > 0) {
+            const imageUrls = [];
+            
+            for (const file of req.files) {
+                if (file.buffer && file.buffer.length > 0) {
+                    const imageUrl = await Saveimage(file, 'popularproducts');
+                    imageUrls.push(imageUrl);
+                }
+            }
+            
+            if (imageUrls.length > 0) {
+                req.body.Images = imageUrls;
+            }
+        }
 
         if (req.body['ProductId[]']) {
-            req.body.ProductId = Array.isArray(req.body['ProductId[]']) 
-                ? req.body['ProductId[]'] 
-                : [req.body['ProductId[]']];
+            req.body.ProductId = Array.isArray(req.body['ProductId[]']) ? req.body['ProductId[]'] : [req.body['ProductId[]']];
             delete req.body['ProductId[]'];
         }
         
@@ -89,12 +116,7 @@ export const deletePopularproducts = async (req, res, next) => {
 
 export const getallCustomerPopularProducts = async (req, res, next) => {
     try {
-        const resdata = await Popularproducts.find({ Status: 'Active' }).populate({ path: 'ProductId', model: 'products', match: { status: 'Active' } })
-            .populate({path: 'HighlightedProductId',
-                model: 'products',
-                match: { status: 'Active' }
-            })
-            .sort({ createdAt: -1 });
+        const resdata = await Popularproducts.find({ Status: 'Active' }).populate({ path: 'ProductId', model: 'products', match: { status: 'Active' } }).sort({ createdAt: -1 });
 
         const filteredData = resdata.filter(item => item.ProductId && item.ProductId.length > 0);
 

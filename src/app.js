@@ -14,7 +14,7 @@ app.set("query parser", str => qs.parse(str));
 
 app.use('/uploads', express.static('uploads'))
 app.use(cors({
-  origin: ['http://localhost:5173','http://192.168.1.52:5173','http://localhost:5174','https://n0p2nzdt-5173.inc1.devtunnels.ms', 'http://192.168.1.35:5173'],
+  origin: ['http://localhost:5173','http://192.168.1.52:5173','http://localhost:5174','https://n0p2nzdt-5173.inc1.devtunnels.ms', 'http://192.168.1.35:5173','http://3.109.65.19'],
   credentials: true
 }))
 app.use('/', router)

@@ -11,6 +11,8 @@ const Hookupsschema = mongoose.Schema({
   Header_menu: String,
   main_title: String,
   subtitle: String,
+  Color: String,
+  color_code: String, 
   collection_names: String,
   Status: { type: String, default: 'Inactive' }
 },{timestamps:true})

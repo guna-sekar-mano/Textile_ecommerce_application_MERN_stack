@@ -10,6 +10,9 @@ import homebannerRouter from './homeBannerroutes.js';
 import OrderRouter from './orderroutes.js';
 import PopularproductsRouter from './popularproductsroutes.js';
 import SearchRouter from './searchroutes.js';
+import DashboardRouter from './dashboardroutes.js';
+import couponsRouter from './couponsroutes.js';
+import NewsLetterRouter from './newletterroutes.js';
 
 const router = express.Router()
 
@@ -24,7 +27,9 @@ router.use('/homeBanner', homebannerRouter)
 router.use('/order', OrderRouter)
 router.use('/popular-products', PopularproductsRouter)
 router.use('/search', SearchRouter)
-
+router.use('/dashboard', DashboardRouter)
+router.use('/coupons', couponsRouter)
+router.use('/newsletter', NewsLetterRouter)
 
 
 export default router;

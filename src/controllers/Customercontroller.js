@@ -93,3 +93,13 @@ export const getfilteroptions= async (req, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getCouponCustomers = async (req, res, next) => {
+  try {
+    const resdata = await Customer.find({}, 'Email');
+    res.send({ resdata });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+};
