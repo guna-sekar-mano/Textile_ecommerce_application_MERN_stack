@@ -6,73 +6,49 @@ export default function Addandeditform ({ visible, setVisible, file, productname
 
     const productOptions = productname && Array.isArray(productname) ? productname.map((name) => ({ label: name, value: name })): [];
     
-    const highlightedProductOptions = formdata?.productname && Array.isArray(formdata?.productname) 
-        ? formdata.productname.map((name) => ({ label: name, value: name }))
-        : [];
-    
-    const handleMultiSelectChange = (e) => {
-        console.log("MultiSelect change event:", e);
-        const event = {
-            target: {
-                name: 'productname',
-                value: e.value
-            }
-        };
-        
-        if (formdata?.highlightedProduct && !e.value.includes(formdata.highlightedProduct)) {
-            const highlightedEvent = {
-                target: {
-                    name: 'highlightedProduct',
-                    value: ''
-                }
-            };
-            handlechange(highlightedEvent);
-        }
-        
-        handlechange(event);
-    };
-
-    const handleHighlightedProductChange = (e) => {
-        const event = {
-            target: {
-                name: 'highlightedProduct',
-                value: e.value
-            }
-        };
-        handlechange(event);
-    };
-
     return (
         <>
         <Dialog header="Popular Products Details" visible={visible} onHide={() => setVisible(false)} className="!w-full lg:!w-[40rem]">
             <form onSubmit={!formdata?._id ? handlesave : handleupdate}>
                 <div className='grid grid-cols-1 gap-3 lg:grid-cols-1'>
+                    <label>Highlight Image</label>
+                    <div className='mb-3'>
+                        <div className='flex items-center justify-center mb-3'>
+                            <label className="flex flex-col items-center overflow-hidden justify-center h-40 w-40 object-cover border-2 border-gray-300 border-dashed cursor-pointer bg-gray-50">
+                                {file ? (
+                                    <img src={file} className='' alt="" srcSet="" />
+                                ) : (
+                                    <>
+                                        <div className="flex flex-col items-center justify-center pt-4 pb-5">
+                                            <i className="fi fi-sr-mode-landscape"></i>
+                                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span></p>
+                                            <p className="text-xs text-gray-500">SVG, PNG, JPG</p>
+                                        </div>
+                                    </>
+                                )}
+                                <input type="file" name="Images" multiple onChange={handlechange} className="hidden" />
+                            </label>
+                        </div>
+                        <div className='hidden'>
+                            <img width="50px" src="https://img.freepik.com/free-photo/3d-rendering-beautiful-luxury-bedroom-suite-hotel-with-tv_105762-2173.jpg?t=st=1711361047~exp=1711364647~hmac=71fd55e8418ee7913fe07a5f00af8d93c6db7474a1d71e2d5fbf7d431975180f&w=1380" alt="" />
+                        </div>
+                    </div>
+                      <div className="mb-2">
+                            <div className="mb-2">
+                                <label>Highlighted Section Name</label>
+                            </div>
+                            <input type="text" name="Highlighted_Section_Name" value={formdata?.Highlighted_Section_Name || ''} onChange={handlechange} className="w-full px-4 py-2 border rounded-md outline-none" required/>
+                        </div>
                      <div className="mb-2">
                         <div className="mb-2">
                             <label>Product Name</label>
                         </div>
-                        <MultiSelect name="productname" value={formdata?.productname || []} options={productOptions} onChange={handleMultiSelectChange} placeholder="Select Product Names" 
+                        <MultiSelect name="productname" value={formdata?.productname || []} options={productOptions} onChange={handlechange} placeholder="Select Product Names" 
                             className="w-full" display="chip" required emptyMessage="No products available" showSelectAll={true} filter={true} filterBy="label"
                         />
                     </div>
 
-                     {formdata?.productname && formdata?.productname.length > 0 && (
-                        <div className="mb-2">
-                            <div className="mb-2">
-                                <label>Highlighted Product</label>
-                            </div>
-                            <Dropdown
-                                name="highlightedProduct"
-                                value={formdata?.highlightedProduct || ''}
-                                options={highlightedProductOptions}
-                                onChange={handleHighlightedProductChange}
-                                placeholder="Select a highlighted product"
-                                className="w-full"
-                                emptyMessage="No products selected"
-                                showClear={true}
-                            />
-                        </div>
-                    )}
+            
                     <div className="mb-2">
                         <div className="mb-2">
                             <label>Status</label>

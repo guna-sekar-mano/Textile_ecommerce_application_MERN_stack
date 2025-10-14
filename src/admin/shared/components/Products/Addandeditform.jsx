@@ -9,9 +9,9 @@ import { Dropdown } from 'primereact/dropdown';
 export default function Addandeditform(props) {
     const { visible, setVisible, formdata, handlechange, handlesave, handleupdate, hookupsData, customerCategories, swapItems } = props;
     const [variants, setVariants] = useState([{ variant_name: '', variant_images: [], description: '', tags:'', material_care: '', sizes: [], gender: '', Product_type: '',
-        price: '', sale_price: '', cost_price: '', stock: 'Inactive', status: 'Active' }]);
+        price: '', sale_price: '', cost_price: '', stock: 'Inactive', status: 'Active',   variant_color: '', }]);
 
-    const [hookups, setHookups] = useState({ categories: [], subcategories: [], genders: [], sizes: [], tags: [], producttype: [], headerMenus: [], });
+    const [hookups, setHookups] = useState({ categories: [], subcategories: [], genders: [], sizes: [], tags: [], producttype: [],colors: [], headerMenus: [], });
 
     const [sizePricingMode, setSizePricingMode] = useState(false);
 
@@ -24,6 +24,11 @@ export default function Addandeditform(props) {
                 sizes: hookupsData.filter(item => item.sizes).map(item => ({ label: item.sizes, value: item.sizes })),
                 tags: hookupsData.filter(item => item.tags).map(item => ({ label: item.tags, value: item.tags })),
                 producttype: hookupsData.filter(item => item.Product_type).map(item => ({ label: item.Product_type, value: item.Product_type })),
+                colors: hookupsData.filter(item => item.Color).map(item => ({ 
+                    label: item.Color, 
+                    value: item.Color,
+                    colorCode: item.color_code
+                })),
             };
             setHookups(processedHookups);
         }
@@ -38,66 +43,6 @@ export default function Addandeditform(props) {
         }
     }, [formdata]);
 
-    const handleSizePricingToggle = (enabled) => {
-        setSizePricingMode(enabled);
-        if (enabled) {
-            const sizeObjects = (formdata?.sizes || []).map(size => 
-                typeof size === 'string' 
-                    ? { size, price: formdata?.price || '', sale_price: formdata?.sale_price || '', cost_price: formdata?.cost_price || '' }
-                    : size
-            );
-            handlechange({ target: { name: 'sizes', value: sizeObjects } });
-        } else {
-            const sizeStrings = (formdata?.sizes || []).map(size => 
-                typeof size === 'object' ? size.size : size
-            );
-            handlechange({ target: { name: 'sizes', value: sizeStrings } });
-        }
-    };
-
-    const handleSizeChange = (sizes) => {
-        if (sizePricingMode) {
-            const sizeObjects = sizes.map(size => ({
-                size,
-                price: '',
-                sale_price: '',
-                cost_price: ''
-            }));
-            handlechange({ target: { name: 'sizes', value: sizeObjects } });
-        } else {
-            handlechange({ target: { name: 'sizes', value: sizes } });
-        }
-    };
-
-    const handleSizePriceChange = (sizeIndex, field, value) => {
-        const updatedSizes = [...(formdata?.sizes || [])];
-        updatedSizes[sizeIndex] = {
-            ...updatedSizes[sizeIndex],
-            [field]: value
-        };
-        handlechange({ target: { name: 'sizes', value: updatedSizes } });
-    };
-
-    const handleVariantSizePricingToggle = (variantIndex, enabled) => {
-        const updatedVariants = [...variants];
-        if (enabled) {
-            const sizeObjects = (updatedVariants[variantIndex].sizes || []).map(size => 
-                typeof size === 'string' 
-                    ? { size, price: '', sale_price: '', cost_price: '' }
-                    : size
-            );
-            updatedVariants[variantIndex].sizes = sizeObjects;
-            updatedVariants[variantIndex].sizePricingMode = true;
-        } else {
-            const sizeStrings = (updatedVariants[variantIndex].sizes || []).map(size => 
-                typeof size === 'object' ? size.size : size
-            );
-            updatedVariants[variantIndex].sizes = sizeStrings;
-            updatedVariants[variantIndex].sizePricingMode = false;
-        }
-        setVariants(updatedVariants);
-        handlechange({ target: { name: 'variants', value: updatedVariants } });
-    };
 
     const handleVariantSizeChange = (variantIndex, sizes) => {
         const dataMap = Object.fromEntries(formdata.variants[variantIndex].sizes.map(item => [item.size, item]));
@@ -131,21 +76,6 @@ export default function Addandeditform(props) {
     };
 
 
-    const handleImageChange = (e) => {
-        const files = Array.from(e.target.files).filter(file => 
-            file instanceof File && file.type.startsWith('image/')
-        );
-        
-        const existingImages = formdata?.Images?.filter(img => typeof img === 'string') || [];
-        const updatedImages = [...existingImages, ...files];
-        
-        handlechange({ target: { name: 'Images', value: updatedImages } });
-    };
-
-    const removeImage = (imageIndex) => {
-        const updatedImages = (formdata?.Images || []).filter((_, i) => i !== imageIndex);
-        handlechange({ target: { name: 'Images', value: updatedImages } });
-    };
 
     const handleVariantImageChange = (variantIndex, e) => {
         const files = Array.from(e.target.files).filter(file => 
@@ -163,6 +93,7 @@ export default function Addandeditform(props) {
     const addVariant = () => {
         const newVariant = { 
             variant_name: '', 
+            variant_color: '',
             variant_images: [], 
             description: '',
             material_care: '',
@@ -189,7 +120,17 @@ export default function Addandeditform(props) {
 
     const updateVariantField = (index, field, value) => {
         const updatedVariants = [...variants];
-        updatedVariants[index][field] = value;
+        
+        if (field === 'variant_color') {
+            const selectedColor = hookups.colors.find(color => color.value === value);
+            updatedVariants[index][field] = value;
+            if (selectedColor?.colorCode) {
+                updatedVariants[index]['variant_color_code'] = selectedColor.colorCode;
+            }
+        } else {
+            updatedVariants[index][field] = value;
+        }
+        
         setVariants(updatedVariants);
         handlechange({ target: { name: 'variants', value: updatedVariants } });
     };
@@ -218,28 +159,6 @@ export default function Addandeditform(props) {
                                     onChange={handlechange} required placeholder="Enter product name"/>
                             </div>
 
-                            {/* <div>
-                                <label className="block text-sm font-semibold text-gray-800 mb-2">Category *</label>
-                                <Dropdown value={formdata?.Category || ""} options={customerCategories} onChange={(e) => {
-                                        const selectedCategory = customerCategories.find(cat => cat.value === e.value);
-                                        handlechange({ target: { name: 'Category', value: e.value } });
-                                        if (selectedCategory?.id) {
-                                            handlechange({ target: { name: 'category_id', value: selectedCategory.id } });
-                                        }
-                                    }} placeholder="Select category" className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black" required />
-                            </div> */}
-
-                            {/* <div>
-                                <label className="block text-sm font-semibold text-gray-800 mb-2">Subcategory *</label>
-                                <Dropdown 
-                                    value={formdata?.Subcategory || ""} 
-                                    options={hookups.subcategories}
-                                    onChange={(e) => handlechange({ target: { name: 'Subcategory', value: e.value } })}
-                                    placeholder="Select subcategory"
-                                    className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black"
-                                    required
-                                />
-                            </div> */}
                         </div>
                     </div>
 
@@ -316,96 +235,7 @@ export default function Addandeditform(props) {
                                     required
                                 />
                             </div>
-                            {/* <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-white col-span-full">
-                                <div className="flex items-center justify-between mb-4">
-                                    <label className="block text-sm font-semibold text-gray-800">Available Sizes</label>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-600">Size-specific pricing</span>
-                                        <input 
-                                            type="checkbox" 
-                                            checked={sizePricingMode}
-                                            onChange={(e) => handleSizePricingToggle(e.target.checked)}
-                                            className="w-4 h-4"
-                                        />
-                                    </div>
-                                </div>
-
-                                {!sizePricingMode ? (
-                                    <MultiSelect 
-                                        value={formdata?.sizes || []} 
-                                        options={hookups.sizes}
-                                        onChange={(e) => handleSizeChange(e.value)}
-                                        placeholder="Select sizes"
-                                        className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black"
-                                        display="chip"
-                                    />
-                                ) : (
-                                    <div>
-                                        <MultiSelect 
-                                            value={(formdata?.sizes || []).map(s => typeof s === 'object' ? s.size : s)} 
-                                            options={hookups.sizes}
-                                            onChange={(e) => handleSizeChange(e.value)}
-                                            placeholder="Select sizes"
-                                            className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-black mb-4"
-                                            display="chip"
-                                        />
-                                        
-                                        {(formdata?.sizes || []).map((sizeObj, index) => (
-                                            <div key={index} className="grid grid-cols-4 gap-2 mb-2 p-3 bg-gray-50 rounded">
-                                                <div className="font-medium text-sm text-gray-700 flex items-center">
-                                                    {typeof sizeObj === 'object' ? sizeObj.size : sizeObj}
-                                                </div>
-                                                <input
-                                                    type="number"
-                                                    placeholder="Price"
-                                                    value={typeof sizeObj === 'object' ? sizeObj.price : ''}
-                                                    onChange={(e) => handleSizePriceChange(index, 'price', e.target.value)}
-                                                    className="px-2 py-1 border border-gray-300 rounded text-sm"
-                                                />
-                                                <input
-                                                    type="number"
-                                                    placeholder="Sale Price"
-                                                    value={typeof sizeObj === 'object' ? sizeObj.sale_price : ''}
-                                                    onChange={(e) => handleSizePriceChange(index, 'sale_price', e.target.value)}
-                                                    className="px-2 py-1 border border-gray-300 rounded text-sm"
-                                                />
-                                                <input
-                                                    type="number"
-                                                    placeholder="Cost Price"
-                                                    value={typeof sizeObj === 'object' ? sizeObj.cost_price : ''}
-                                                    onChange={(e) => handleSizePriceChange(index, 'cost_price', e.target.value)}
-                                                    className="px-2 py-1 border border-gray-300 rounded text-sm"
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div> */}
-
-                            {/* {!sizePricingMode && (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-800 mb-2">Price *</label>
-                                        <input type="number" value={formdata?.price || ''} onChange={(e) => handlechange({ target: { name: 'price', value: e.target.value } })}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent" 
-                                            placeholder="0.00" required/>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-800 mb-2">Sale Price *</label>
-                                        <input type="number" value={formdata?.sale_price || ''} onChange={(e) => handlechange({ target: { name: 'sale_price', value: e.target.value } })}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent" 
-                                            placeholder="0.00" required/>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-800 mb-2">Cost of the product *</label>
-                                        <input type="number" value={formdata?.cost_price || ''} onChange={(e) => handlechange({ target: { name: 'cost_price', value: e.target.value } })}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent" 
-                                            placeholder="0.00" required/>
-                                    </div>
-                                </div>
-                            )} */}
+                           
                             <div>
                                 <label className="block text-sm font-semibold text-gray-800 mb-2">Status *</label>
                                 <select name="status" value={formdata?.status || 'Active'} onChange={handlechange}
@@ -423,38 +253,23 @@ export default function Addandeditform(props) {
                                     <option value="Inactive">Out of Stock</option>
                                 </select>
                             </div>
-                           {/* <div>
-                                <label className="block text-sm font-semibold text-gray-800 mb-2">Show in Popular Products (Home)</label>
-                                <input type="checkbox" 
-                                    name="is_popular_products"
-                                    checked={formdata?.is_popular_products || false} 
-                                    onChange={handlechange}
-                                    className="w-5 h-5 border border-gray-300 rounded" />
-                            </div> */}
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-800 mb-2">Sale Items Date</label>
+                                <div className='grid grid-cols-2 gap-2'>
+                                    <div>
+                                        <label className='mb-1'>From</label>
+                                        <input type="date" name="sale_date_from" value={formdata?.sale_date_from || ""} onChange={handlechange} className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent' />
+                                    </div>
+                                    <div>
+                                        <label className='mb-1'>To</label>
+                                        <input type="date" name="sale_date_to" value={formdata?.sale_date_to || ""} onChange={handlechange} className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent' />
+                                    </div>
+                                </div>
+                            </div>
+                         
                         </div>
 
-                        {/* <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-2">Product Images</label>
-                            
-                            {formdata?.Images?.length > 0 && (
-                                <div className="mb-3 flex gap-2">
-                                    {formdata.Images.map((image, imgIndex) => {
-                                        const imageUrl = image instanceof File ? URL.createObjectURL(image) : `${apiurl()}/${image}`;
-                                        return (
-                                            <div key={imgIndex} className="relative group">
-                                                <img src={imageUrl} alt={`Product ${imgIndex + 1}`} 
-                                                    className="h-20 w-20 object-cover rounded border"/>
-                                                <button type="button" onClick={() => removeImage(imgIndex)} 
-                                                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs hover:bg-red-600">×</button>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                            
-                            <input type="file" multiple onChange={handleImageChange} accept="image/*" 
-                                className="w-full p-3 border border-dashed border-gray-300 rounded-lg text-sm hover:border-gray-400"/>
-                        </div> */}
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg">
@@ -481,72 +296,32 @@ export default function Addandeditform(props) {
                                     )}
                                 </div>
 
-                                <div className='mb-2'>
-                                    <label className="block text-sm font-medium mb-1">Variant Name *</label>
-                                    <input type="text" value={variant.variant_name || ''} onChange={(e) => updateVariantField(index, 'variant_name', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
-                                        placeholder="e.g., Red, Blue, Green" required/>
-                                </div>
-                                {/* <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-                                    <div className='mb-2'>
-                                        <label className="block text-sm font-medium mb-1">Material Care</label>
-                                         <SunEditor setContents={variant.material_care || ''} onChange={(content) => updateVariantField(index, 'material_care', content)}
-                                            setOptions={{
-                                                defaultStyle: "font-family: Arial, sans-serif;",
-                                                font: ['Arial'],
-                                                buttonList: [
-                                                    ['undo', 'redo', 'fontSize', 'formatBlock'],
-                                                    ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
-                                                    ['fontColor', 'hiliteColor', 'textStyle'],
-                                                    ['align', 'list', 'lineHeight'],
-                                                    ['outdent', 'indent'],
-                                                ]
-                                            }}
-                                            height="150px"
-                                        />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Variant Name *</label>
+                                        <input type="text" value={variant.variant_name || ''} onChange={(e) => updateVariantField(index, 'variant_name', e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500" 
+                                            placeholder="e.g., Small, Medium, Large" required/>
                                     </div>
 
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium mb-1">Description</label>
-                                            <SunEditor setContents={variant.description || ''} onChange={(content) => updateVariantField(index, 'description', content)}
-                                                setOptions={{
-                                                    defaultStyle: "font-family: Arial, sans-serif;",
-                                                    font: ['Arial'],
-                                                    buttonList: [
-                                                        ['undo', 'redo', 'fontSize', 'formatBlock'],
-                                                        ['bold', 'underline', 'italic', 'strike', 'subscript', 'superscript', 'removeFormat'],
-                                                        ['fontColor', 'hiliteColor', 'textStyle'],
-                                                        ['align', 'list', 'lineHeight'],
-                                                        ['outdent', 'indent'],
-                                                    ]
-                                                }}
-                                                height="150px"
-                                            />
-                                    </div>
-                                </div> */}
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                    {/* <div className="mb-4">
-                                        <label className="block text-sm font-medium mb-1">Product type</label>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Variant Color *</label>
                                         <Dropdown 
-                                            value={formdata?.Product_type || ""} 
-                                            options={hookups.producttype}
-                                            onChange={(e) => updateVariantField(index, 'Product_type', e.target.value)}
-                                            placeholder="Select product type"
-                                            className="w-full px-3 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                            value={variant.variant_color || ""} 
+                                            options={hookups.colors}
+                                            onChange={(e) => {
+                                                updateVariantField(index, 'variant_color', e.value);
+                                            }}
+                                            placeholder="Select color"
+                                            className="w-full border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
                                             required
                                         />
                                     </div>
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium mb-1">Gender</label>
-                                          <Dropdown 
-                                            value={variant.gender || ""} 
-                                            options={hookups.genders}
-                                            onChange={(e) => updateVariantField(index, 'gender', e.value)}
-                                            placeholder="Select gender"
-                                            className="w-full px-3 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                                        />
-                                    </div> */}
+                                </div>
+
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                
                                     <div className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50 col-span-full">
                                         <div className="flex items-center justify-between mb-3">
                                             <label className="block text-sm font-medium">Available Sizes</label>

@@ -59,4 +59,9 @@ export const apiPaymentDone = async (paymentData) => {
 export const getOrderdetails = async(params)=>{
     var res=await axios.get(`${apiurl()}/order/apigetorderdetails`,{params:params, headers: {"Authorization" : `Bearer ${gettoken()}`}});
     return res.data;
- }
+}
+
+export const checkFirstTimeUserCoupon = async()=>{
+    var res = await axios.get(`${apiurl()}/order/checkCustomerOrderforCoupon`,{headers: {"Authorization" : `Bearer ${gettoken()}`}});
+    return res.data;
+}

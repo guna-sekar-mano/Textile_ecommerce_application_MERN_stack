@@ -47,9 +47,13 @@ export default function Productspage() {
             is_popular_products: false,
             stock: 'Inactive',
             status: 'Active',
+            sale_date_from: '',
+            sale_date_to: '',
             variants: [{ 
                 sizePricingMode: true,
                 variant_name: '', 
+                variant_color: '',
+                variant_color_code: '',
                 variant_images: [], 
                 description: '',
                 material_care: '',
@@ -200,11 +204,7 @@ export default function Productspage() {
         } else if (type === 'checkbox') {
             setFormdata(prev => ({ ...prev, [name]: checked }));
         } else {
-            if (name === 'sizes' || name === 'variants') {
-                setFormdata(prev => ({ ...prev, [name]: value }));
-            } else {
-                setFormdata(prev => ({ ...prev, [name]: value }));
-            }
+            setFormdata(prev => ({ ...prev, [name]: value }));
         }
     };
 
@@ -232,7 +232,8 @@ export default function Productspage() {
         
         if (!cleanData.variants || !Array.isArray(cleanData.variants) || cleanData.variants.length === 0) {
             cleanData.variants = [{ 
-                variant_name: 'Default', 
+                variant_name: 'Default',
+                variant_color: '',
                 variant_images: [], 
                 description: cleanData.description || '',
                 material_care: cleanData.material_care || '',
@@ -268,6 +269,8 @@ export default function Productspage() {
 
                 const cleanVariant = {
                     variant_name: variant.variant_name || '',
+                    variant_color: variant.variant_color || '',
+                    variant_color_code: variant.variant_color_code || '', 
                     variant_images: Array.isArray(variant.variant_images) ? variant.variant_images : [],
                     description: variant.description || '',
                     material_care: variant.material_care || '',

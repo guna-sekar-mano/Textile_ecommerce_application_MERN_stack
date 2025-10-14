@@ -12,7 +12,7 @@ import apiurl from "../../shared/services/apiendpoint/apiendpoint";
 export default function Homebannerpage () {
 
     const [visible, setVisible] = useState(false);
-    const [globalfilter,setglobalfilter]=useState('');
+    const [globalFilter,setGlobalFilter]=useState('');
     const [formdata,setFormdata]=useState({});
     const [desktopFile, setDesktopFile] = useState();
     const [mobileFile, setMobileFile] = useState();
@@ -32,7 +32,7 @@ export default function Homebannerpage () {
     const getbanners = useCallback(async ()=>{
         setLoading(true)
         try {
-            const res= await getallBanner({first,rows,globalfilter,...colfilter});
+            const res= await getallBanner({first,rows,globalFilter,...colfilter});
             const res1= await apigetallproductsCustomers();
             
             setTabledata(res?.resdata);
@@ -70,18 +70,26 @@ export default function Homebannerpage () {
             setProductData([]);
         }
         setLoading(false)
-    },[first,rows,globalfilter,colfilter]);
+    },[first,rows,globalFilter,colfilter]);
 
     useEffect(()=>{
         if(isMounted){ getbanners(); }
         return(()=>isMounted = false);
-    },[first,rows,globalfilter,colfilter])
+    },[first,rows,globalFilter,colfilter])
 
     const onPage = (page) => {
         setPage(page)
         setFirst(rows *(page -1));
         setRows(rows);
     };
+
+    const clearFilter = (event)=>{
+        setcolFilter(null);
+        setGlobalFilter('')
+        // setTempFilterValues([])
+        setFirst(0)
+        // setSort({})
+    }
 
     const handlefiltervalue=async(field) => {
         const res=await getuniquevaluebyfield({field})
@@ -203,7 +211,7 @@ export default function Homebannerpage () {
 
     return (
         <>
-        <Tableheadpanel newform={newform} setglobalfilter={setglobalfilter}/>
+        <Tableheadpanel newform={newform} setGlobalFilter={setGlobalFilter} clearFilter={clearFilter} />
         <AddandEditform visible={visible} setVisible={setVisible} productname={productname} setFormdata={setFormdata} 
             handlechange={handlechange} handlesave={handlesave} handleupdate={handleupdate} desktopFile={desktopFile} mobileFile={mobileFile} formdata={formdata} loading={loading} />
         <Tableview loading={loading} 

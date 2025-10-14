@@ -1,18 +1,35 @@
+import axios from "axios";
+import { useEffect, useState } from "react"
+import { Link } from "react-router-dom";
+
 export default function Rough () {
+
+    const [productdata, setproductdata] = useState([]);
+
+    const getproductdata = async () => {
+        const res = await axios.get('https://dummyjson.com/products');
+        setproductdata(res.data.products);
+    };
+
+    useEffect(() => {
+        getproductdata();
+    }, []);
 
     return (
         <>
-        <div className="grid grid-cols-12 grid-rows-8 gap-4">
-            <div className="col-span-2 row-span-4"><img src="/images/categories/cat1.png" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-3 row-span-4 col-start-1 row-start-5"><img src="/images/home/home1.jpg" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-3 row-span-3 col-start-3 row-start-2"><img src="/images/home/home1.jpg" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-2 row-span-3 col-start-4 row-start-5"><img src="/images/home/home1.jpg" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-2 row-span-4 col-start-6 row-start-3"><img src="/images/categories/cat1.png" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-3 row-span-4 col-start-8 row-start-2"><img src="/images/categories/cat1.png" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-2 row-span-3 col-start-8 row-start-6"><img src="/images/categories/cat1.png" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-2 row-span-5 col-start-11 row-start-1"><img src="/images/home/home1.jpg" alt="" className="h-full object-cover" /></div>
-            <div className="col-span-2 row-span-2 col-start-10 row-start-6"><img src="/images/home/home1.jpg" alt="" className="h-full object-cover" /></div>
-        </div>
+            {productdata.map((res) => (
+                <Link to={`/singleproductdata/${res.id}`} data-testid className="p-5 mt-6 mr-2 border shadow Productcard rounded-xl">
+                    <div key={res.id} className="p-4 border rounded-md shadow-md text-center">
+                        <img className='h-[170px] max-w-full object-cover mx-auto' src={res.thumbnail} alt={res.title} />
+                        <h1 className='px-4 py-2 mt-2 font-bold bg-slate-100'>{res.title}</h1>
+                        <h1 className='px-3 py-2 font-semibold'>${res.price}</h1>
+                        <h1 className='px-3 py-2'>
+                        <i className="fa-solid fa-star-half-stroke"></i> {res.rating}
+                        </h1>
+                    </div>
+                </Link>
+            ))}
+
         </>
     )
 }

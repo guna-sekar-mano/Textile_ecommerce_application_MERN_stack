@@ -9,21 +9,13 @@ import useAuth from '../../services/store/useAuth';
 import { deleteOnewishitems, getAllwishitems, savewishitems } from '../../services/apiwishlist/apiwishlist';
 import toast from 'react-hot-toast';
 import { Link, useParams, useLocation } from 'react-router-dom';
-import { apigetallproductsCustomers } from '../../services/apicustomerProducts/apicustomerproducts';
+import { apigetHeaderproductsCustomers } from '../../services/apicustomerProducts/apicustomerproducts';
+import Swal from 'sweetalert2';
+import FilterSidebar from './FilterSidebar';
 
-const toUrlFriendly = (str) => {
-    return str
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-};
+const toUrlFriendly = (str) => {return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');};
 
-const fromUrlFriendly = (str) => {
-    return str
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-};
+const fromUrlFriendly = (str) => {return str.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');};
 
 export default function Categoryproducts() {
     const [loading, setLoading] = useState(false);
@@ -38,9 +30,17 @@ export default function Categoryproducts() {
     const [isOpen, setIsOpen] = useState(false);
 
     const [availableSizes, setAvailableSizes] = useState([]);
-    const [priceRanges, setPriceRanges] = useState([]);
+    const [availableColors, setAvailableColors] = useState([]);
+    const [availablePrices, setAvailablePrices] = useState([]);
     const [selectedSizes, setSelectedSizes] = useState([]);
-    const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
+    const [selectedColors, setSelectedColors] = useState([]);
+    const [selectedPrices, setSelectedPrices] = useState([]);
+    const [availableProductTypes, setAvailableProductTypes] = useState([]);
+    const [selectedProductTypes, setSelectedProductTypes] = useState([]);
+    const [priceRange, setPriceRange] = useState([0, 10000]);
+    const [minPrice, setMinPrice] = useState(0);
+    const [maxPrice, setMaxPrice] = useState(10000);
+
 
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -95,60 +95,53 @@ export default function Categoryproducts() {
         });
     };
 
-    const generatePriceRanges = (products) => {
-        const prices = [];
+    const extractUniqueColors = (products) => {
+        const colorsSet = new Set();
+        const colorMap = new Map();
         
         products.forEach(product => {
-            if (product.sale_price && product.sale_price !== "0") {
-                prices.push(parseFloat(product.sale_price));
-            } else if (product.price) {
-                prices.push(parseFloat(product.price));
-            }
-            
             if (product.variants && Array.isArray(product.variants)) {
                 product.variants.forEach(variant => {
-                    if (variant.sizes && Array.isArray(variant.sizes)) {
-                        variant.sizes.forEach(sizeObj => {
-                            if (sizeObj.sale_price && sizeObj.sale_price !== "0") {
-                                prices.push(parseFloat(sizeObj.sale_price));
-                            } else if (sizeObj.price) {
-                                prices.push(parseFloat(sizeObj.price));
-                            }
-                        });
+                    if (variant.variant_color && variant.variant_color.trim()) {
+                        const colorName = variant.variant_color.trim();
+                        const colorCode = variant.variant_color_code || '#000000';
+                        
+                        if (!colorMap.has(colorName)) {
+                            colorMap.set(colorName, colorCode);
+                            colorsSet.add(colorName);
+                        }
                     }
                 });
             }
         });
         
-        if (prices.length === 0) return [];
+        return Array.from(colorsSet).map(color => ({
+            name: color,
+            code: colorMap.get(color)
+        }));
+    };
+
+    const extractUniquePrices = (products) => {
+        const prices = products.map(product => getProductPrice(product)).filter(price => price);
         
-        const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
+        if (prices.length === 0) return { min: 0, max: 10000 };
         
-        const ranges = [];
-        const step = Math.ceil((maxPrice - minPrice) / 4);
+        const min = Math.floor(Math.min(...prices));
+        const max = Math.ceil(Math.max(...prices));
         
-        for (let i = minPrice; i < maxPrice; i += step) {
-            const rangeEnd = Math.min(i + step - 1, maxPrice);
-            ranges.push({
-                label: `₹${i} - ₹${rangeEnd}`,
-                min: i,
-                max: rangeEnd
-            });
-        }
+        return { min, max };
+    };
+
+    const extractUniqueProductTypes = (products) => {
+        const typesSet = new Set();
         
-        if (ranges.length > 0) {
-            const lastRange = ranges[ranges.length - 1];
-            if (lastRange.max < maxPrice) {
-                ranges.push({
-                    label: `Above ₹${lastRange.max}`,
-                    min: lastRange.max + 1,
-                    max: maxPrice
-                });
+        products.forEach(product => {
+            if (product.Product_type && product.Product_type.trim()) {
+                typesSet.add(product.Product_type.trim());
             }
-        }
+        });
         
-        return ranges;
+        return Array.from(typesSet).sort();
     };
 
     const getProductPrice = (product) => {
@@ -182,19 +175,38 @@ export default function Categoryproducts() {
         return false;
     };
 
-    const applyFilters = (products, sizes, priceRanges) => {
+    const productHasColor = (product, targetColor) => {
+        if (product.variants && Array.isArray(product.variants)) {
+            return product.variants.some(variant => 
+                variant.variant_color === targetColor
+            );
+        }
+        return false;
+    };
+
+    const productInPriceRange = (product, minRange, maxRange) => {
+        const productPrice = getProductPrice(product);
+        return productPrice >= minRange && productPrice <= maxRange;
+    };
+
+    const applyFilters = (products, sizes, colors, priceMin, priceMax, productTypes) => {
         return products.filter(product => {
             if (sizes.length > 0) {
                 const hasSize = sizes.some(size => productHasSize(product, size));
                 if (!hasSize) return false;
             }
             
-            if (priceRanges.length > 0) {
-                const productPrice = getProductPrice(product);
-                const inPriceRange = priceRanges.some(range => 
-                    productPrice >= range.min && productPrice <= range.max
-                );
-                if (!inPriceRange) return false;
+            if (colors.length > 0) {
+                const hasColor = colors.some(color => productHasColor(product, color));
+                if (!hasColor) return false;
+            }
+
+            if (!productInPriceRange(product, priceMin, priceMax)) {
+                return false;
+            }
+
+            if (productTypes.length > 0) {
+                if (!productTypes.includes(product.Product_type)) return false;
             }
             
             return true;
@@ -208,24 +220,44 @@ export default function Categoryproducts() {
         
         setSelectedSizes(newSelectedSizes);
         
-        const filtered = applyFilters(products, newSelectedSizes, selectedPriceRanges);
+        const filtered = applyFilters(products, newSelectedSizes, selectedColors, priceRange[0], priceRange[1], selectedProductTypes);
         setFilteredProducts(filtered);
     };
 
-    const handlePriceRangeChange = (range) => {
-        const newSelectedRanges = selectedPriceRanges.some(r => r.min === range.min && r.max === range.max)
-            ? selectedPriceRanges.filter(r => !(r.min === range.min && r.max === range.max))
-            : [...selectedPriceRanges, range];
+    const handleColorChange = (color) => {
+        const newSelectedColors = selectedColors.includes(color)
+            ? selectedColors.filter(c => c !== color)
+            : [...selectedColors, color];
         
-        setSelectedPriceRanges(newSelectedRanges);
+        setSelectedColors(newSelectedColors);
         
-        const filtered = applyFilters(products, selectedSizes, newSelectedRanges);
+        const filtered = applyFilters(products, selectedSizes, newSelectedColors, priceRange[0], priceRange[1], selectedProductTypes);
+        setFilteredProducts(filtered);
+    };
+
+    const handlePriceRangeChange = (newRange) => {
+        setPriceRange(newRange);
+        
+        const filtered = applyFilters(products, selectedSizes, selectedColors, newRange[0], newRange[1], selectedProductTypes);
+        setFilteredProducts(filtered);
+    };
+
+    const handleProductTypeChange = (productType) => {
+        const newSelectedProductTypes = selectedProductTypes.includes(productType)
+            ? selectedProductTypes.filter(pt => pt !== productType)
+            : [...selectedProductTypes, productType];
+        
+        setSelectedProductTypes(newSelectedProductTypes);
+        
+        const filtered = applyFilters(products, selectedSizes, selectedColors, priceRange[0], priceRange[1], newSelectedProductTypes);
         setFilteredProducts(filtered);
     };
 
     const clearFilters = () => {
         setSelectedSizes([]);
-        setSelectedPriceRanges([]);
+        setSelectedColors([]);
+        setSelectedProductTypes([]);
+        setPriceRange([minPrice, maxPrice]);
         setFilteredProducts(products);
     };
 
@@ -234,47 +266,59 @@ export default function Categoryproducts() {
         
         setLoading(true);
         try {
-            const data = await apigetallproductsCustomers();
+            const urlParams = new URLSearchParams(location.search);
+            const genderFilter = urlParams.get('gender');
+            
+            const params = {};
+            
+            if (productType === 'sale') {
+                params.saleItems = true;
+            } else if (productType !== 'all') {
+                params.productType = productType;
+            }
+            
+            if (genderFilter) {
+                params.gender = genderFilter;
+            }
+            
+            const data = await apigetHeaderproductsCustomers(params);
             
             if (data.resdata) {
-                const urlParams = new URLSearchParams(location.search);
-                const genderFilter = urlParams.get('gender');
-                
-                const filteredProducts = data.resdata.filter(product => {
-                    if (!product.Product_type) return false;
-                    
-                    const productTypeUrlFriendly = toUrlFriendly(product.Product_type);
-                    const urlProductType = productType.toLowerCase();
-                    
-                    const productTypeMatches = productTypeUrlFriendly === urlProductType;
-                    
-                    if (genderFilter && productTypeMatches) {
-                        const genderMatches = product.gender.toLowerCase() === genderFilter.toLowerCase();
-                        return genderMatches;
-                    }
-                    
-                    return productTypeMatches;
-                });
-                
-                const displayProductType = filteredProducts.length > 0 ? filteredProducts[0].Product_type : fromUrlFriendly(productType);
-                
-                let displayName = displayProductType;
-                if (genderFilter) {
+                let displayName = '';
+                if (productType === 'all' && genderFilter) {
                     const capitalizedGender = genderFilter.charAt(0).toUpperCase() + genderFilter.slice(1);
-                    displayName = `${capitalizedGender}'s ${displayProductType}`;
+                    displayName = `All ${capitalizedGender}'s Products`;
+                } else {
+                    const displayProductType = data.resdata.length > 0 
+                        ? data.resdata[0].Product_type 
+                        : fromUrlFriendly(productType);
+                    
+                    displayName = displayProductType;
+                    if (genderFilter) {
+                        const capitalizedGender = genderFilter.charAt(0).toUpperCase() + genderFilter.slice(1);
+                        displayName = `${capitalizedGender}'s ${displayProductType}`;
+                    }
                 }
                 
-                setProducts(filteredProducts);
+                setProducts(data.resdata);
                 setCategoryName(displayName);
                 
-                const uniqueSizes = extractUniqueSizes(filteredProducts);
-                const dynamicPriceRanges = generatePriceRanges(filteredProducts);
+                const uniqueSizes = extractUniqueSizes(data.resdata);
+                const uniqueColors = extractUniqueColors(data.resdata);
+                const priceMinMax = extractUniquePrices(data.resdata);
+                const uniqueProductTypes = extractUniqueProductTypes(data.resdata);
                 
                 setAvailableSizes(uniqueSizes);
-                setPriceRanges(dynamicPriceRanges);
-                setFilteredProducts(filteredProducts);
+                setAvailableColors(uniqueColors);
+                setMinPrice(priceMinMax.min);
+                setMaxPrice(priceMinMax.max);
+                setPriceRange([priceMinMax.min, priceMinMax.max]);
+                setAvailableProductTypes(uniqueProductTypes);
+                setFilteredProducts(data.resdata);
                 
-                sessionStorage.setItem('currentProductType', displayProductType);
+                if (productType !== 'all') {
+                    sessionStorage.setItem('currentProductType', displayProductType);
+                }
             }
         } catch (error) {
             console.error("Error fetching category products:", error);
@@ -296,8 +340,17 @@ export default function Categoryproducts() {
         
         return wishlistItems.some(item => {
             const isSameProduct = item.productId === productToCheck._id;
-            const isSameVariant = variantToCheck ? item.variantId === variantToCheck._id : !item.variantId;
-            return isSameProduct && isSameVariant;
+            
+            if (variantToCheck) {
+                return isSameProduct && item.variantId === variantToCheck._id;
+            }
+            
+            const firstVariant = productToCheck.variants?.find(v => v.status === 'Active') || productToCheck.variants?.[0];
+            if (firstVariant) {
+                return isSameProduct && item.variantId === firstVariant._id;
+            }
+            
+            return isSameProduct && !item.variantId;
         });
     };
 
@@ -322,54 +375,82 @@ export default function Categoryproducts() {
         try {
             const userDetails = userdetails;
             if (!userDetails || !userDetails.Email) {
-                toast.error("Please log in to manage your wishlist!");  
+                toast("📢 Please log in to manage your wishlist!");  
                 return;
             }
 
             const productToProcess = productData;
-            const currentWishlistState = checkIfInWishlist(productToProcess, null);
+            
+            const firstVariant = productToProcess.variants?.find(v => v.status === 'Active') || productToProcess.variants?.[0];
+            
+            const currentWishlistState = checkIfInWishlist(productToProcess, firstVariant);
             
             if (currentWishlistState) {
                 const wishlistItem = wishlistItems.find(item => {
                     const isSameProduct = item.productId === productToProcess._id;
-                    const isSameVariant = !item.variantId;
-                    return isSameProduct && isSameVariant;
+                    if (firstVariant) {
+                        return isSameProduct && item.variantId === firstVariant._id;
+                    }
+                    return isSameProduct && !item.variantId;
                 });
 
                 if (wishlistItem) {
                     await deleteOnewishitems(wishlistItem._id);
                     setWishlistItems(prev => prev.filter(item => item._id !== wishlistItem._id));
-                    toast.success("Removed from wishlist!");
+                    
+                    Swal.fire({ title: "Removed from Wishlist!", icon: "success", draggable: true, timer: 2000, showConfirmButton: false});
                 }
             } else {
-                const {_id, variants, ...productDataWithoutId} = productToProcess;
+                let wishlistData;
 
-                const wishlistData = {
-                    Email: userDetails.Email,
-                    productId: productToProcess._id,
-                    variantId: null,
-                    variantName: null,
-                    Product_Name: productToProcess.Product_Name,
-                    Category: productToProcess.Category,
-                    Subcategory: productToProcess.Subcategory,
-                    Images: productToProcess.Images,
-                    description: productToProcess.description,
-                    material_care: productToProcess.material_care,
-                    tags: productToProcess.tags,
-                    sizes: productToProcess.sizes,
-                    gender: productToProcess.gender,
-                    Product_type: productToProcess.Product_type,
-                    sale_price: productToProcess.sale_price,
-                    discount: productToProcess.discount,
-                    discounted_sale_price: productToProcess.discounted_sale_price,
-                    stock: productToProcess.stock
-                };
+                if (firstVariant) {
+                    wishlistData = {
+                        Email: userDetails.Email,
+                        productId: productToProcess._id,
+                        variantId: firstVariant._id,
+                        Product_Name: productToProcess.Product_Name,
+                        Category: productToProcess.Category || '',
+                        Subcategory: productToProcess.Subcategory || '',
+                        description: productToProcess.description || '',
+                        material_care: productToProcess.material_care || '',
+                        tags: productToProcess.tags || '',
+                        gender: productToProcess.gender || '',
+                        Product_type: productToProcess.Product_type || '',
+                        is_popular_products: productToProcess.is_popular_products || false,
+                        Images: productToProcess.Images || [],
+                        variants: [firstVariant]
+                    };
+                } else {
+                    const {_id, variants, ...productDataWithoutId} = productToProcess;
+
+                    wishlistData = {
+                        Email: userDetails.Email,
+                        productId: productToProcess._id,
+                        variantId: null,
+                        variantName: null,
+                        Product_Name: productToProcess.Product_Name,
+                        Category: productToProcess.Category,
+                        Subcategory: productToProcess.Subcategory,
+                        Images: productToProcess.Images,
+                        description: productToProcess.description,
+                        material_care: productToProcess.material_care,
+                        tags: productToProcess.tags,
+                        sizes: productToProcess.sizes,
+                        gender: productToProcess.gender,
+                        Product_type: productToProcess.Product_type,
+                        sale_price: productToProcess.sale_price,
+                        discount: productToProcess.discount,
+                        discounted_sale_price: productToProcess.discounted_sale_price,
+                        stock: productToProcess.stock
+                    };
+                }
 
                 const response = await savewishitems(wishlistData);
                 if (response) {
                     setWishlistItems(prev => [...prev, response]);
                 }
-                toast.success("Added to wishlist!");
+                
+                Swal.fire({title: "Added to Wishlist!",icon: "success",draggable: true,timer: 2000,showConfirmButton: false});
             }
         } catch (error) {
             console.error("Error managing wishlist:", error);
@@ -411,9 +492,9 @@ export default function Categoryproducts() {
                     {filteredProducts.length === 0 && !loading ? (
                         <div className="text-center py-10">
                             <p className="text-lg text-gray-600">
-                                {selectedSizes.length > 0 || selectedPriceRanges.length > 0 ? "No products found matching the selected filters." : "No products found in this category."}
+                                {selectedSizes.length > 0 || selectedColors.length > 0 || selectedPrices.length > 0 ? "No products found matching the selected filters." : "No products found in this category."}
                             </p>
-                            {(selectedSizes.length > 0 || selectedPriceRanges.length > 0) && (
+                           {(selectedSizes.length > 0 || selectedColors.length > 0 || selectedProductTypes.length > 0 || priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
                                 <button onClick={clearFilters} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Clear Filters</button>
                             )}
                         </div>
@@ -459,9 +540,14 @@ export default function Categoryproducts() {
                                                 </div>
                                             )}
                                             
-                                            <div className="absolute top-2 right-2 bg-white p-2 z-10 hover:bg-white cursor-pointer">
-                                                <i className={`fi ${checkIfInWishlist(item, null) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl text-red-700`} 
-                                                    onClick={() => {addWish(item);}}
+                                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-2 z-10 hover:bg-white cursor-pointer transition-all duration-200  shadow-sm">
+                                                <i className={`fi ${checkIfInWishlist(item, firstVariant) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl transition-colors duration-200 ${
+                                                    checkIfInWishlist(item, firstVariant) ? "text-red-600" : "text-gray-600 hover:text-red-600"
+                                                }`} 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        addWish(item);
+                                                    }}
                                                 ></i>
                                             </div>
                                             
@@ -501,48 +587,24 @@ export default function Categoryproducts() {
                         </div>
                     )}
 
-                    <div className={`fixed top-0 right-0 h-full w-80 bg-zinc-800 z-[100] text-white p-5 transition-transform duration-300 overflow-y-auto ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Filters</h2>
-                            <X onClick={() => setIsOpen(!isOpen)} className="cursor-pointer"/>
-                        </div>
-                        
-                        {(selectedSizes.length > 0 || selectedPriceRanges.length > 0) && (
-                            <button onClick={clearFilters} className="mb-4 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 w-full">
-                                Clear All Filters
-                            </button>
-                        )}
-                        
-                        {availableSizes.length > 0 && (
-                            <div className="mb-6">
-                                <h3 className="font-semibold mb-3">Filter by Size ({selectedSizes.length} selected)</h3>
-                                <div className="space-y-2 overflow-y-auto">
-                                    {availableSizes.map(size => (
-                                        <label key={size} className="flex items-center cursor-pointer hover:bg-zinc-700 p-2 rounded">
-                                            <input type="checkbox" className="mr-3" checked={selectedSizes.includes(size)} onChange={() => handleSizeChange(size)}/>
-                                            <span>{size}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {priceRanges.length > 0 && (
-                            <div className="mb-6">
-                                <h3 className="font-semibold mb-3">Filter by Price ({selectedPriceRanges.length} selected)</h3>
-                                <div className="space-y-2">
-                                    {priceRanges.map((range, index) => (
-                                        <label key={index} className="flex items-center cursor-pointer hover:bg-zinc-700 p-2 rounded">
-                                            <input type="checkbox" className="mr-3" checked={selectedPriceRanges.some(r => r.min === range.min && r.max === range.max)}
-                                                onChange={() => handlePriceRangeChange(range)}/>
-                                            <span>{range.label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                    </div>
+                    <FilterSidebar 
+                        setIsOpen={setIsOpen} 
+                        isOpen={isOpen} 
+                        selectedSizes={selectedSizes} 
+                        selectedColors={selectedColors}
+                        selectedProductTypes={selectedProductTypes}
+                        priceRange={priceRange}
+                        minPrice={minPrice}
+                        maxPrice={maxPrice}
+                        availableSizes={availableSizes} 
+                        availableColors={availableColors}
+                        availableProductTypes={availableProductTypes}
+                        handleSizeChange={handleSizeChange}
+                        handleColorChange={handleColorChange}
+                        handlePriceRangeChange={handlePriceRangeChange}
+                        handleProductTypeChange={handleProductTypeChange}
+                        clearFilters={clearFilters}
+                    />
 
                     {isOpen && (
                         <div className="fixed inset-0 bg-black/35 z-[99]" onClick={() => setIsOpen(false)} />

@@ -1,6 +1,34 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { apiSaveNewsletter } from "../shared/services/apinewsletter/apinewsletter";
+import Swal from 'sweetalert2';
+import toast from "react-hot-toast";
 
 export default function Footer () {
+
+    const [newsletterEmail, setNewsletterEmail] = useState({});
+
+    const handleChange = (e) =>{
+        setNewsletterEmail({...newsletterEmail, [e.target.name] : e.target.value});
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await apiSaveNewsletter(newsletterEmail);
+             if(res.message === "Newsletter successfully saved"){
+                Swal.fire({ title: "Thank you for subscribing to our newsletter!", icon: "success", draggable: true,});
+                setNewsletterEmail("");
+            } else if (res.message === "This email is already subscribed to our newsletter") {
+                Swal.fire({ title: "This email is already subscribed! Try another email", icon: "info", draggable: true,});
+            } else {
+                toast("Something went wrong. Please try again.");
+            }
+           
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     return (
         <>
@@ -10,10 +38,10 @@ export default function Footer () {
                         <div>
                             <p className="text-5xl md:text-7xl leading-20 barlow-condensed">Become Part of <br /> The Extreme Culture</p>
                             <div className="mt-10">
-                                <form action="#">
+                                <form onSubmit={handleSubmit}>
                                     <div className="lg:flex gap-5 lg:space-y-0 space-y-2">
                                         <div>
-                                            <input type="text" name="" id="" className="p-2 bg-white azeret-mono text-center placeholder:text-black text-black" placeholder="Enter your E-mail"/>
+                                            <input type="email" name="Newsletter_email" onChange={handleChange} value={newsletterEmail.Newsletter_email} className="p-2 bg-white azeret-mono text-center placeholder:text-black text-black" placeholder="Enter your E-mail" required/>
                                         </div>
                                         <div>
                                             <button type="submit" className="bg-gray-600 px-4 py-2 cursor-pointer azeret-mono">

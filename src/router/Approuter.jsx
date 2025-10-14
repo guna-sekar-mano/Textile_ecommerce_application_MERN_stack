@@ -22,6 +22,7 @@ import Myorders from "../shared/components/MyAccount/pages/MyOrders";
 import AccountDetails from "../shared/components/MyAccount/pages/AccountDetails";
 import Rough from "../shared/components/rough";
 import BannerProducts from "../shared/components/BannerProducts/Bannerproducts";
+import OrderThankyou from "../shared/components/OrderThankyou";
 
 
 export default function Approuter () {
@@ -42,6 +43,7 @@ export default function Approuter () {
                     <Route path="/cart" element={<Cartpage/>}/>
                     <Route path="/checkout" element={<Checkoutpage/>}/>
                     <Route path="/rough" element={<Rough/>}/>
+                    <Route path="/thank-you" element={<OrderThankyou/>}/>
 
                     <Route path="/wishlist" element={<Wishlistpage/>}/>
                         <Route element={<SupportMain />}>

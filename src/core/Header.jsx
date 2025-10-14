@@ -4,13 +4,9 @@ import useAuth from "../shared/services/store/useAuth";
 import useCartStore from "../shared/services/store/usecart";
 import { apigetallproductsCustomers } from "../shared/services/apicustomerProducts/apicustomerproducts";
 import Search from "../shared/components/Search/Search";
+import { ChevronDown } from "lucide-react";
 
-const toUrlFriendly = (str) => {
-    return str
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-};
+const toUrlFriendly = (str) => {return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')};
 
 export default function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,11 +20,17 @@ export default function Header() {
     const [loading, setLoading] = useState(false);
     const [menCategories, setMenCategories] = useState([]);
     const [womenCategories, setWomenCategories] = useState([]);
+
+    const [menOpen, setMenOpen] = useState(false);
+    const [womenOpen, setWomenOpen] = useState(false);
+
     const { cart } = useCartStore();
 
     const toggleMenu = () => { setIsMenuOpen(!isMenuOpen); };
     const toggleSearch = () => { setIsSearchOpen(!isSearchOpen); };
     const closeSearch = () => { setIsSearchOpen(false); };
+    const menMenuOpen = () => {setMenOpen(!menOpen)};
+    const womenMenuOpen = () => {setWomenOpen(!womenOpen)};
 
     const handleLogout = () => {
         logout();
@@ -137,7 +139,7 @@ export default function Header() {
                                                 >
                                                     All Men's Products
                                                 </div>
-                                                <ul className="grid grid-rows-4 grid-flow-col">
+                                                <ul className="max-h-fit">
                                                     {menCategories.map((col, index) => (
                                                         <li key={`men-${col.Category_Name}-${index}`} className={index > 3 ? 'border-l' : 'border-0'}>
                                                             <div onClick={() => handleCategoryClick(col.redirect_link)}
@@ -163,13 +165,12 @@ export default function Header() {
                                                 <h3 className="font-semibold text-sm uppercase tracking-wider text-gray-900 mb-4">
                                                     Women's Collections
                                                 </h3>
-                                                <div 
-                                                    onClick={() => handleGenderClick('women')}
+                                                <div onClick={() => handleGenderClick('women')}
                                                     className="text-gray-700 hover:text-black transition-colors text-sm whitespace-nowrap p-3 cursor-pointer font-medium border-b border-gray-200 mb-2"
                                                 >
                                                     All Women's Products
                                                 </div>
-                                                <ul className="grid grid-rows-4 grid-flow-col">
+                                                <ul className="max-h-fit">
                                                     {womenCategories.map((col, index) => (
                                                         <li key={`women-${col.Category_Name}-${index}`} className={index > 3 ? 'border-l' : 'border-0'}>
                                                             <div onClick={() => handleCategoryClick(col.redirect_link)}
@@ -192,12 +193,13 @@ export default function Header() {
                             <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
                             <span className={`block w-6 h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
                         </button>
-
-                        <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2 lg:translate-none lg:relative lg:left-auto lg:transform-none">
-                            <img src="/images/logo/logo1.png" alt="" className="h-8 w-auto" />
-                            <p className="font-semibold text-xl hidden sm:block font-handelgothic">EXTREME CULTURE</p>
-                            <p className="font-semibold text-lg sm:hidden">EC</p>
-                        </div>
+                        
+                            <Link to={"/"} className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2 lg:translate-none lg:relative lg:left-auto lg:transform-none">
+                                <img src="/images/logo/logo1.png" alt="" className="h-8 w-auto" />
+                                <p className="font-semibold text-xl hidden sm:block font-handelgothic">EXTREME CULTURE</p>
+                                <p className="font-semibold text-lg sm:hidden">EC</p>
+                            </Link>
+                      
 
                         <div className="hidden lg:flex space-x-8 items-center">
                             <Link to={"/contact-us"} onClick={scrollToTop}>
@@ -259,9 +261,9 @@ export default function Header() {
                     </div>
                 </div>
 
-                <div className={`fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={toggleMenu}></div>
+                <div className={`fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={toggleMenu}></div>
 
-                <div className={`fixed top-0 left-0 h-full w-80 bg-black z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                <div className={`fixed top-0 left-0 h-full w-80 bg-gray-900 z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                     <div className="flex flex-col h-full">
                         <div className="flex items-center justify-between p-6 border-b border-gray-800">
                             <div className="flex items-center space-x-2">
@@ -279,32 +281,31 @@ export default function Header() {
                                 </li>
 
                                 <li>
-                                    <p className="text-white text-xl font-medium py-2">Men</p>
-                                    <div className="ml-4 space-y-3">
-                                        <div
-                                            onClick={() => { handleGenderClick('men'); toggleMenu(); }}
-                                            className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer font-medium"
-                                        >
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-white text-xl font-medium py-2">Men</p>
+                                        <ChevronDown className={`text-white cursor-pointer duration-300 transition-transform ease-in-out ${menOpen ? "rotate-180 " : "rotate-0"}`} onClick={menMenuOpen} />
+                                    </div>
+                                   { menOpen && (
+                                    <div className="mt-3 ml-2 space-y-3 ">
+                                        <div onClick={() => { handleGenderClick('men'); toggleMenu(); }} className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer font-medium">
                                             All Men's Products
                                         </div>
                                         {menCategories.map((col, index) => (
-                                            <div key={`mobile-men-${index}`}
-                                                onClick={() => { handleCategoryClick(col.redirect_link); toggleMenu(); }}
-                                                className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer"
-                                            >
+                                            <div key={`mobile-men-${index}`} onClick={() => { handleCategoryClick(col.redirect_link); toggleMenu(); }} className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer">
                                                 {col?.Category_Name}
                                             </div>
                                         ))}
-                                    </div>
+                                    </div>)}
                                 </li>
 
                                 <li>
-                                    <p className="text-white text-xl font-medium py-2">Women</p>
-                                    <div className="ml-4 space-y-3">
-                                        <div
-                                            onClick={() => { handleGenderClick('women'); toggleMenu(); }}
-                                            className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer font-medium"
-                                        >
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-white text-xl font-medium py-2">Women</p>
+                                        <ChevronDown className={`text-white cursor-pointer duration-300 transition-transform ease-in-out ${womenOpen ? "rotate-180 " : "rotate-0"}`} onClick={womenMenuOpen} />
+                                    </div>
+                                    { womenOpen && (
+                                        <div className=" mt-3 ml-2 space-y-3">
+                                        <div onClick={() => { handleGenderClick('women'); toggleMenu(); }} className="text-gray-300 hover:text-white transition-colors text-sm cursor-pointer font-medium">
                                             All Women's Products
                                         </div>
                                         {womenCategories.map((col, index) => (
@@ -315,7 +316,7 @@ export default function Header() {
                                                 {col?.Category_Name}
                                             </div>
                                         ))}
-                                    </div>
+                                    </div>)}
                                 </li>
 
                                 <li>
@@ -323,9 +324,14 @@ export default function Header() {
                                         Sale
                                     </Link>
                                 </li>
-                                <li className="pt-4 border-t border-gray-800">
+                                <li className="pt-4 border-t border-gray-500">
                                     <Link to="/contact-us" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={toggleMenu}>
                                         Support
+                                    </Link>
+                                </li>
+                                <li className="border-gray-800">
+                                    <Link to="/account-details" className="block text-white text-lg hover:text-gray-300 transition-colors py-2" onClick={toggleMenu}>
+                                        My Account
                                     </Link>
                                 </li>
                                 {!userdetails && (
@@ -335,10 +341,17 @@ export default function Header() {
                                         </Link>
                                     </li>
                                 )}
+                                {userdetails && (
+                                    <li>
+                                        <button onClick={handleLogout} className="block text-white text-lg bg-red-500 px-3 hover:text-gray-300 transition-colors py-2">
+                                            Logout
+                                        </button>
+                                    </li>
+                                )}
                             </ul>
                         </nav>
 
-                        <div className="px-6 py-6 border-t border-gray-800">
+                        <div className="px-6 py-6 border-t border-gray-500">
                             <div className="flex justify-center space-x-8">
                                 <button onClick={toggleSearch} className="text-white hover:text-gray-300 transition-colors">
                                     <i className="fi fi-rr-search text-xl"></i>

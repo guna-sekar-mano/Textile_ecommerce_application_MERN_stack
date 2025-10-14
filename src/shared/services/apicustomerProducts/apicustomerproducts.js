@@ -61,3 +61,14 @@ export const apigetSalePriceProducts = async (params) => {
         throw err;
     }
 };
+
+export const apigetHeaderproductsCustomers = async (params) => {
+    try {
+        const token = gettoken();
+        const res = await axios.get(`${apiurl()}/products/apigetHeaderProductsCustomer`, { params: params,headers: { "Authorization": `Bearer ${token}` }});
+        return res.data;
+    } catch (err) {
+        console.error('API Get Products Error:', err.response ? err.response.data : err);
+        throw err;
+    }
+};

@@ -1,6 +1,6 @@
 const apiurl=()=>{
-    // var url="http://192.168.1.20:5000";
     var url="http://192.168.1.35:5000";
+    // var url="http://3.109.65.19:5000";
     // var url="https://n0p2nzdt-5000.inc1.devtunnels.ms";
 
     return url;

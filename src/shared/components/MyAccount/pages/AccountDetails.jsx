@@ -77,7 +77,7 @@ export default function AccountDetails () {
             <hr className="mt-5" />
 
              <div className="max-w-full mt-10 ">
-                <div className="flex justify-between">
+                <div className="lg:flex justify-between">
                     <div className="max-w-[45rem] border p-5 w-full">
                         { accountDetails ? (
                             isEditing ? (
@@ -93,7 +93,8 @@ export default function AccountDetails () {
                                         </div>
                                         <div className="mb-2">
                                             <label htmlFor="">Email</label>
-                                            <input className="w-full p-2 border mt-1" name="Email" value={formData.Email} disabled/>
+                                            <input className={`w-full p-2 border mt-1 ${isEditing ? " bg-gray-300 border-2" : "bg-gray-200 border-gray-300"}`} name="Email" value={formData.Email} disabled/>
+                                            {isEditing && (<p className="text-xs mt-1">* Do not edit</p>)}
                                         </div>
                                         <div className="mb-2">
                                             <label htmlFor="">Phone No</label>
@@ -132,8 +133,8 @@ export default function AccountDetails () {
                         <p className="text-center text-red-500">Account details not found.</p>
                     )}
                     </div>
-                    <div className="flex justify-center items-center ">
-                        <div className="flex flex-col gap-4">
+                    <div className="flex justify-center items-center lg:mt-0 mt-5">
+                        <div className="flex lg:flex-col gap-4">
                             {accountDetails && (
                                 <button  onClick={() => setIsEditing(!isEditing)} className={` azeret-mono px-2 py-1 cursor-pointer ${isEditing ? "bg-gray-200 text-gray-700" : "bg-black text-white"}`}>
                                   {isEditing ? "Cancel" : "Edit"}

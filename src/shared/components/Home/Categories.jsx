@@ -71,9 +71,7 @@ export default function Categories() {
                     <h1 className="text-2xl lg:text-3xl azeret-mono">Categories</h1>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 pt-5 lg:pt-7">
                         {categories.map((item) => (
-                            <Link 
-                                key={item._id} 
-                                to={item.redirect_link || "#"} 
+                            <Link key={item._id} to={item.redirect_link || "#"} 
                                 onClick={() => {
                                     handleCategoryClick(item.redirect_link, item.Category_Name); 
                                     scrollToTop();
@@ -82,11 +80,7 @@ export default function Categories() {
                                 <div className="cursor-pointer hover:opacity-80 transition-opacity">
                                     {item.Images && item.Images.length > 0 ? (
                                         <div className="relative">
-                                            <img 
-                                                src={getImageUrl(item.Images[0])} 
-                                                alt={item.Category_Name} 
-                                                className="w-full h-[50dvh] object-cover"
-                                            />
+                                            <img src={getImageUrl(item.Images[0])} alt={item.Category_Name} className="w-full lg:h-[50dvh] h-[230px] md:h-[400px] object-cover"/>
                                         </div>
                                     ) : (
                                         <div className="w-full h-[50dvh] bg-gray-200 rounded-lg flex items-center justify-center">

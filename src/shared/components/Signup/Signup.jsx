@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { apiSignUp } from "../../services/apiauthentication/apiregister";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Signup () {
 
@@ -130,6 +130,14 @@ export default function Signup () {
 
 
                         </div>
+                            <div className="text-center mt-5">
+                                <p className="text-sm">
+                                    Already Signed Up?{" "}
+                                    <Link to="/login" className="font-black underline decoration-2 underline-offset-2 hover:bg-black hover:text-white px-1 py-0.5 transition-colors duration-200">
+                                        LOGIN HERE
+                                    </Link>
+                                </p>
+                            </div>
                         <div className="mt-4">
                             <button type="submit" className="w-full bg-black text-white py-4 cursor-pointer font-bold text-lg tracking-widest border-3 border-black hover:bg-white hover:text-black transition-all duration-200 shadow-[4px_4px_0px_0px_#000000] hover:shadow-[6px_6px_0px_0px_#000000] hover:transform hover:-translate-x-1 hover:-translate-y-1">
                                 {loading ? "PLEASE WAIT..." : "SIGN UP"}

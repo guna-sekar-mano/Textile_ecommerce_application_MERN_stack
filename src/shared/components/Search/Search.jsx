@@ -102,7 +102,7 @@ const Search = ({ closeSearch, isSearchOpen }) => {
     };
 
     const handleProductClick = (product) => {
-        navigate(`/products/${toUrlFriendly(product.Product_type)}/${toUrlFriendly(product.Product_Name)}`, {
+        navigate(`/products/${toUrlFriendly(product.Product_type)}/${product.Router_Link}`, {
             state: { product: product, productId: product._id }
         });
         closeSearch();

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Share } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Share } from "lucide-react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -20,6 +20,27 @@ export default function Productsview(props) {
     const { userdetails } = useAuth();
     const [wishlist, setwishlist] = useState(false);
     const [wishlistItems, setWishlistItems] = useState([]);
+    const [copied, setCopied] = useState(false);
+
+    const handleShare = (share) => {
+        const productUrl = window.location.href;
+        const productName = currentProduct?.Product_Name || 'Product';
+        const productPrice = pricingInfo.currentPrice;
+        
+        if (share === 'whatsapp') {
+            const message = `Check out this product: ${productName}\nPrice: ₹${productPrice}\n${productUrl}`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        } else if (share === 'copy') {
+            navigator.clipboard.writeText(productUrl).then(() => {
+                setCopied(true);
+                toast.success('Link copied to clipboard!');
+                setTimeout(() => setCopied(false), 2000);
+            }).catch(() => {
+                toast.error('Failed to copy link');
+            });
+        }
+    };
 
     const checkIfInWishlist = (productToCheck, variantToCheck = null) => {
         if (!wishlistItems.length) return false;
@@ -131,43 +152,60 @@ export default function Productsview(props) {
         setSelectedSize(size);
     };
 
-    const handleAddToCart = async (product) => {
+    const handleAddToCart = async (productParam) => {
         const userDetails = userdetails;
-        // if (!userDetails) {
-        //     toast.error("Please log in to add items to your cart!");
-        //     return;
-        // }
-
+        if (!userDetails?.Email) {
+            toast("📢 Please log in to manage your Cart!");  
+            return;
+        }
+        
         if (!selectedSize) {
             toast.error("Please select a size!");
             return;
         }
 
         const cartItemsFromStore = await getcartItems(userdetails?.Email);
-        // console.log(cartItemsFromStore.response)
-        const existingItem = cartItemsFromStore.response.length!=0?cartItemsFromStore.response.find(item => {
+        
+        const correctProductId = product._id;
+        const correctVariantId = selectedVariant?._id || null;
+        
+        const existingItem = cartItemsFromStore.response.length != 0 ? cartItemsFromStore.response.find(item => {
             const itemProductId = item.productId?._id || item.productId || item.productId?.id;
-            return itemProductId === product._id && item.selectedSize === selectedSize && (item.variantId || null) === (selectedVariant?.variantId || null);
-        }):null;
+            return itemProductId === correctProductId && 
+                item.selectedSize === selectedSize && 
+                (item.variantId || null) === correctVariantId;
+        }) : null;
 
         try {
             if (existingItem) {
                 if(existingItem.variantData.sizes.filter(s => s.size === selectedSize)[0].Stock >= existingItem.Quantity){
-                    const productWithSize = {...product,selectedSize: selectedSize,variantId: selectedVariant?.variantId || null};
+                    const productWithSize = {
+                        ...product,
+                        selectedSize: selectedSize,
+                        variantId: correctVariantId
+                    };
                     addToCart(productWithSize);
                     await updatecartItem(existingItem._id, existingItem.Quantity+1, existingItem?.Email);
-                    // const productType = selectedVariant ? 'Variant' : 'Main product';
                     toast.success(`Product Quantity increases as ${existingItem.Quantity+1} successfully!`);
                     return;
-                }else{
+                } else {
                     toast.error("Sorry, you've reached the maximum stock limit for this item.");
                     return;
                 }
-            }
-            else{
-                const cartData = { productId: product._id, Email: userDetails.Email, Quantity: 1, selectedSize: selectedSize, variantId: selectedVariant?.variantId || null};
-                await apisavecart(cartData);
-                const productWithSize = {...product,selectedSize: selectedSize,variantId: selectedVariant?.variantId || null};
+            } else {
+                const cartData = { 
+                    productId: correctProductId,
+                    Email: userDetails.Email, 
+                    Quantity: 1, 
+                    selectedSize: selectedSize, 
+                    variantId: correctVariantId
+                };
+                
+
+                const saveResult = await apisavecart(cartData);
+                console.log("API Response:", saveResult);
+                
+                const productWithSize = {...product,selectedSize: selectedSize,variantId: correctVariantId};
                 addToCart(productWithSize);
                 const productType = selectedVariant ? 'Variant' : 'Main product';
                 toast.success(`Product added to cart successfully!`);
@@ -182,7 +220,7 @@ export default function Productsview(props) {
         try {
             const userDetails = userdetails;
             if (!userDetails?.Email) {
-                toast.error("Please log in to manage your wishlist!");  
+                toast("📢 Please log in to manage your wishlist!");  
                 return;
             }
 
@@ -190,7 +228,7 @@ export default function Productsview(props) {
             const variantToProcess = selectedVariant;
             
             if (!variantToProcess) {
-                toast.error("Please select a variant to add to wishlist!");
+                toast("📢 Please select a variant to add to wishlist!");
                 return;
             }
             
@@ -205,29 +243,23 @@ export default function Productsview(props) {
                 if (wishlistItem) {
                     await deleteOnewishitems(wishlistItem._id);
                     setWishlistItems(prev => prev.filter(item => item._id !== wishlistItem._id));
-                    Swal.fire({
-                        title: "Removed from Wishlist !",
-                        icon: "success",
-                        draggable: true,
-                    });
+                    Swal.fire({title: "Removed from Wishlist !", icon: "success", draggable: true });
                 }
             } else {
                 const wishlistData = {
                     Email: userDetails.Email,
                     productId: productToProcess._id,
                     variantId: variantToProcess._id,
-                    variantName: variantToProcess.variant_name,
-                    Product_Name: variantToProcess.variant_name,
+                    Product_Name: productToProcess.Product_Name,
                     Category: productToProcess.Category || '',
                     Subcategory: productToProcess.Subcategory || '',
-                    description: variantToProcess.description || productToProcess.description || '',
-                    material_care: variantToProcess.material_care || productToProcess.material_care || '',
-                    tags: variantToProcess.tags || productToProcess.tags || '',
-                    gender: variantToProcess.gender || productToProcess.gender || '',
-                    Product_type: variantToProcess.Product_type || productToProcess.Product_type || '',
+                    description: productToProcess.description || '',
+                    material_care: productToProcess.material_care || '',
+                    tags: productToProcess.tags || '',
+                    gender: productToProcess.gender || '',
+                    Product_type: productToProcess.Product_type || '',
                     is_popular_products: productToProcess.is_popular_products || false,
-                    stock: variantToProcess.stock || 'Inactive',
-                    status: variantToProcess.status || 'Active',
+                    Images: productToProcess.Images || [],
                     variants: [variantToProcess]
                 };
                 
@@ -235,14 +267,14 @@ export default function Productsview(props) {
                 if (response) {
                     setWishlistItems(prev => [...prev, response]);
                 }
-                Swal.fire({title: "Add to Wishlist Success !", icon: "success", draggable: true });
+                Swal.fire({title: "Added to Wishlist!",icon: "success",draggable: true,timer: 2000,showConfirmButton: false});
             }
         } catch (error) {
             console.error("Error managing wishlist:", error);
             toast.error("Failed to update wishlist. Please try again.");
         }
     };
-
+    
     const pricingInfo = getPricingInfo();
 
     return (
@@ -250,30 +282,69 @@ export default function Productsview(props) {
             <section className="py-10">
                 <div className="max-w-[85rem] mx-auto px-3">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        <div className="flex justify-center items-center gap-5">
-                            <div className="h-[60dvh] relative">
-                                <Swiper direction={'vertical'} navigation={{ nextEl: '.swiper-button-next-custom', prevEl: '.swiper-button-prev-custom', }} modules={[Navigation]} className="h-full w-20 mySwiper" slidesPerView={4} spaceBetween={10} >
-                                    {currentProduct?.Images?.map((img, index) => (
-                                        <SwiperSlide key={index}>
-                                            <img src={getImageUrl(img)} alt={`${currentProduct.Product_Name} - Thumbnail ${index + 1}`}
-                                                className={`h-20 w-20 object-cover cursor-pointer border-2 ${ currentMainImage === index ? 'border-black' : 'border-transparent hover:border-gray-300' }`}
-                                                onClick={() => handleThumbnailClick(index)} onError={(e) => { e.target.src = 'https://via.placeholder.com/80x80?text=No+Image'; }} />
-                                        </SwiperSlide>
-                                    ))}
-                                </Swiper>
-                                <div className="swiper-button-prev-custom absolute -top-12 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
-                                    <ChevronUp/>
-                                </div>
-                                
-                                <div className="swiper-button-next-custom absolute -bottom-0 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
-                                    <ChevronDown/>
-                                </div>
+                       <div className="flex flex-col md:flex-row justify-center items-center gap-5">
+                        {/* Desktop */}
+                        <div className="hidden md:block h-[60dvh] relative">
+                            <Swiper direction={'vertical'} 
+                                navigation={{ 
+                                    nextEl: '.swiper-button-next-custom', 
+                                    prevEl: '.swiper-button-prev-custom', 
+                                }} 
+                                modules={[Navigation]} className="h-full w-20 mySwiper" slidesPerView={4} spaceBetween={10}
+                            >
+                                {currentProduct?.Images?.map((img, index) => (
+                                    <SwiperSlide key={index}>
+                                        <img src={getImageUrl(img)} alt={`${currentProduct.Product_Name} - Thumbnail ${index + 1}`}
+                                            className={`h-20 w-20 object-cover cursor-pointer border-2 ${
+                                                currentMainImage === index ? 'border-black' : 'border-transparent hover:border-gray-300'
+                                            }`}
+                                            onClick={() => handleThumbnailClick(index)} 
+                                        />
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                            <div className="swiper-button-prev-custom absolute -top-12 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
+                                <ChevronUp/>
                             </div>
-                            <div>
-                                <img src={currentProduct?.Images && currentProduct.Images.length > 0 ? getImageUrl(currentProduct.Images[currentMainImage]) : 'https://via.placeholder.com/400x600?text=No+Image'} 
-                                    alt={currentProduct?.Product_Name} className="h-[75dvh] w-[35rem] object-cover" />
+                            <div className="swiper-button-next-custom absolute -bottom-0 left-1/2 transform -translate-x-1/2 z-10 cursor-pointer text-white bg-black shadow-md px-5">
+                                <ChevronDown/>
                             </div>
                         </div>
+
+                        <div className="order-1 md:order-2">
+                            <img src={currentProduct?.Images && currentProduct.Images.length > 0 ? getImageUrl(currentProduct.Images[currentMainImage]) : 'https://via.placeholder.com/400x600?text=No+Image'} 
+                                alt={currentProduct?.Product_Name} className="h-[50dvh] md:h-[75dvh] w-full md:w-[35rem] object-cover" 
+                            />
+                        </div>
+
+                        {/* Mobile */}
+                        <div className="block md:hidden w-full relative order-2">
+                            <Swiper direction={'horizontal'} 
+                                navigation={{ 
+                                    nextEl: '.swiper-button-next-mobile', 
+                                    prevEl: '.swiper-button-prev-mobile', 
+                                }} 
+                                modules={[Navigation]} className="w-full h-20 mySwiper" slidesPerView={4} spaceBetween={10}
+                            >
+                                {currentProduct?.Images?.map((img, index) => (
+                                    <SwiperSlide key={index}>
+                                        <img src={getImageUrl(img)} alt={`${currentProduct.Product_Name} - Thumbnail ${index + 1}`}
+                                            className={`h-20 w-20 object-cover cursor-pointer border-2 ${
+                                                currentMainImage === index ? 'border-black' : 'border-transparent hover:border-gray-300'
+                                            }`}
+                                            onClick={() => handleThumbnailClick(index)} 
+                                        />
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                            <div className="swiper-button-prev-mobile absolute left-0 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer text-white bg-black shadow-md py-5 px-1">
+                                <ChevronLeft/>
+                            </div>
+                            <div className="swiper-button-next-mobile absolute right-0 top-1/2 transform -translate-y-1/2 z-10 cursor-pointer text-white bg-black shadow-md py-5 px-1">
+                                <ChevronRight/>
+                            </div>
+                        </div>
+                    </div>
 
                         <div className="py-10">
                             <div className="flex justify-between">
@@ -281,9 +352,23 @@ export default function Productsview(props) {
                                     <p className="text-xl barlow font-semibold tracking-wider"> {currentProduct?.Product_Name || 'Product Name Not Available'} </p>
                                     <h3 className="text-gray-500"> {currentProduct?.tags || 'NEW DROP'} </h3>
                                 </div>
-                                <div className="flex gap-5">
-                                    <i className={`fi ${wishlist ? "fi-sr-heart" : "fi-rr-heart"} hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(); }}></i>
-                                    <Share />
+                               <div className="flex gap-5">
+                                    <i className={`fi ${wishlist ? "fi-sr-heart" : "fi-rr-heart"} hover:cursor-pointer text-xl text-red-700`} 
+                                        onClick={() => {addWish(); }}>
+                                    </i>
+                                    <div className="relative group">
+                                        <Share className="cursor-pointer" />
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                                            <button onClick={() => handleShare('whatsapp')} className="flex items-center cursor-pointer gap-2 w-full px-4 py-2 text-left hover:bg-gray-100 rounded-t-md">
+                                                <i className="fi fi-brands-whatsapp text-green-600"></i>
+                                                <span> WhatsApp</span>
+                                            </button>
+                                            <button onClick={() => handleShare('copy')} className="flex items-center cursor-pointer gap-2 w-full px-4 py-2 text-left hover:bg-gray-100 rounded-b-md">
+                                                <i className={`fi ${copied ? 'fi-sr-check' : 'fi-rr-copy'}`}></i>
+                                                <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -343,7 +428,12 @@ export default function Productsview(props) {
                                     <div className="space-y-3">
                                         <p className="font-semibold manrope">SIZE</p>
                                         <div className="flex gap-2 text-lg">
-                                            {currentProduct?.sizes?.map((sizeObj, index) => {
+                                           {currentProduct?.sizes?.sort((a, b) => {
+                                                const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                                                const sizeA = typeof a === 'string' ? a : a.size;
+                                                const sizeB = typeof b === 'string' ? b : b.size;
+                                                return sizeOrder.indexOf(sizeA) - sizeOrder.indexOf(sizeB);
+                                            }).map((sizeObj, index) => {
                                                 const sizeValue = typeof sizeObj === 'string' ? sizeObj : sizeObj.size;
                                                 return (
                                                     <p key={index} className={`px-5 py-1 cursor-pointer transition-colors ${selectedSize === sizeValue ? 'bg-black text-white' : 'bg-gray-200 text-black hover:bg-gray-300'}`}

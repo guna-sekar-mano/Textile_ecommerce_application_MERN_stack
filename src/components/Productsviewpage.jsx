@@ -39,52 +39,53 @@ export default function ProductsViewPage() {
     }
   }, [product]);
 
-  const getCurrentProductData = () => {
+const getCurrentProductData = () => {
     if (!product) return null;
     if (selectedVariant) {
-      return {
-        ...selectedVariant,
-        Product_Name: selectedVariant.variant_name,
-        Product_Description: selectedVariant.description,
-        Images: selectedVariant.variant_images,
-        tags: selectedVariant.tags || product.tags,
-      };
+        return {
+            ...product,
+            ...selectedVariant,
+            Product_Name: selectedVariant.variant_name,
+            Product_Description: selectedVariant.description,
+            Images: selectedVariant.variant_images,
+            tags: selectedVariant.tags || product.tags,
+            _id: product._id,
+            variantId: selectedVariant._id,
+        };
     } else {
-      setSelectedVariant({
-        ...product,
-        ...product.variants[0],
-        Product_Name: product.variants[0].variant_name,
-        Images: product.variants[0].variant_images,
-        _id: product._id,
-        productId: product._id,
-        variantId: product.variants[0]._id,
-      });
-      return {
-        ...product,
-        ...product.variants[0],
-        Product_Name: product.variants[0].variant_name,
-        Images: product.variants[0].variant_images,
-        _id: product._id,
-        productId: product._id,
-        variantId: product.variants[0]._id,
-      };
+        const firstVariant = product.variants[0];
+        const processedVariant = {
+            ...product,
+            ...firstVariant,
+            Product_Name: firstVariant.variant_name,
+            Images: firstVariant.variant_images,
+            _id: product._id,
+            variantId: firstVariant._id,
+            originalProductId: product._id,
+        };
+        
+        setSelectedVariant({
+            ...firstVariant,
+            originalProductId: product._id
+        });
+        return processedVariant;
     }
-  };
+};
 
   const currentProduct = getCurrentProductData();
 
   const handleVariantClick = (variant, index) => {
-    setSelectedVariant({
-      ...product,
-      ...product.variants[index],
-      Product_Name: product.variants[index].variant_name,
-      Images: product.variants[index].variant_images,
-      _id: product._id,
-      productId: product._id,
-      variantId: product.variants[index]._id,
-    });
-    setCurrentMainImage(0);
+      const selectedVariantData = {
+          ...product.variants[index],
+          Product_Name: product.variants[index].variant_name,
+          Images: product.variants[index].variant_images,
+          _id: product.variants[index]._id,
+          originalProductId: product._id,
+      };
+      setSelectedVariant(selectedVariantData);
+      setCurrentMainImage(0);
   };
+
 
   const handlePrimaryProductClick = () => {
     setSelectedVariant(null);

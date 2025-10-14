@@ -73,7 +73,6 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
             const saveResponse = await apiPaymentDone(completeOrderData);
 
             if (saveResponse.success || saveResponse.message === "Order saved successfully") {
-                toast.success('Order placed successfully!');
                 
                 try {
                     await deleteAllcartItems(userdetails?.Email);
@@ -81,10 +80,8 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                     setCartItems([]);
                 } catch (cartError) {
                     console.error('Error clearing cart:', cartError);
-                    // Don't show error to user as order was successful
                 }
-                
-                navigate('/my-orders');
+
             } else {
                 throw new Error(saveResponse.message || 'Failed to place order');
             }
@@ -105,10 +102,8 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
             sale_price: null
         };
 
-        // Handle variant products
         if (item.variantId) {
             if (item.variant_name || item.variant_images) {
-                // Variant data is directly in item
                 productData.name = item.variant_name || item.Product_Name;
                 productData.variant_name = item.variant_name;
                 productData.images = item.productId?.Images || [];
@@ -124,7 +119,6 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                 }
             } 
             else if (item.variantData) {
-                // Variant data is in variantData property
                 productData.name = item.variantData.variant_name;
                 productData.variant_name = item.variantData.variant_name;
                 productData.images = item.productId?.Images || [];
@@ -140,7 +134,6 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                 }
             } 
             else if (item.productId?.variants) {
-                // Find variant in product variants array
                 const variant = item.productId.variants.find(v => v._id === item.variantId);
                 if (variant) {
                     productData.name = variant.variant_name;
@@ -159,7 +152,6 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                 }
             }
         } 
-        // Handle regular products
         else if (item.productId) {
             productData.name = item.productId.Product_Name;
             productData.images = item.productId.Images || [];
@@ -173,7 +165,6 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
                 productData.sale_price = item.productId.sale_price ? Number(item.productId.sale_price) : null;
             }
         } 
-        // Handle direct product data
         else if (item.Product_Name || item.variant_name) {
             productData.name = item.Product_Name || item.variant_name;
             productData.images = item.Images || [];

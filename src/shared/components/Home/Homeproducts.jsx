@@ -82,14 +82,32 @@ export default function Homeproducts() {
         };
     }, [getAllProductsDataForCustomer]);
 
+    const isWithinSaleDateRange = (product) => {
+    if (!product.sale_date_from || !product.sale_date_to) {
+        return false;
+    }
+    
+    const currentDate = new Date();
+    const saleFrom = new Date(product.sale_date_from);
+    const saleTo = new Date(product.sale_date_to);
+    
+    return currentDate >= saleFrom && currentDate <= saleTo;
+    };
+
     const getSalePriceForCustomer = useCallback(async () => {
         try {
             const res = await apigetSalePriceProducts();
             
             const apiData = res?.resdata || [];
+            
+            const filteredByDate = apiData.filter(product => {
+                const productData = product.ProductId?.[0] || product;
+                return isWithinSaleDateRange(productData);
+            });
+            
             setSaleData({ 
-                products: apiData, 
-                totallength: res?.totallength || apiData.length 
+                products: filteredByDate, 
+                totallength: filteredByDate.length 
             });
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -208,7 +226,7 @@ export default function Homeproducts() {
         try {
             const userDetails = userdetails;
             if (!userDetails || !userDetails.Email) {
-                toast.error("Please log in to manage your wishlist!");  
+                toast("📢 Please log in to manage your wishlist!");  
                 return;
             }
 
@@ -272,7 +290,7 @@ export default function Homeproducts() {
                 <div className="flex flex-wrap gap-4 mb-6">
                     {getUniqueProductTypes().map((productType) => (
                         <button key={productType} onClick={() => handleProductTypeClick(productType)}
-                            className={`px-4 py-1 transition-colors duration-200 ${selectedProductType === productType ? 'bg-black text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} text-sm lg:text-base `}>
+                            className={`px-4 py-1 transition-colors duration-200 cursor-pointer ${selectedProductType === productType ? 'bg-black text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} text-sm lg:text-base `}>
                             {productType}
                         </button>
                     ))}
@@ -285,7 +303,7 @@ export default function Homeproducts() {
                 </div> */}
 
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-6">
-                    {filteredData?.products?.map((item) => {
+                    {filteredData?.products?.slice(0, 8).map((item) => {
                         const allImages = getAllProductImages(item);
                         const priceInfo = getPriceDisplay(item);
                         
@@ -305,7 +323,7 @@ export default function Homeproducts() {
                                     >
                                         {item.variants[0].variant_images?.map((img, index) => (
                                             <SwiperSlide key={index}>
-                                                <img src={getImageUrl(img)} alt={`${item.variants[0].variant_name} - Image ${index + 1}`} className="w-full h-[55dvh] object-cover"/>
+                                                <img src={getImageUrl(img)} alt={`${item.variants[0].variant_name} - Image ${index + 1}`} className="w-full lg:h-[55dvh] h-[230px] md:h-[400px] object-cover"/>
                                             </SwiperSlide>
                                         ))}
                                     </Swiper>
@@ -361,6 +379,14 @@ export default function Homeproducts() {
                         );
                     })}
                 </div>
+
+                {filteredData?.products?.length > 8 && (
+                    <div className="flex justify-center mt-8">
+                        <Link to={`/collections/${selectedProductType === 'All' ? 'all' : toUrlFriendly(selectedProductType)}`} onClick={scrollToTop} className="px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors duration-200">
+                            View More
+                        </Link>
+                    </div>
+                )}
                 
                 {filteredData?.products?.length === 0 && (
                     <div className="text-center py-8">
@@ -372,94 +398,85 @@ export default function Homeproducts() {
             </div>
         </section>
 
-        <section className="px-4 py-7 azeret-mono">
-            <div className="max-w-[95rem] mx-auto">
-                <h1 className="text-2xl lg:text-3xl mb-5 azeret-mono">Sale Items</h1>
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-6">
-                    {filteredSaleData?.products?.map((item) => {
-                        const allImages = getAllProductImages(item);
-                        const priceInfo = getPriceDisplay(item);
-                        
-                        return (
-                            <div className="group" key={item._id}>
-                                <div className="relative">
-                                <Link to={`/products/${toUrlFriendly(item.Product_type)}/${item.Router_Link}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
-                                    <Swiper 
-                                        navigation={{
-                                            nextEl: `.swiper-button-next-sale-${item._id}`,
-                                            prevEl: `.swiper-button-prev-sale-${item._id}`,
-                                        }} 
-                                        modules={[Navigation]} 
-                                        className="mySwiper relative" 
-                                        loop={item.Images?.length > 1}
-                                        allowTouchMove={true}
-                                    >
-                                        {item.variants[0].variant_images?.map((img, index) => (
-                                            <SwiperSlide key={index}>
-                                                <img src={getImageUrl(img)} alt={`${item.variants[0].variant_name} - Image ${index + 1}`} className="w-full h-[55dvh] object-cover"/>
-                                            </SwiperSlide>
-                                        ))}
-                                    </Swiper>
-                                </Link>
-                                    
-                                    {item.tags && (
-                                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 z-10">
-                                            <p className="text-xs font-medium">SALE</p>
-                                        </div>
-                                    )}
-                                    
-                                    <div className="absolute top-2 right-2 bg-white p-1 z-10 hover:bg-white cursor-pointer rounded">
-                                        <i className={`fi ${checkIfInWishlist(item, null) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(item); }}></i>
-                                    </div>
-                                    
-                                    {allImages.length > 1 && (
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <div className={`swiper-button-prev-sale-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
-                                                <ChevronLeft/>
+        {filteredSaleData?.products?.length > 0 && (
+            <section className="px-4 py-7 azeret-mono">
+                <div className="max-w-[95rem] mx-auto">
+                    <h1 className="text-2xl lg:text-3xl mb-5 azeret-mono">Sale Items</h1>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mt-6">
+                        {filteredSaleData?.products?.map((item) => {
+                            const allImages = getAllProductImages(item);
+                            const priceInfo = getPriceDisplay(item);
+                            
+                            return (
+                                <div className="group" key={item._id}>
+                                    <div className="relative">
+                                    <Link to={`/products/${toUrlFriendly(item.Product_type)}/${item.Router_Link}`} state={{ product: item, productId: item._id }} onClick={scrollToTop}>
+                                        <Swiper 
+                                            navigation={{
+                                                nextEl: `.swiper-button-next-sale-${item._id}`,
+                                                prevEl: `.swiper-button-prev-sale-${item._id}`,
+                                            }} 
+                                            modules={[Navigation]} className="mySwiper relative" loop={item.Images?.length > 1} allowTouchMove={true}
+                                        >
+                                            {item.variants[0].variant_images?.map((img, index) => (
+                                                <SwiperSlide key={index}>
+                                                    <img src={getImageUrl(img)} alt={`${item.variants[0].variant_name} - Image ${index + 1}`} className="w-full lg:h-[55dvh] h-[230px] md:h-[400px] object-cover"/>
+                                                </SwiperSlide>
+                                            ))}
+                                        </Swiper>
+                                    </Link>
+                                        
+                                        {item.tags && (
+                                            <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 z-10">
+                                                <p className="text-xs font-medium">SALE</p>
                                             </div>
-                                            <div className={`swiper-button-next-sale-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
-                                                <ChevronRight/>
-                                            </div>
+                                        )}
+                                        
+                                        <div className="absolute top-2 right-2 bg-white p-1 z-10 hover:bg-white cursor-pointer rounded">
+                                            <i className={`fi ${checkIfInWishlist(item, null) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(item); }}></i>
                                         </div>
-                                    )}
-                                </div>
-                                
-                                <div className="mt-3 px-1">
-                                    <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
-                                        {item.Product_Name}
-                                    </h3>
-
-                                    <div className="mt-1 flex items-center gap-2">
-                                        {priceInfo.hasSale ? (
-                                            <>
-                                                <span className="text-lg font-semibold text-red-600">
-                                                    {priceInfo.salePrice}
-                                                </span>
-                                                <span className="text-sm text-gray-500 line-through">
-                                                    {priceInfo.originalPrice}
-                                                </span>
-                                            </>
-                                        ) : (
-                                            <span className="text-lg font-semibold text-gray-900">
-                                                {priceInfo.price}
-                                            </span>
+                                        
+                                        {allImages.length > 1 && (
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                <div className={`swiper-button-prev-sale-${item._id} absolute left-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white hover:text-black p-2 cursor-pointer z-20 shadow-md`}>
+                                                    <ChevronLeft/>
+                                                </div>
+                                                <div className={`swiper-button-next-sale-${item._id} absolute right-2 lg:w-32 bottom-0 transform flex justify-center items-center -translate-y-1/2 bg-black text-white hover:bg-white p-2 hover:text-black cursor-pointer z-20 shadow-md`}>
+                                                    <ChevronRight/>
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
+                                    
+                                    <div className="mt-3 px-1">
+                                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                                            {item.Product_Name}
+                                        </h3>
+
+                                        <div className="mt-1 flex items-center gap-2">
+                                            {priceInfo.hasSale ? (
+                                                <>
+                                                    <span className="text-lg font-semibold text-red-600">
+                                                        {priceInfo.salePrice}
+                                                    </span>
+                                                    <span className="text-sm text-gray-500 line-through">
+                                                        {priceInfo.originalPrice}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-lg font-semibold text-gray-900">
+                                                    {priceInfo.price}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
-                
-                {filteredSaleData?.products?.length === 0 && (
-                    <div className="text-center py-8">
-                        <p className="text-gray-500">
-                            {selectedProductType === 'All' ? 'No sale products available' : `No sale products found for "${selectedProductType}"`}
-                        </p>
+                            );
+                        })}
                     </div>
-                )}
-            </div>
-        </section>
+                </div>
+            </section>
+        )}
         </>
     );
 }

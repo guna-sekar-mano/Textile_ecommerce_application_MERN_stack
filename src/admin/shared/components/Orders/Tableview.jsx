@@ -83,7 +83,7 @@ export default function Tableview (props) {
     return (
         <>
             <div>
-                <DataTable value={tabledata} scrollable scrollHeight="680px" onSort={onSort} sortField={Sort.sortField} sortOrder={Sort.sortOrder}
+                <DataTable value={tabledata} loading={loading} scrollable scrollHeight="680px" onSort={onSort} sortField={Sort.sortField} sortOrder={Sort.sortOrder}
                     className="!text-sm border border-gray-200 rounded" stateStorage="session" stateKey="dt-state-demo-local" >
                     <Column header="Action" body={actionbotton} />
                     {/* <Column header="Images"  body={image} /> */}

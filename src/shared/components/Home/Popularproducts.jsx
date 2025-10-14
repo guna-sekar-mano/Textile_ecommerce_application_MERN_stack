@@ -14,7 +14,7 @@ import Swal from 'sweetalert2'
 
 const toUrlFriendly = (str) => {
   return str
-    .toLowerCase()
+    ?.toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 };
@@ -60,15 +60,18 @@ export default function Popularproducts () {
             
             const apiData = res?.resdata || [];
             let allProducts = [];
-            let highlightedProduct = null;
+            let highlightedData = null;
 
             apiData.forEach(popularProductGroup => {
                 if (popularProductGroup.ProductId && Array.isArray(popularProductGroup.ProductId)) {
                     allProducts.push(...popularProductGroup.ProductId);
                 }
                 
-                if (popularProductGroup.HighlightedProductId && !highlightedProduct) {
-                    highlightedProduct = popularProductGroup.HighlightedProductId;
+                if (!highlightedData && popularProductGroup.Images && popularProductGroup.Images.length > 0) {
+                    highlightedData = {
+                        image: popularProductGroup.Images[0],
+                        sectionName: popularProductGroup.Highlighted_Section_Name || 'Featured Collection'
+                    };
                 }
             });
 
@@ -77,8 +80,8 @@ export default function Popularproducts () {
             );
 
             setData({ 
-                products: uniqueProducts, 
-                highlightedProduct: highlightedProduct,
+                products: uniqueProducts,
+                highlightedProduct: highlightedData,
                 totallength: uniqueProducts.length 
             });
         } catch (error) {
@@ -206,27 +209,20 @@ export default function Popularproducts () {
                     <div className="col-span-4 ">
                         <div className='sticky top-20 relative'>
                             {data.highlightedProduct ? (
-                                <Link to={`/products/${toUrlFriendly(data.highlightedProduct.Product_type)}/${toUrlFriendly(data.highlightedProduct.Product_Name)}`} state={{ product: data.highlightedProduct, productId: data.highlightedProduct._id }} onClick={scrollToTop}>
+                                <>
                                     <img 
-                                        src={getImageUrl(getProductImage(data.highlightedProduct))} 
-                                        alt={data.highlightedProduct.Product_Name} 
+                                        src={getImageUrl(data.highlightedProduct.image)} 
+                                        alt={data.highlightedProduct.sectionName} 
                                         className="lg:h-[80dvh] w-full object-cover object-center" 
                                     />
                                     <div className='absolute bottom-0 left-0 w-full p-4 azeret-mono'>
                                         <div className='bg-white/90 p-3 rounded'>
-                                            <h3 className='font-semibold text-gray-800 mb-2'>
-                                                {data.highlightedProduct.Product_Name}
+                                            <h3 className='font-semibold text-gray-800 text-lg'>
+                                                {data.highlightedProduct.sectionName}
                                             </h3>
-                                            <div className='flex gap-3 mt-3 font-semibold text-gray-600 text-sm'>
-                                                <p className='bg-white p-1'>{data.highlightedProduct.Category?.toUpperCase() || 'FEATURED'}</p>
-                                                <p className='bg-white p-1'>{data.highlightedProduct.Product_type?.toUpperCase() || 'PRODUCT'}</p>
-                                                {data.highlightedProduct.tags && (
-                                                    <p className='bg-white p-1'>{data.highlightedProduct.tags.toUpperCase()}</p>
-                                                )}
-                                            </div>
                                         </div>
                                     </div>
-                                </Link>
+                                </>
                             ) : (
                                 <>
                                     <img src="/images/popular-products/3.jpg" alt="" className="lg:h-[80dvh] w-full object-cover object-center" />

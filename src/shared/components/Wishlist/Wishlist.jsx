@@ -13,7 +13,7 @@ import { apisavecart } from "../../services/apicart/apicart";
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2'
 
-const toUrlFriendly = (str) => {return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');};
+const toUrlFriendly = (str) => {return str?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');};
 
 const SizeSelectionModal = ({ isOpen, onClose, product, onAddToCart, getImageUrl }) => {
     const [selectedSize, setSelectedSize] = useState('');
@@ -176,9 +176,8 @@ export default function Wishlist() {
     const { userdetails } = useAuth();
     const { addToCart, cart: cartItems } = useCartStore();
 
-    // Helper function to get variant data from variants array
     const getVariantData = (item) => {
-        if (item.variantId && item.variants) {
+        if (item.variantId && item.variants && item.variants.length > 0) {
             const variant = item.variants.find(v => v._id === item.variantId);
             if (variant) {
                 return {
@@ -187,7 +186,8 @@ export default function Wishlist() {
                     sizes: variant.sizes,
                     price: variant.price,
                     sale_price: variant.sale_price,
-                    stock: variant.stock
+                    stock: variant.stock,
+                    actualVariantId: variant._id
                 };
             }
         }
@@ -205,7 +205,8 @@ export default function Wishlist() {
                 sizes: variantData.sizes,
                 price: variantData.price,
                 sale_price: variantData.sale_price,
-                stock: variantData.stock
+                stock: variantData.stock,
+                correctVariantId: variantData.actualVariantId
             };
         }
         
@@ -217,7 +218,8 @@ export default function Wishlist() {
                 sizes: firstVariant.sizes,
                 price: firstVariant.price,
                 sale_price: firstVariant.sale_price,
-                stock: firstVariant.stock
+                stock: firstVariant.stock,
+                correctVariantId: firstVariant._id
             };
         }
         
@@ -235,7 +237,7 @@ export default function Wishlist() {
         } catch (error) {
             console.error('Error fetching data:', error);
             setData({ products: [], totallength: 0 });
-            toast.error("Failed to fetch wishlist data");
+            // toast.error("Failed to fetch wishlist data");
         }
     }, []);
 
@@ -266,7 +268,7 @@ export default function Wishlist() {
                 products: prev.products.filter(item => item._id !== itemId),
                 totallength: prev.totallength - 1
             }));
-            Swal.fire({title: "Removed from wishlist !", icon: "success", draggable: true });
+            Swal.fire({title: "Removed from wishlist !",icon: "success",draggable: true,timer: 2000,showConfirmButton: false});
         } catch (error) {
             console.error("Error removing from wishlist:", error);
             toast.error("Failed to remove from wishlist. Please try again.");
@@ -295,17 +297,18 @@ export default function Wishlist() {
         const cartItemsFromStore = cartItems || [];
         
         const productId = product.productId || product._id;
-        const variantId = product.variantId || null;
+        
+        const correctVariantId = product.correctVariantId || product.variantId;
         
         const existingItem = cartItemsFromStore.find(item => {
             const itemProductId = item.productId?._id || item.productId || item.productId?.id;
             return itemProductId === productId && 
                 item.selectedSize === selectedSize &&
-                (item.variantId || null) === variantId;
+                (item.variantId || null) === (correctVariantId || null);
         });
 
         if (existingItem) {
-            const productType = variantId ? 'variant' : 'main product';
+            const productType = correctVariantId ? 'variant' : 'main product';
             toast.error(`This ${productType} with size ${selectedSize || 'default'} is already in your cart!`);
             return;
         }
@@ -316,13 +319,13 @@ export default function Wishlist() {
                 Email: userDetails.Email,
                 Quantity: 1,
                 selectedSize: selectedSize,
-                variantId: variantId
+                variantId: correctVariantId
             };
             
             await apisavecart(cartData);
             
-            let productWithSize = {
-                _id: product._id,
+            let productForCart = {
+                _id: `${productId}_${correctVariantId}_${selectedSize}_${Date.now()}`,
                 productId: productId,
                 Product_Name: product.Product_Name,
                 Images: product.Images,
@@ -330,7 +333,7 @@ export default function Wishlist() {
                 sale_price: product.sale_price,
                 sizes: product.sizes,
                 stock: product.stock,
-                variantId: variantId,
+                variantId: correctVariantId,
                 selectedSize: selectedSize,
                 Quantity: 1,
                 description: product.description,
@@ -342,12 +345,22 @@ export default function Wishlist() {
                 Subcategory: product.Subcategory
             };
 
-            if (variantId && product.variantName) {
-                productWithSize.variant_name = product.variantName;
+            if (correctVariantId && product.variantName) {
+                productForCart.variant_name = product.variantName;
+                productForCart.variant_images = product.Images;
             }
 
-            addToCart(productWithSize);
-            const productType = variantId ? 'Variant' : 'Product';
+            addToCart(productForCart);
+            const wishlistItemId = selectedProduct?._id;
+            if (wishlistItemId) {
+                await deleteOnewishitems(wishlistItemId);
+                setData(prev => ({
+                    ...prev,
+                    products: prev.products.filter(item => item._id !== wishlistItemId),
+                    totallength: prev.totallength - 1
+                }));
+            }
+            const productType = correctVariantId ? 'Variant' : 'Product';
             toast.success(`${productType} added to cart successfully!`);
             
         } catch (error) {

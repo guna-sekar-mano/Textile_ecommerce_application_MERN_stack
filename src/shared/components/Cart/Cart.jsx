@@ -10,6 +10,12 @@ import useAuth from "../../services/store/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import apiurl from "../../services/apiendpoint/apiendpoint";
 
+const toUrlFriendly = (str) => {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
 
 export default function Cart() {
     const { userdetails } = useAuth();
@@ -125,13 +131,18 @@ export default function Cart() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const productView = (product) => {
-        navigate('/products/type/product', {
-            state: {
-                productId: product?.productId?._id,
-                // product: product
-            }
-        });
+    const productView = (item) => {
+        const product = item.productId || item;
+        
+        if (product && product.Product_type && product.Router_Link) {
+            navigate(`/products/${toUrlFriendly(product.Product_type)}/${product.Router_Link}`, {
+                state: { 
+                    product: product, 
+                    productId: product._id 
+                }
+            });
+            scrollToTop();
+        }
     };
 
 
@@ -164,8 +175,8 @@ export default function Cart() {
                                                     <div className="hidden md:grid grid-cols-12 gap-4 bg-gray-100 p-5 items-center">
                                                         <div className="col-span-5">
                                                             <div className="flex items-center gap-3">
-                                                                <img onClick={() => { productView(item) }} src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'} alt={productDetails.name}
-                                                                    className="h-20 w-20 object-cover object-center" />
+                                                              <img onClick={() => { productView(item) }} src={productDetails.image ? `${apiurl()}/${productDetails.image}` : '/images/default-product.png'} alt={productDetails.name}
+                                                                className="h-20 w-20 object-cover object-center cursor-pointer" />
                                                                 <div>
                                                                     <p className="font-medium">{productDetails.name}</p>
                                                                     <p className="text-gray-500 text-sm">Size: {item.selectedSize}</p>
@@ -197,7 +208,7 @@ export default function Cart() {
                                                             <div className="flex items-center gap-3">
                                                                 <button
                                                                     className="w-8 h-8 bg-white border border-gray-300 hover:bg-gray-50 flex items-center justify-center"
-                                                                    onClick={() => handleDecreaseQuantity(index, safeCart, userdetails, setCartItems)}
+                                                                    onClick={() => handleDecreaseQuantity(index, safeCart, userdetails, setCartItems,item)}
                                                                     disabled={item.Quantity <= 1}
                                                                 >
                                                                     -
@@ -294,13 +305,6 @@ export default function Cart() {
                                         </Link>
                                     </div>
                                 )}
-
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <input type="text" className="w-full bg-gray-200 p-2 azeret-mono text-center text-sm" placeholder="Gift card or Discount coupon" />
-                                    <button className="azeret-mono w-full px-4 py-2 border-2 hover:bg-black hover:text-white hover:transition-all duration-300 cursor-pointer text-sm">
-                                        Apply
-                                    </button>
-                                </div>
                             </div>
                         </div>
 
@@ -324,8 +328,7 @@ export default function Cart() {
 
                                 <div className="mt-4 azeret-mono">
                                     <Link to={"/checkout"}
-                                        className="block tracking-widest p-3 text-center bg-black w-full text-white cursor-pointer hover:bg-white hover:text-black hover:transition-all duration-300 text-sm font-medium"
-                                    >
+                                        className="block tracking-widest p-3 text-center bg-black w-full text-white cursor-pointer hover:bg-white hover:text-black hover:transition-all duration-300 text-sm font-medium">
                                         CHECKOUT SECURELY
                                     </Link>
                                 </div>
@@ -370,18 +373,13 @@ export default function Cart() {
                                     <hr className="mt-3" />
                                 </div>
 
-                                <div className="mt-2">
+                                {/* <div className="mt-2">
                                     <p className="text-center text-xs text-gray-600">Shipping amount has been not included</p>
-                                </div>
+                                </div> */}
                             </div>
 
-                            <div className="mt-5">
-                                <Link
-                                    to={"/"}
-                                    className="azeret-mono text-center w-full border-2 p-3 hover:bg-black hover:text-white hover:transition-all duration-300 cursor-pointer block text-sm font-medium"
-                                >
-                                    CONTINUE SHOPPING
-                                </Link>
+                            <div className="mt-3">
+                                <Link to={"/"} className="azeret-mono text-center w-full underline p-3  cursor-pointer block text-sm font-medium">CONTINUE SHOPPING</Link>
                             </div>
                         </div>
                     </div>

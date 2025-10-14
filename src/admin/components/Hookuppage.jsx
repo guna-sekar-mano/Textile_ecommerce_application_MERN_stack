@@ -25,13 +25,11 @@ export default function Hookuppage () {
     let isMounted = true;
 
     const tabs = [
-        // { key: 'Category', label: 'Category', field: 'Category' },
-        // { key: 'Subcategory', label: 'Subcategory', field: 'Subcategory' },
         { key: 'tags', label: 'Tags', field: 'tags' },
         { key: 'sizes', label: 'Sizes', field: 'sizes' },
         { key: 'gender', label: 'Gender', field: 'gender' },
         { key: 'Product_type', label: 'Product Type', field: 'Product_type' },
-        { key: 'Header_menu', label: 'Header Menu', field: 'Header_menu' }
+        { key: 'Color', label: 'Color', field: 'Color' },
     ];
 
     const openform=()=>{
@@ -60,18 +58,14 @@ export default function Hookuppage () {
     const getAllHookups = useCallback(async () =>{
         setLoading(true);
         try {
-            const res = await apigetallHookups({ first, rows, globalFilter, colfilter,Sort });
-            const allData = res?.resdata || [];
-            const filteredData = allData.filter(item => 
-                item[activeTab] && 
-                item[activeTab].toString().trim() !== '' &&
-                item[activeTab] !== null &&
-                item[activeTab] !== undefined
-            );
-            setTableData({...res, resdata: filteredData, totallength: filteredData.length}); 
+            const tabFilter = {...colfilter,[activeTab]: { $exists: true, $nin: [null, ''] }};
+            
+            const res = await apigetallHookups({ first, rows, globalFilter, colfilter: tabFilter,Sort });
+            
+            setTableData(res); 
         } catch (error) {
             console.error('Error fetching data:', error);
-            setTableData([]);
+            setTableData({ resdata: [], totallength: 0 });
         } finally {
             setLoading(false);
         }
@@ -82,17 +76,16 @@ export default function Hookuppage () {
             getAllHookups();
         }
         return(()=>isMounted = false);
-    },[first, rows, globalFilter, colfilter, Sort, activeTab]);
+    },[getAllHookups]);
 
     const onPage = (pages) => {
         setPage(pages);
-        // console.log(rows,pages )
         setFirst(pages.first);
         setRows(rows);
     };
 
     const clearFilter = (event)=>{
-        setcolFilter(null);
+        setcolFilter({});
         setGlobalFilter('')
         setTempFilterValues([])
         setFirst(0)
@@ -101,10 +94,8 @@ export default function Hookuppage () {
 
     const cusfilter = (field, value) => {
         setcolFilter(prev => ({ ...prev, [field]: {$in:value} }));
-        setFirst(0); // Reset to first page when applying a new filter
-        console.log(first)
+        setFirst(0);
     };
-
 
     const editform = (data) => {
         const cleanData = { ...data };
@@ -152,20 +143,17 @@ export default function Hookuppage () {
         });
     };
 
-
     return (
         <>
         <div className="bg-white shadow-sm border-b">
             <div className="flex overflow-x-auto">
                 {tabs.map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setActiveTab(tab.key)}
+                    <button key={tab.key} onClick={() => {
+                        setActiveTab(tab.key);
+                        setFirst(0);
+                    }}
                         className={`px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                            activeTab === tab.key
-                                ? 'border-black text-black bg-gray-50'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
+                            activeTab === tab.key ? 'border-black text-black bg-gray-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
                     >
                         {tab.label}
                     </button>

@@ -12,7 +12,7 @@ export default function Orderspage () {
     const [totalRecords, setTotalRecords] = useState(0);
     const [tabledata, setTabledata]=useState([]);
     // const [colfilter, setcolFilter] = useState({});
-    const [globalfilter,setglobalfilter]=useState('');
+    const [globalFilter,setGlobalFilter]=useState('');
     const [page, setPage] = useState(1);
     const [first, setFirst] = useState(0);
     const [rows, setRows] = useState(10);
@@ -30,17 +30,19 @@ export default function Orderspage () {
     let isMounted = true;
 
     const getallorder = useCallback(async ()=>{
-        const res= await getallorders({first, rows, globalfilter, colfilter,Sort});
+         setLoading(true)
+        const res= await getallorders({first, rows, globalFilter, colfilter,Sort});
         setTabledata(res?.resdata);
         setTotalRecords(res?.totallength);
-    },[first, rows, globalfilter, colfilter,Sort]);
+        setLoading(false)
+    },[first, rows, globalFilter, colfilter,Sort]);
 
     useEffect(()=>{
         if(isMounted){
             getallorder();
         }
         return(()=>isMounted = false);
-    },[first, rows, globalfilter, colfilter,Sort])
+    },[first, rows, globalFilter, colfilter,Sort])
 
     const onPage = (page) => {
         setPage(page);
@@ -56,7 +58,7 @@ export default function Orderspage () {
 
     const clearFilter = (event)=>{
         setcolFilter(null);
-        setglobalfilter('')
+        setGlobalFilter('')
         // setTempFilterValues([])
         setFirst(0)
         // setSort({})
@@ -105,10 +107,10 @@ export default function Orderspage () {
 
     return (
         <>
-            <Tableheadpanel clearFilter={clearFilter} setglobalfilter={setglobalfilter} globalfilter={globalfilter} />
+            <Tableheadpanel clearFilter={clearFilter} setGlobalFilter={setGlobalFilter} globalFilter={globalFilter} />
             <Tableview tabledata={tabledata} totalRecords={totalRecords} first={first} editfrom={editfrom} setLoading={setLoading} downloadingPDF={downloadingPDF}
                 onPage={onPage} page={page} downloadPDF={downloadPDF} viewProducts={viewProducts} cusfilter={cusfilter} Sort={Sort} setSort={setSort} clearFilter={clearFilter}
-                tempFilterValues={tempFilterValues} setTempFilterValues={setTempFilterValues} />
+                tempFilterValues={tempFilterValues} setTempFilterValues={setTempFilterValues} loading={loading} />
             <Addandeditform visible={visible} setVisible={setVisible} loading={loading} formdata={formdata} setFormdata={setFormdata}
                 handlechange={handlechange} handleupdate={handleupdate} />
             <ViewOrders ViewProduct={ViewProduct} setViewProduct={setViewProduct} ViewProductData={ViewProductData} />

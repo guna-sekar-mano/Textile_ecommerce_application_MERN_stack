@@ -26,9 +26,21 @@ export default function Tableview ({tableData, editform, confirm, activeTab}) {
             'sizes': 'Sizes',
             'gender': 'Gender',
             'Product_type': 'Product Type',
-            'Header_menu': 'Header Menu'
+            'Color': 'Color',
+            // 'Header_menu': 'Header Menu'
         };
         return labels[fieldKey] || fieldKey;
+    };
+
+    const colorBody = (rowData) => {
+        if (activeTab !== 'Color') return null;
+        
+        return (
+            <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded border border-gray-300" style={{ backgroundColor: rowData.color_code }}title={rowData.color_code} ></div>
+                <span>{rowData.Color}</span>
+            </div>
+        );
     };
 
     const headerMenuBody = (rowData) => {
@@ -44,10 +56,11 @@ export default function Tableview ({tableData, editform, confirm, activeTab}) {
     };
 
     const getColumns = () => {
-        if (activeTab === 'Header_menu') {
+        if (activeTab === 'Color') {
             return [
                 { header: 'Action', body: edittemplateBody },
-                { header: 'Header Menu Details', body: headerMenuBody },
+                { header: 'Color', body: colorBody },
+                { field: 'color_code', header: 'Color Code' },
                 { field: 'Status', header: 'Status' },
             ];
         } else {
