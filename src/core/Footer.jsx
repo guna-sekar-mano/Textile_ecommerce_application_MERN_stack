@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiSaveNewsletter } from "../shared/services/apinewsletter/apinewsletter";
 import Swal from 'sweetalert2';
@@ -7,6 +7,42 @@ import toast from "react-hot-toast";
 export default function Footer () {
 
     const [newsletterEmail, setNewsletterEmail] = useState({});
+    const [instagramPosts, setInstagramPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    const INSTAGRAM_TOKEN = 'EAAKB6IGCVvQBP6HcFxXOchXheXOAcDdo3CCYb2pzc7GZAgnXQw4v4lPyWNJAZC0RAkRTfxpi9t1D3LuTalZBO7BbbaulJoBQvEevLMLALaZAhPnZApUA6ZCZAnCbWS23vw8ceUWDXEMjoXcZBeSJ5BOOXRJZCmPQS4pSErAsmGVkGATDVrmxZCOS9bNJ8bBFyMmZCvB';
+    const INSTAGRAM_USER_ID = 'sergio_kalai';
+
+    useEffect(() => {
+        fetchInstagramPosts();
+    }, []);
+
+    const fetchInstagramPosts = async () => {
+        try {
+            const response = await fetch(
+                `https://graph.instagram.com/${INSTAGRAM_USER_ID}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink&access_token=${INSTAGRAM_TOKEN}&limit=2`
+            );
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch Instagram posts');
+            }
+
+            const data = await response.json();
+            
+            if (data.data && data.data.length > 0) {
+                setInstagramPosts(data.data);
+            }
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching Instagram posts:', error);
+            setLoading(false);
+            setInstagramPosts([
+                { id: '1', media_url: '/images/popular-products/1.png', permalink: '' },
+                { id: '2', media_url: '/images/popular-products/2.png', permalink: '' }
+            ]);
+        }
+    };
+
 
     const handleChange = (e) =>{
         setNewsletterEmail({...newsletterEmail, [e.target.name] : e.target.value});
@@ -57,13 +93,38 @@ export default function Footer () {
                                 <div className="text-center">
                                     <h1 className="lg:text-4xl text-2xl azeret-mono">Our Social Post</h1>
                                 </div>
-                                <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 mt-8">
-                                    <div>
-                                        <img src="/images/popular-products/1.png" alt="" className="lg:h-[350px] w-full object-cover" />
-                                    </div>
-                                    <div>
-                                        <img src="/images/popular-products/2.png" alt="" className="lg:h-[350px] w-full object-cover" />
-                                    </div>
+                                   <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 mt-8">
+                                    {loading ? (
+                                        <>
+                                            <div className="lg:h-[350px] w-full bg-gray-800 animate-pulse"></div>
+                                            <div className="lg:h-[350px] w-full bg-gray-800 animate-pulse"></div>
+                                        </>
+                                    ) : (
+                                        instagramPosts.slice(0, 2).map((post, index) => (
+                                            <div key={post.id || index}>
+                                                {post.permalink ? (
+                                                    <a 
+                                                        href={post.permalink} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="block"
+                                                    >
+                                                        <img 
+                                                            src={post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url} 
+                                                            alt={post.caption ? post.caption.substring(0, 50) : "Instagram post"} 
+                                                            className="lg:h-[350px] w-full object-cover hover:opacity-80 transition-opacity" 
+                                                        />
+                                                    </a>
+                                                ) : (
+                                                    <img 
+                                                        src={post.media_url} 
+                                                        alt="" 
+                                                        className="lg:h-[350px] w-full object-cover" 
+                                                    />
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -93,9 +154,9 @@ export default function Footer () {
                              <div className="text-start">
                                 <p className="font-semibold text-lg barlow-condensed">SUPPORT</p>
                                 <ul className="mt-3 lg:mt-5 flex flex-col gap-2 lg:gap-3 text-gray-400">
-                                    <Link to={""}><li className="hover:text-white">Track My order</li></Link>
-                                    <Link to={""}><li className="hover:text-white">FAQs</li></Link>
-                                    <Link to={""}><li className="hover:text-white">Contact Us</li></Link>
+                                    <Link to={"/track-order"}><li className="hover:text-white">Track My order</li></Link>
+                                    <Link to={"/frequently-asked-questions"}><li className="hover:text-white">FAQs</li></Link>
+                                    <Link to={"/contact-us"}><li className="hover:text-white">Contact Us</li></Link>
                                 </ul>
                             </div>
                              <div className="text-start">
@@ -111,11 +172,10 @@ export default function Footer () {
 
                         <div className="flex justify-center items-center lg:mt-0 mt-5">
                             <div className="flex flex-col lg:flex-row gap-2 lg:gap-5 azeret-mono">
-                                <Link to={""}><p className="">Terms & Condition</p></Link>
-                                <Link to={""}><p className="">Privacy Policy</p></Link>
+                                <Link to={"/terms-and-conditions"}><p className="">Terms & Condition</p></Link>
+                                <Link to={"/privacy-policy"}><p className="">Privacy Policy</p></Link>
                                 <Link to={""}><p className="">Cookies Policy</p></Link>
                             </div>
-
                         </div>
                     </div>
                 </div>

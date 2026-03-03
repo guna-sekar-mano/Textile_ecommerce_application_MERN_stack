@@ -77,6 +77,7 @@ export default function Sidebar({ isOpen }) {
                                 <NavItem icon="fi fi-sr-order-history" label="Orders" to="/dashboard/orders" isOpen={isMobile ? isMobileOpen : isOpen} />
                                 <NavItem icon="fi fi-rr-ticket" label="Coupons" to="/dashboard/coupons" isOpen={isMobile ? isMobileOpen : isOpen} />
                                 <NavItem icon="fi fi-ts-newsletter-subscribe" label="Newsletter Emails" to="/dashboard/newsletter" isOpen={isMobile ? isMobileOpen : isOpen} />
+                                {/* <NavItem icon="fi fi-sr-shipping-fast" label="Shipping Amounts" to="/dashboard/shipping-amounts" isOpen={isMobile ? isMobileOpen : isOpen} /> */}
                             </>
                         )}
                        

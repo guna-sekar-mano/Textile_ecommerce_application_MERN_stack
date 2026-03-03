@@ -1,6 +1,7 @@
 import { deleteAllcartItems } from '../../services/apicart/apicart';
 import toast from 'react-hot-toast';
 import { apiPaymentDone } from '../../services/apiorder/apiorder';
+import { trackCouponUsage } from '../../../admin/shared/services/apiCoupons/apicoupons';
 
 export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, navigate) => {
     
@@ -8,7 +9,7 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
         return `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
     };
 
-    const createOrder = async (selectedAddress, total) => {
+    const createOrder = async (selectedAddress, total, appliedCoupon, couponDiscount, shippingCost) => {
         try {
             if (!selectedAddress) {
                 toast.error('Please select or add shipping address');
@@ -30,6 +31,18 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
             const orderData = {
                 Order_id: orderId,
                 Total_Amount: total,
+                Shipping_Amount: shippingCost,
+                Coupon_Discount: couponDiscount || 0,
+                Applied_Coupon: appliedCoupon ? {
+                    id: appliedCoupon._id,
+                    code: appliedCoupon.Coupon_Code,
+                    name: appliedCoupon.Coupon_Name,
+                    discount_type: appliedCoupon.Discount_Type,
+                    discount_value: appliedCoupon.Discount_Type === 'Flat_Discount' 
+                        ? appliedCoupon.Flat_Discount 
+                        : appliedCoupon.Flat_Percentage,
+                    apply_shipping_discount: appliedCoupon.Apply_Shipping_Discount
+                } : null,
                 Billing_Name: `${selectedAddress.First_Name} ${selectedAddress.Last_Name}`.trim(),
                 Email: userdetails?.Email,
                 Mobilenumber: selectedAddress.Mobilenumber,
@@ -45,14 +58,12 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
 
             const orderItems = cart.map(item => {
                 const productData = getProductData(item);
-                console.log(item,productData)
                 return {
                     Order_id: orderId,
                     productId: item.productId?._id || item.productId,
                     variantId: item.variantId || null,
                     Product_Name: productData.name,
                     variant_name: item.variantId ? productData.variant_name : null,
-                    // Images: productData.images,
                     Images: item.variantId ? productData.variant_images : null,
                     price: productData.price.toString(),
                     sale_price: productData.sale_price ? productData.sale_price.toString() : null,
@@ -74,20 +85,19 @@ export const useOrderHandlers = (cart, userdetails, clearCart, setCartItems, nav
 
             if (saveResponse.success || saveResponse.message === "Order saved successfully") {
                 
-                try {
-                    await deleteAllcartItems(userdetails?.Email);
-                    clearCart();
-                    setCartItems([]);
-                } catch (cartError) {
-                    console.error('Error clearing cart:', cartError);
+                if (appliedCoupon?._id) {
+                    await trackCouponUsage(appliedCoupon._id, userdetails?.Email, orderId);
                 }
+
+                await deleteAllcartItems(userdetails?.Email);
+                clearCart();
+                setCartItems([]);
 
             } else {
                 throw new Error(saveResponse.message || 'Failed to place order');
             }
 
         } catch (error) {
-            console.error('Order creation error:', error);
             toast.error(error.response?.data?.message || error.message || 'Failed to place order. Please try again.');
         }
     };

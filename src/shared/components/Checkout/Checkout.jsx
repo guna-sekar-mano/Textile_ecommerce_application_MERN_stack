@@ -7,12 +7,14 @@ import { getcartItems } from "../../services/apicart/apicart";
 import apiurl from "../../services/apiendpoint/apiendpoint";
 import toast from "react-hot-toast";
 import { useOrderHandlers } from "./Paymentfunctions";
-import { getuserdetails } from "../../services/token/token";
+import { gettoken, getuserdetails } from "../../services/token/token";
 import { checkFirstTimeUserCoupon } from "../../services/apiorder/apiorder";
 import { getAllcustomerCoupon } from "../../../admin/shared/services/apiCoupons/apicoupons";
 import { Dialog } from 'primereact/dialog';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import Addshipping from "./AddShipping";
+import { X } from "lucide-react";
+import axios from "axios";
 
 export default function Checkout () {
 
@@ -84,68 +86,7 @@ export default function Checkout () {
         return subTotal;
     };
 
-    const validateCoupon = (coupon, subtotal, userEmail) => {
-    
-        const currentDate = new Date();
-        const validFrom = new Date(coupon.Valid_From);
-        const validTo = new Date(coupon.Valid_To);
-
-        if (coupon.Status !== 'Active') {
-            return { isValid: false, message: 'Coupon is not active' };
-        }
-
-        if (currentDate < validFrom || currentDate > validTo) {
-            return { isValid: false, message: 'Coupon has expired or not yet valid' };
-        }
-
-        // Check total usage limit using the new Current_Usage_Count field
-        const totalUsageCount = coupon.Current_Usage_Count || 0;
-        if (totalUsageCount >= coupon.Total_Usage_Limit) {
-            return { isValid: false, message: 'Coupon usage limit has been reached' };
-        }
-
-        if (coupon.Coupon_Type === 'Private') {
-            
-            if (!coupon.Customer || !Array.isArray(coupon.Customer)) {
-                return { isValid: false, message: 'This coupon is not available for your account' };
-            }
-            
-            const isEligible = coupon.Customer.includes(userEmail);
-            if (!isEligible) {
-                return { isValid: false, message: 'This coupon is not available for your account' };
-            }
-        }
-
-        if (coupon.Target_Users === 'First_Time_Users') {
-            if (isFirstTimeUser === null) {
-                return { isValid: false, message: 'Checking user eligibility...' };
-            }
-            if (!isFirstTimeUser) {
-                return { isValid: false, message: 'This coupon is only available for first-time users' };
-            }
-        }
-
-        if (subtotal < coupon.Minimum_Amount) {
-            return { 
-                isValid: false, 
-                message: `Minimum order amount of ${coupon.Minimum_Amount} required` 
-            };
-        }
-
-        return { isValid: true, message: '' };
-    };
-
-    const calculateDiscount = (coupon, subtotal) => {
-        if (coupon.Discount_Type === 'Flat_Discount') {
-            return coupon.Flat_Discount || 0;
-        } else if (coupon.Discount_Type === 'Flat_Percentage') {
-            const percentage = coupon.Flat_Percentage || 0;
-            return (subtotal * percentage) / 100;
-        }
-        return 0;
-    };
-
-    const handleApplyCoupon = () => {
+    const handleApplyCoupon = async () => {
         setCouponError('');
         setCouponSuccess('');
 
@@ -154,37 +95,51 @@ export default function Checkout () {
             return;
         }
 
-        const coupon = availableCoupons.find(
-            c => c.Coupon_Code && c.Coupon_Code.toUpperCase() === couponCode.toUpperCase()
-        );
-
-        if (!coupon) {
-            setCouponError('Invalid coupon code');
-            return;
-        }
-
-        const subtotal = getSubtotalAmount();
-        
         const { Email } = getuserdetails() || {};
         
         if (!Email) {
             setCouponError('Please login to apply coupon');
             return;
         }
-        
-        const validation = validateCoupon(coupon, subtotal, Email);
 
-        if (!validation.isValid) {
-            setCouponError(validation.message);
-            return;
+        const subtotal = getSubtotalAmount();
+
+        try {
+            const token = gettoken();
+            const response = await axios.post(`${apiurl()}/coupons/apivalidateCoupons`, {
+                    couponCode: couponCode.trim(),
+                    email: Email,
+                    subtotal: subtotal
+                }, {headers: {'Authorization': `Bearer ${token}`,'Content-Type': 'application/json'}}
+            );
+
+            const result = response.data;
+
+            if (!result.isValid) {
+                setCouponError(result.message);
+                return;
+            }
+
+
+            if (!result.coupon._id) {
+                console.error('WARNING: Coupon object does not have _id field!');
+            }
+
+            setAppliedCoupon(result.coupon);
+            setCouponDiscount(result.coupon.discount);
+            
+            let successMessage = `Coupon applied! You saved ₹${result.coupon.discount.toFixed(2)}`;
+            if (result.coupon.Apply_Shipping_Discount === 'Yes') {
+                successMessage += ' + Free Shipping';
+            }
+
+            setCouponSuccess(successMessage);
+            setCouponCode('');
+
+        } catch (error) {
+            console.error('Error validating coupon:', error);
+            setCouponError('Error validating coupon. Please try again.');
         }
-
-        const discount = calculateDiscount(coupon, subtotal);
-        
-        setAppliedCoupon(coupon);
-        setCouponDiscount(discount);
-        setCouponSuccess(`Coupon applied! You saved ${curr?.symbol.split(" - ")[0]} ${discount.toFixed(2)}`);
-        setCouponCode('');
     };
 
     const handleRemoveCoupon = () => {
@@ -197,14 +152,24 @@ export default function Checkout () {
 
     const calculateFinalTotal = () => {
         const subtotal = getSubtotalAmount();
-        const shipping = subtotal >= 5000 ? 0 : 100;
+        const shipping = getShippingCost(); 
         const total = subtotal + shipping - couponDiscount;
         return Math.max(0, total).toFixed(2);
     };
 
     const getShippingCost = () => {
         const subtotal = getSubtotalAmount();
-        return subtotal >= 5000 ? 0 : 100;
+        let baseShipping = subtotal >= 5000 ? 0 : 100;
+        
+        if (!appliedCoupon) {
+            return baseShipping;
+        }
+        
+        if (appliedCoupon.Apply_Shipping_Discount === 'Yes') {
+            return 0;
+        }
+        
+        return baseShipping;
     };
 
     const fetchShippingDetails = useCallback(async () => {
@@ -360,7 +325,7 @@ export default function Checkout () {
                 shippingCost
             );
             
-            toast.success('Order placed successfully!');
+            // toast.success('Order placed successfully!');
             
             setTimeout(() => {
                 setShowLoadingOverlay(false);
@@ -380,7 +345,7 @@ export default function Checkout () {
         setVisible(true);
     };
 
-        const handlechange = (e) => e.target.files ? setFormData({ ...formData, [e.target.name]: e.target.files[0] }) : setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handlechange = (e) => e.target.files ? setFormData({ ...formData, [e.target.name]: e.target.files[0] }) : setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -619,7 +584,7 @@ export default function Checkout () {
                                                     className="w-full px-3 py-2 text-sm bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black azeret-mono"
                                                 />
                                                 <button onClick={handleApplyCoupon} 
-                                                    className="px-4 py-2 text-sm font-medium text-white transition-colors bg-black hover:bg-gray-800 azeret-mono whitespace-nowrap"
+                                                    className="px-4 py-2 text-sm font-medium cursor-pointer text-white transition-colors bg-black hover:bg-gray-800 azeret-mono whitespace-nowrap"
                                                 >
                                                     Apply
                                                 </button>
@@ -638,16 +603,14 @@ export default function Checkout () {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="text-sm font-medium text-green-800 azeret-mono">
-                                                        {appliedCoupon.Coupon_Name} ({appliedCoupon.Coupon_Code})
+                                                        {appliedCoupon.Coupon_Code}
                                                     </p>
                                                     <p className="text-xs text-green-600 azeret-mono">
                                                         You saved ₹{couponDiscount.toFixed(2)}
                                                     </p>
                                                 </div>
-                                                <button onClick={handleRemoveCoupon} className="text-red-500 transition-colors hover:text-red-700" aria-label="Remove coupon">
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
+                                                <button onClick={handleRemoveCoupon} className="text-red-500 cursor-pointer transition-colors hover:text-red-700" aria-label="Remove coupon">
+                                                   <X/>
                                                 </button>
                                             </div>
                                         </div>
@@ -671,13 +634,15 @@ export default function Checkout () {
                                         <span className="text-sm">
                                             {getShippingCost() === 0 ? (
                                                 <span className="text-green-600">FREE</span>
+                                            ) : appliedCoupon?.Apply_Shipping_Discount === 'Yes' ? (
+                                                <span className="text-green-600">FREE</span>
                                             ) : (
-                                                `₹ ${getShippingCost()}`
+                                                `₹${getShippingCost()}`
                                             )}
                                         </span>
                                     </div>
 
-                                    {subTotal < 5000 && (
+                                    {subTotal < 5000 && getShippingCost() > 0 && (
                                         <div className="p-2 text-xs text-center bg-yellow-50 text-yellow-800 border border-yellow-200">
                                             Add ₹{(5000 - subTotal).toFixed(2)} more to get FREE shipping!
                                         </div>

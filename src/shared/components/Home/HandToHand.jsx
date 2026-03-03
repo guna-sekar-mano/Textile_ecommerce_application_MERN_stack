@@ -7,7 +7,7 @@ export default function HandtoHand() {
                     <div className=" max-w-[95rem] mx-auto px-3">
                         <div className="flex lg:block gap-4 font-handelgothic">
                             <h1 className="lg:text-8xl text-5xl text-white pt-8 font-bold">HAND</h1>
-                            <h1 className="lg:text-8xl text-5xl text-white font-bold lg:mx-52 pt-8">TO</h1>
+                            <h1 className="lg:text-8xl text-4xl text-white font-bold lg:mx-52 pt-8">TO</h1>
                             <h1 className="lg:text-8xl text-5xl text-white font-bold pt-8 lg:mx-[20%]">HAND</h1>
                         </div>
                         <hr className="text-white/35 mt-5 lg:mt-10" />

@@ -9,7 +9,7 @@ import useAuth from '../../services/store/useAuth';
 import { deleteOnewishitems, getAllwishitems, savewishitems } from '../../services/apiwishlist/apiwishlist';
 import toast from 'react-hot-toast';
 import { Link, useParams, useLocation } from 'react-router-dom';
-import { apigetHeaderproductsCustomers } from '../../services/apicustomerProducts/apicustomerproducts';
+import { apigetHeaderproductsCustomers, apigetPopularProducts } from '../../services/apicustomerProducts/apicustomerproducts';
 import Swal from 'sweetalert2';
 import FilterSidebar from './FilterSidebar';
 
@@ -262,6 +262,30 @@ export default function Categoryproducts() {
     };
 
     const fetchCategoryProducts = useCallback(async () => {
+        const passedProducts = location.state?.products;
+        const passedCategoryName = location.state?.categoryName;
+        const isPopularProducts = location.state?.isPopularProducts;
+
+        if (isPopularProducts && passedProducts && passedProducts.length > 0) {
+            setProducts(passedProducts);
+            setCategoryName(passedCategoryName || 'Popular Products');
+            
+            const uniqueSizes = extractUniqueSizes(passedProducts);
+            const uniqueColors = extractUniqueColors(passedProducts);
+            const priceMinMax = extractUniquePrices(passedProducts);
+            const uniqueProductTypes = extractUniqueProductTypes(passedProducts);
+            
+            setAvailableSizes(uniqueSizes);
+            setAvailableColors(uniqueColors);
+            setMinPrice(priceMinMax.min);
+            setMaxPrice(priceMinMax.max);
+            setPriceRange([priceMinMax.min, priceMinMax.max]);
+            setAvailableProductTypes(uniqueProductTypes);
+            setFilteredProducts(passedProducts);
+            setLoading(false);
+            return;
+        }
+        
         if (!productType) return;
         
         setLoading(true);
@@ -269,37 +293,57 @@ export default function Categoryproducts() {
             const urlParams = new URLSearchParams(location.search);
             const genderFilter = urlParams.get('gender');
             
-            const params = {};
+            let data;
+            let displayName = '';
             
-            if (productType === 'sale') {
-                params.saleItems = true;
-            } else if (productType !== 'all') {
-                params.productType = productType;
-            }
-            
-            if (genderFilter) {
-                params.gender = genderFilter;
-            }
-            
-            const data = await apigetHeaderproductsCustomers(params);
-            
-            if (data.resdata) {
-                let displayName = '';
+            if (productType === 'popular-products') {
+                const res = await apigetPopularProducts();
+                const apiData = res?.resdata || [];
+                let allProducts = [];
+
+                apiData.forEach(popularProductGroup => {
+                    if (popularProductGroup.ProductId && Array.isArray(popularProductGroup.ProductId)) {
+                        allProducts.push(...popularProductGroup.ProductId);
+                    }
+                });
+
+                const uniqueProducts = allProducts.filter((product, index, self) => 
+                    index === self.findIndex((p) => p._id === product._id)
+                );
+
+                data = { resdata: uniqueProducts };
+                displayName = 'Popular Products';
+            } else {
+                const params = {};
+                
+                if (productType === 'sale') {
+                    params.saleItems = true;
+                } else if (productType !== 'all') {
+                    params.productType = productType;
+                }
+                
+                if (genderFilter) {
+                    params.gender = genderFilter;
+                }
+                
+                data = await apigetHeaderproductsCustomers(params);
+                
                 if (productType === 'all' && genderFilter) {
                     const capitalizedGender = genderFilter.charAt(0).toUpperCase() + genderFilter.slice(1);
                     displayName = `All ${capitalizedGender}'s Products`;
-                } else {
-                    const displayProductType = data.resdata.length > 0 
-                        ? data.resdata[0].Product_type 
-                        : fromUrlFriendly(productType);
-                    
+                } else if (data.resdata && data.resdata.length > 0) {
+                    const displayProductType = data.resdata[0].Product_type || fromUrlFriendly(productType);
                     displayName = displayProductType;
                     if (genderFilter) {
                         const capitalizedGender = genderFilter.charAt(0).toUpperCase() + genderFilter.slice(1);
                         displayName = `${capitalizedGender}'s ${displayProductType}`;
                     }
+                } else {
+                    displayName = fromUrlFriendly(productType);
                 }
-                
+            }
+            
+            if (data.resdata) {
                 setProducts(data.resdata);
                 setCategoryName(displayName);
                 
@@ -316,16 +360,19 @@ export default function Categoryproducts() {
                 setAvailableProductTypes(uniqueProductTypes);
                 setFilteredProducts(data.resdata);
                 
-                if (productType !== 'all') {
-                    sessionStorage.setItem('currentProductType', displayProductType);
+                if (productType !== 'all' && productType !== 'popular-products') {
+                    sessionStorage.setItem('currentProductType', displayName);
                 }
             }
         } catch (error) {
             console.error("Error fetching category products:", error);
+            setProducts([]);
+            setFilteredProducts([]);
+            setCategoryName('');
         } finally {
             setLoading(false);
         }
-    }, [productType, location.search]);
+    }, [productType, location.search, location.state]);
 
     useEffect(() => {
         fetchCategoryProducts();

@@ -141,11 +141,11 @@ export default function Home() {
             </div>
 
             <div className="absolute bottom-6 right-6 z-10 flex space-x-3">
-                <button onClick={prevSlide} className="bg-white hover:bg-black hover:text-white transition-all p-3 group" aria-label="Previous slide">
-                    <ChevronLeft className="w-5 h-5 text-black group-hover:text-white" />
+                <button onClick={prevSlide} className="bg-white hover:bg-black hover:text-white cursor-pointer transition-all p-3 group" aria-label="Previous slide">
+                    <ChevronLeft className="w-5 h-5 text-black group-hover:text-white " />
                 </button>
 
-                <button onClick={nextSlide} className="bg-white hover:bg-black hover:text-white transition-all p-3 group" aria-label="Next slide">
+                <button onClick={nextSlide} className="bg-white hover:bg-black hover:text-white cursor-pointer transition-all p-3 group" aria-label="Next slide">
                     <ChevronRight className="w-5 h-5 text-black group-hover:text-white" />
                 </button>
             </div>

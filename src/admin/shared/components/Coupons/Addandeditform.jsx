@@ -160,6 +160,59 @@ export default function AddandEditform ({visible, setVisible, handlesave, handle
                                     placeholder="Enter percentage (0-100)" min="0" max="100" step="0.01" required />
                             </div>
                         )}
+
+                        <div className="mb-2 p-4 bg-gray-50 rounded-md border">
+                            <div className="mb-3">
+                                <label className="font-semibold text-gray-700">Shipping Options</label>
+                            </div>
+
+                            <div className="mb-2">
+                                <div className="mb-2">
+                                    <label>Apply Discount on Shipping?</label>
+                                </div>
+                                <select name="Apply_Shipping_Discount" value={formdata?.Apply_Shipping_Discount || ''} onChange={handlechange} className="w-full px-4 py-2 border rounded-md outline-none" required>
+                                    <option value="" disabled>--- Select option ---</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+
+                            {/* {formdata?.Apply_Shipping_Discount === 'Yes' && (
+                                <>
+                                    <div className="mb-2">
+                                        <div className="mb-2">
+                                            <label>Shipping Discount Type</label>
+                                        </div>
+                                        <select name="Shipping_Discount_Type" value={formdata?.Shipping_Discount_Type || ''} onChange={handlechange} className="w-full px-4 py-2 border rounded-md outline-none" required>
+                                            <option value="" disabled>--- Select shipping discount type ---</option>
+                                            <option value="Free_Shipping">Free Shipping</option>
+                                            <option value="Flat_Amount">Flat Amount Discount</option>
+                                            <option value="Percentage">Percentage Discount</option>
+                                        </select>
+                                    </div>
+
+                                    {formdata?.Shipping_Discount_Type === 'Flat_Amount' && (
+                                        <div className="mb-2">
+                                            <div className="mb-2">
+                                                <label>Shipping Discount Amount</label>
+                                            </div>
+                                            <input type="number" name="Shipping_Discount_Amount" value={formdata?.Shipping_Discount_Amount || ''} onChange={handlechange} className="w-full px-4 py-2 border rounded-md outline-none" 
+                                                placeholder="Enter discount amount for shipping" min="0" step="0.01" required />
+                                        </div>
+                                    )}
+
+                                    {formdata?.Shipping_Discount_Type === 'Percentage' && (
+                                        <div className="mb-2">
+                                            <div className="mb-2">
+                                                <label>Shipping Discount Percentage (%)</label>
+                                            </div>
+                                            <input type="number" name="Shipping_Discount_Percentage" value={formdata?.Shipping_Discount_Percentage || ''} onChange={handlechange} className="w-full px-4 py-2 border rounded-md outline-none" 
+                                                placeholder="Enter percentage (0-100)" min="0" max="100" step="0.01" required />
+                                        </div>
+                                    )}
+                                </>
+                            )} */}
+                        </div>
                     </>
                 )}
 

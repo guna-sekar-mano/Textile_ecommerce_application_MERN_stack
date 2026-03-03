@@ -174,18 +174,17 @@ export default function Popularproductspage () {
     }
     
     const editfrom = (data) => {
-        const productNames = data.ProductId ? 
-            data.ProductId.map(id => {
-                const product = productData.find(p => p._id === id);
-                return product ? product.Product_Name : null;
-            }).filter(Boolean) : [];
+        const productNames = data.ProductId?.map(product => 
+            product.Product_Name || productData.find(p => p._id === product)?.Product_Name
+        ).filter(Boolean) || [];
 
-        const highlightedProductName = data.HighlightedProductId ? 
-            productData.find(p => p._id === data.HighlightedProductId)?.Product_Name : '';
+        const highlightedProductName = data.HighlightedProductId?.Product_Name || 
+            productData.find(p => p._id === data.HighlightedProductId)?.Product_Name || '';
 
         setFormdata({...data, productname: productNames, highlightedProduct: highlightedProductName });
         setVisible(true);
-        if (data.Images && data.Images[0]) {
+        
+        if (data.Images?.[0]) {
             setFile(apiurl() + "/" + data.Images[0]);
         }
     }

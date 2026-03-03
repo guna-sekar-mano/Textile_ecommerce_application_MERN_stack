@@ -20,9 +20,11 @@ import ScrollToTop from "./Scrolltotop";
 import MyAccountMain from "../shared/components/MyAccount/core/MyAccountMain";
 import Myorders from "../shared/components/MyAccount/pages/MyOrders";
 import AccountDetails from "../shared/components/MyAccount/pages/AccountDetails";
-import Rough from "../shared/components/rough";
 import BannerProducts from "../shared/components/BannerProducts/Bannerproducts";
 import OrderThankyou from "../shared/components/OrderThankyou";
+import PrivacyPolicy from "../shared/components/Policies/PrivacyPolicy";
+import TermsandConditions from "../shared/components/Policies/TermsandConditions";
+// import UpdateProduct from "../shared/components/rough";
 
 
 export default function Approuter () {
@@ -42,8 +44,10 @@ export default function Approuter () {
                     <Route path="/verify-otp" element={<VerifyOtp/>}/>
                     <Route path="/cart" element={<Cartpage/>}/>
                     <Route path="/checkout" element={<Checkoutpage/>}/>
-                    <Route path="/rough" element={<Rough/>}/>
+                    {/* <Route path="/rough" element={<UpdateProduct/>}/> */}
                     <Route path="/thank-you" element={<OrderThankyou/>}/>
+                    <Route path="/privacy-policy" element={<PrivacyPolicy/>}/>
+                    <Route path="/terms-and-conditions" element={<TermsandConditions/>}/>
 
                     <Route path="/wishlist" element={<Wishlistpage/>}/>
                         <Route element={<SupportMain />}>

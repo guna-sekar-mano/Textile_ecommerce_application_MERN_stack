@@ -6,17 +6,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apigetPopularProducts } from '../../services/apicustomerProducts/apicustomerproducts';
 import apiurl from '../../services/apiendpoint/apiendpoint';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { deleteOnewishitems, getAllwishitems, savewishitems } from '../../services/apiwishlist/apiwishlist';
 import useAuth from '../../services/store/useAuth';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2'
 
 const toUrlFriendly = (str) => {
-  return str
-    ?.toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+  return str ?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 };
 
 export default function Popularproducts () {
@@ -25,6 +22,7 @@ export default function Popularproducts () {
     const [data, setData] = useState({ products: [], highlightedProduct: null, totallength: 0 });
     const { userdetails } = useAuth();
     const [wishlistItems, setWishlistItems] = useState([]);
+    const navigate = useNavigate();
 
     const checkIfInWishlist = (productToCheck, variantToCheck = null) => {
         if (!wishlistItems.length) return false;
@@ -79,11 +77,7 @@ export default function Popularproducts () {
                 index === self.findIndex((p) => p._id === product._id)
             );
 
-            setData({ 
-                products: uniqueProducts,
-                highlightedProduct: highlightedData,
-                totallength: uniqueProducts.length 
-            });
+            setData({ products: uniqueProducts,highlightedProduct: highlightedData,totallength: uniqueProducts.length });
         } catch (error) {
             console.error('Error fetching data:', error);
             setData({ products: [], highlightedProduct: null, totallength: 0 });
@@ -199,6 +193,12 @@ export default function Popularproducts () {
         }
     };
 
+    const handleViewMore = () => {
+        navigate('/collections/popular-products', { 
+            state: { products: data.products,categoryName: data.highlightedProduct?.sectionName || 'Popular Products',isPopularProducts: true} 
+        });
+    };
+
     return (
         <>
         <section className="px-4 py-5 lg:py-10">
@@ -208,29 +208,15 @@ export default function Popularproducts () {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mt-5 lg:mt-8">
                     <div className="col-span-4 ">
                         <div className='sticky top-20 relative'>
-                            {data.highlightedProduct ? (
+                            {data.highlightedProduct && (
                                 <>
-                                    <img 
-                                        src={getImageUrl(data.highlightedProduct.image)} 
-                                        alt={data.highlightedProduct.sectionName} 
-                                        className="lg:h-[80dvh] w-full object-cover object-center" 
-                                    />
+                                    <img src={getImageUrl(data.highlightedProduct.image)} alt={data.highlightedProduct.sectionName} className="lg:h-[80dvh] w-full object-cover object-center" />
                                     <div className='absolute bottom-0 left-0 w-full p-4 azeret-mono'>
                                         <div className='bg-white/90 p-3 rounded'>
-                                            <h3 className='font-semibold text-gray-800 text-lg'>
-                                                {data.highlightedProduct.sectionName}
-                                            </h3>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <img src="/images/popular-products/3.jpg" alt="" className="lg:h-[80dvh] w-full object-cover object-center" />
-                                    <div className='absolute bottom-0 left-0 w-full p-2 azeret-mono'>
-                                        <div className='flex gap-2 mt-3 font-semibold text-gray-600 text-sm'>
-                                            <p className='bg-white p-1'>TRACKS</p>
-                                            <p className='bg-white p-1'>T-SHIRTS</p>
-                                            <p className='bg-white p-1'>SHORTS</p>
+                                            <h3 className='font-semibold text-gray-800 text-lg'>{data.highlightedProduct.sectionName}</h3>
+                                            <button onClick={handleViewMore} className='mt-3 w-full bg-black text-white py-2 px-4 hover:bg-gray-800 transition-colors duration-200 cursor-pointer'>
+                                                View More
+                                            </button>
                                         </div>
                                     </div>
                                 </>
@@ -240,7 +226,7 @@ export default function Popularproducts () {
 
                     <div className="col-span-8">
                         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                            {data?.products.map((item) => {
+                            {data?.products.slice(0, 6).map((item) => {
                                 const productImages = getProductImages(item);
                                 const firstVariant = item.variants?.find(v => v.status === 'Active') || item.variants?.[0];
                                 
@@ -265,9 +251,9 @@ export default function Popularproducts () {
                                                 </Swiper>
                                             </Link>
                                             
-                                            <div className="absolute top-2 left-2 bg-white/60 p-1 z-10">
+                                            {/* <div className="absolute top-2 left-2 bg-white/60 p-1 z-10">
                                                 <p className="text-sm flex justify-center items-center">{item.tags || 'NEW'}</p>
-                                            </div>
+                                            </div> */}
                                             <div className="absolute top-2 right-2 bg-white p-1 z-10">
                                                <i className={`fi ${checkIfInWishlist(item, null) ? "fi-sr-heart" : "fi-rr-heart"} flex justify-center items-center hover:cursor-pointer text-xl text-red-700`} onClick={() => {addWish(item); }}></i>
                                             </div>
@@ -290,7 +276,6 @@ export default function Popularproducts () {
                                             
                                             <div className="mt-1 flex items-center gap-2">
                                                 {(() => {
-                                                    // Check if product has global price/sale_price
                                                     if (item.price || item.sale_price) {
                                                         const hasGlobalSalePrice = item.sale_price && parseFloat(item.sale_price) > 0;
                                                         
@@ -313,7 +298,6 @@ export default function Popularproducts () {
                                                             );
                                                         }
                                                     } 
-                                                    // Check variant-based pricing
                                                     else if (firstVariant?.sizes && firstVariant.sizes.length > 0) {
                                                         const firstSize = firstVariant.sizes[0];
                                                         const displayPrice = firstSize?.sale_price && firstSize.sale_price !== "0" 

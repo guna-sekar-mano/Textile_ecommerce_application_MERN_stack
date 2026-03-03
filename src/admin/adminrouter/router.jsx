@@ -11,6 +11,7 @@ import Popularproductspage from "../components/PopularProductspage";
 import Orderspage from "../components/Orderspage";
 import Couponspage from "../components/Couponspage";
 import Newsletterpage from "../components/Newsletterpage";
+import Shippingcalculationspage from "../components/Shippingcalculationspage";
 
 export default function Dashboardrouter() {
 
@@ -32,6 +33,7 @@ export default function Dashboardrouter() {
                 <Route path="/orders" element={<Orderspage/>}/>
                 <Route path="/coupons" element={<Couponspage/>}/>
                 <Route path="/newsletter" element={<Newsletterpage/>}/>
+                <Route path="/shipping-amounts" element={<Shippingcalculationspage/>}/>
 
                 <Route path="/" element={<Navigate to={getRedirectPath()} replace />} />
             </Route>

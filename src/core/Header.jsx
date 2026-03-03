@@ -14,7 +14,7 @@ export default function Header() {
     const [isMenHovered, setIsMenHovered] = useState(false);
     const [isWomenHovered, setIsWomenHovered] = useState(false);
     const { logout, userdetails } = useAuth();
-    const { clearCart } = useCartStore();
+    const { clearCart ,cart, fetchCartItems} = useCartStore();
     const navigate = useNavigate();
     const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -24,7 +24,6 @@ export default function Header() {
     const [menOpen, setMenOpen] = useState(false);
     const [womenOpen, setWomenOpen] = useState(false);
 
-    const { cart } = useCartStore();
 
     const toggleMenu = () => { setIsMenuOpen(!isMenuOpen); };
     const toggleSearch = () => { setIsSearchOpen(!isSearchOpen); };
@@ -37,6 +36,12 @@ export default function Header() {
         clearCart();
         navigate('/');
     };
+
+    useEffect(() => {
+        if (userdetails?.Email) {
+            fetchCartItems(userdetails.Email);
+        }
+    }, [userdetails, fetchCartItems]);
 
     const getProductCategories = useCallback(async () => {
         setLoading(true);
@@ -184,7 +189,7 @@ export default function Header() {
                                         </div>
                                     </div>
                                 </li>
-                                <li className="text-lg cursor-pointer hover:text-gray-300 transition-colors">Sale</li>
+                                {/* <li className="text-lg cursor-pointer hover:text-gray-300 transition-colors">Sale</li> */}
                             </ul>
                         </div>
 
@@ -244,7 +249,7 @@ export default function Header() {
                                 <Link to={"/cart"} className="hover:text-gray-300 transition-colors relative">
                                     <i className="fi fi-rr-shopping-bag text-lg "></i>
                                     <span className="absolute -top-2 -right-3 flex items-center justify-center w-5 h-5 text-xs text-white bg-red-600 rounded-full">
-                                        {cart?.length}
+                                        {cart?.length || 0}
                                     </span>
                                 </Link>
                             </div>

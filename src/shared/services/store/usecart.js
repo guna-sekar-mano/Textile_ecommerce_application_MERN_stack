@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware';
+import { getcartItems } from '../apicart/apicart';
 
 const useCartStore = create(
   persist(
@@ -24,7 +25,7 @@ const useCartStore = create(
             return {
               ...apiItem,
               variant_name: localItem.variant_name,
-              variant_images: localItem.variant_images,
+              variant_images: localItem.variant_imagesw,
               Product_Name: localItem.Product_Name,
               Images: localItem.Images,
               sizes: localItem.sizes,
@@ -71,6 +72,20 @@ const useCartStore = create(
       updateQuantity: (itemId, Quantity) => set((state) => ({ cart: state.cart.map((item) => item._id === itemId ? { ...item, Quantity } : item ) })),
         
       clearCart: () => set(() => ({ cart: [] })),
+
+      fetchCartItems: async (email) => {
+        try {
+          const response = await getcartItems(email);
+          
+          if (response && Array.isArray(response.response)) {
+            set({ cart: response.response });
+          } else {
+            set({ cart: [] });
+          }
+        } catch (error) {
+          set({ cart: [] });
+        }
+      },
     }),
     {
       name: 'cart-storage',
