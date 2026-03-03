@@ -17,6 +17,16 @@ const Orderschema = mongoose.Schema({
     Payment_Status: { type: String, default: "Not Paid" },
     Order_Status: { type: String, default: "Payment Pending" },
     Total_Amount: Number,
+    Coupon_Discount: { type: Number, default: 0 },
+    Shipping_Amount: { type: Number, default: 0 },
+    Applied_Coupon: {
+      id: String,
+      code: String,
+      name: String,
+      discount_type: String,
+      discount_value: Number,
+      apply_shipping_discount: String
+    },
     shipment_id: Number,
     Payment_Date: { type: Date },
     failed_reason: String,    

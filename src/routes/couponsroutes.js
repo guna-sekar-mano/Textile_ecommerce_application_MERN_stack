@@ -1,5 +1,5 @@
 import express from 'express'
-import { deleteCoupon, getallCoupons, getAllCustomerCoupons, saveCoupons, trackCouponUsage, updateCoupondata, validateCouponUsage } from '../controllers/CouponController.js';
+import { deleteCoupon, getallCoupons, getAllCustomerCoupons, saveCoupons, trackCouponUsage, updateCoupondata, validateCoupon } from '../controllers/CouponController.js';
 import authMiddleware from '../middlewares/authmiddlewares.js';
 
 const couponsRouter = express.Router()
@@ -11,6 +11,6 @@ couponsRouter.delete('/apideleteCoupon/:id', authMiddleware(['Admin']), deleteCo
 couponsRouter.get('/apigetallcustomercoupon', getAllCustomerCoupons);
 
 couponsRouter.post('/apitrackCouponUsage', trackCouponUsage);
-couponsRouter.post('/apivalidateCouponUsage', validateCouponUsage);
+couponsRouter.post('/apivalidateCoupons',  validateCoupon);
 
 export default couponsRouter;

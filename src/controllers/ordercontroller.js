@@ -29,6 +29,9 @@ export const saveOrder = async (req, res) => {
       Order_id: orderData.Order_id,
       Invoice_ID,
       Total_Amount: orderData.Total_Amount,
+      Shipping_Amount: orderData.Shipping_Amount || 0,
+      Coupon_Discount: orderData.Coupon_Discount || 0,
+      Applied_Coupon: orderData.Applied_Coupon || null,
       Billing_Name: orderData.Billing_Name,
       Email: orderData.Email,
       Mobilenumber: orderData.Mobilenumber,
@@ -98,7 +101,7 @@ export const saveOrder = async (req, res) => {
 
 export const getorderdetails = async (req, res) => {
     try {
-        const orders = await Order.find({ Email: req.user.Email });
+        const orders = await Order.find({ Email: req.user.Email }).sort({ createdAt: -1 });
 
         const orderIds = orders.map(order => order.Order_id);
 
